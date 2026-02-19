@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Glitch">
+<meta name="theme-color" content="#0c0a12">
+<title>Glitch — AI Game Clips</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiR2xpdGNoIiwic2hvcnRfbmFtZSI6IkdsaXRjaCIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMGMwYTEyIiwidGhlbWVfY29sb3IiOiIjMGMwYTEyIn0K">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --accent: #ff6b2b;
+  --accent-dim: #ff6b2b33;
+  --accent-glow: #ff6b2b22;
+  --purple: #a855f7;
+  --purple-dim: #a855f733;
+  --purple-glow: #a855f722;
+  --bg: #0c0a12;
+  --bg-card: #13111d;
+  --bg-surface: #1c1928;
+  --bg-hover: #252233;
+  --text: #eae8f0;
+  --text-dim: #7b6f94;
+  --xbox-green: #107c10;
+  --psn-blue: #003087;
+  --red: #ff4757;
+  --orange: #ff6b2b;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+input, button, textarea { font-family: inherit; }
+
+button { cursor: pointer; border: none; background: none; }
+
+::-webkit-scrollbar { width: 0; height: 0; }
+
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
+  50% { box-shadow: 0 0 40px var(--accent-dim); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes scoreReveal {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.fade-up { animation: fadeUp 0.5s ease forwards; }
+.fade-in { animation: fadeIn 0.4s ease forwards; }
+
+.stagger-1 { animation-delay: 0.05s; opacity: 0; }
+.stagger-2 { animation-delay: 0.1s; opacity: 0; }
+.stagger-3 { animation-delay: 0.15s; opacity: 0; }
+.stagger-4 { animation-delay: 0.2s; opacity: 0; }
+.stagger-5 { animation-delay: 0.25s; opacity: 0; }
+
+/* ===== LOGIN SCREEN ===== */
+.login-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(ellipse at 50% 0%, #a855f70a 0%, transparent 50%), var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-screen::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: repeating-conic-gradient(#ffffff02 0deg 1deg, transparent 1deg 6deg);
+  animation: rotate 120s linear infinite;
+}
+
+@keyframes rotate { to { transform: rotate(360deg); } }
+
+.login-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  background: linear-gradient(135deg, #ff6b2b, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.login-subtitle {
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 44px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid #ffffff0a;
+  padding: 32px 28px;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(24px);
+}
+
+.login-heading {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.login-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 28px;
+  line-height: 1.4;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-btn:active { transform: scale(0.97); }
+
+.btn-xbox {
+  background: linear-gradient(135deg, #ff6b2b18, #a855f718);
+  border: 1px solid #ff6b2b44;
+  color: var(--text);
+  backdrop-filter: blur(12px);
+}
+
+.btn-xbox:hover, .btn-xbox:active {
+  background: linear-gradient(135deg, #ff6b2b30, #a855f730);
+  border-color: #ff6b2b88;
+  box-shadow: 0 0 24px #ff6b2b22, inset 0 0 24px #ff6b2b08;
+}
+
+.btn-xbox .btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ff6b2b33, #ff6b2b11);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.btn-psn {
+  background: linear-gradient(135deg, #a855f718, #6366f118);
+  border: 1px solid #a855f744;
+  color: var(--text);
+  margin-top: 10px;
+  backdrop-filter: blur(12px);
+}
+
+.btn-psn:hover, .btn-psn:active {
+  background: linear-gradient(135deg, #a855f730, #6366f130);
+  border-color: #a855f788;
+  box-shadow: 0 0 24px #a855f722, inset 0 0 24px #a855f708;
+}
+
+.btn-psn .btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #a855f733, #a855f711);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.btn-platform-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  opacity: 0.5;
+  margin-left: auto;
+}
+
+.btn-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 14px 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.btn-divider::before, .btn-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #ffffff15, transparent);
+}
+
+.btn-demo {
+  width: 100%;
+  padding: 13px 20px;
+  background: #ffffff06;
+  border: 1px solid #ffffff10;
+  border-radius: 14px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s;
+  backdrop-filter: blur(8px);
+}
+
+.btn-demo:hover, .btn-demo:active {
+  background: #ffffff0d;
+  border-color: #ffffff22;
+  color: var(--text);
+}
+
+.login-features {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  margin-top: 36px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.login-feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--accent-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.login-feature-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== CONFIG SCREEN ===== */
+.config-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.config-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid #ffffff0a;
+  padding: 28px 24px;
+}
+
+.config-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.config-card p {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.config-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid #ffffff11;
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 12px;
+  transition: border 0.2s;
+  font-family: monospace;
+}
+
+.config-input:focus { border-color: var(--accent); }
+
+.config-input::placeholder { color: var(--text-dim); font-family: 'Rajdhani', sans-serif; }
+
+.btn-accent {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.btn-accent:active { transform: scale(0.97); }
+
+.btn-ghost {
+  width: 100%;
+  padding: 12px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* ===== TOP BAR ===== */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  padding-top: calc(10px + var(--safe-top));
+  position: sticky;
+  top: 0;
+  background: #0c0a12ee;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 100;
+  border-bottom: 1px solid #ffffff06;
+}
+
+.top-bar-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff6b2b, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.notif-badge {
+  position: relative;
+}
+
+.notif-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 800;
+  color: white;
+}
+
+.avatar-sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  border: 1.5px solid var(--accent-dim);
+}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding: 6px 0;
+  padding-bottom: calc(8px + var(--safe-bottom));
+  background: #0c0a12f8;
+  border-top: 1px solid #ffffff06;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  z-index: 100;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 14px;
+  color: var(--text-dim);
+  transition: color 0.2s;
+}
+
+.nav-item.active { color: var(--accent); }
+
+.nav-item-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.nav-upload-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  background: var(--bg-surface);
+  border: 1px solid #ffffff11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -12px;
+  color: var(--text-dim);
+  transition: all 0.2s;
+}
+
+.nav-upload-btn.active {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  box-shadow: 0 4px 24px var(--accent-dim);
+}
+
+/* ===== PAGE CONTENT ===== */
+.page-content {
+  padding-bottom: calc(76px + var(--safe-bottom));
+}
+
+/* ===== FILTER TABS ===== */
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 14px 16px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter-tab {
+  padding: 7px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: all 0.2s;
+  border: 1px solid #ffffff0a;
+  background: var(--bg-surface);
+  color: var(--text-dim);
+}
+
+.filter-tab.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+/* ===== CLIP CARDS ===== */
+.clip-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px 14px;
+}
+
+.clip-card {
+  background: var(--bg-card);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #ffffff08;
+  transition: all 0.3s;
+}
+
+.clip-card:active { transform: scale(0.985); }
+
+.clip-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.clip-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.clip-thumb-gradient {
+  width: 100%;
+  height: 100%;
+}
+
+.clip-play-btn {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #00000077;
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 3px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.clip-thumb:active .clip-play-btn { opacity: 1; }
+
+.clip-duration {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: #000000bb;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+}
+
+.clip-autoclip-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #a855f722;
+  border: 1px solid #a855f744;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--purple);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  backdrop-filter: blur(6px);
+}
+
+.clip-views {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #ffffffcc;
+  background: #00000066;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.clip-body {
+  padding: 12px 14px 14px;
+}
+
+.clip-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.clip-user-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.clip-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border: 1px solid #ffffff11;
+  flex-shrink: 0;
+}
+
+.clip-username {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.clip-time {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.clip-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  line-height: 1.2;
+}
+
+.clip-game-tag {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 600;
+  background: var(--bg-surface);
+  border-radius: 6px;
+  padding: 2px 8px;
+  display: inline-block;
+}
+
+.ai-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 20px;
+  padding: 3px 10px 3px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  animation: scoreReveal 0.4s ease forwards;
+}
+
+.ai-badge.insane { background: #ff475722; border: 1px solid #ff475755; color: var(--red); }
+.ai-badge.fire { background: #a855f722; border: 1px solid #a855f755; color: var(--purple); }
+.ai-badge.nice { background: #f0a03022; border: 1px solid #f0a03055; color: var(--orange); }
+
+.clip-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #ffffff08;
+}
+
+.clip-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  transition: color 0.2s;
+  padding: 0;
+}
+
+.clip-action-btn.liked { color: var(--red); }
+
+/* ===== FRIENDS PAGE ===== */
+.page-title {
+  font-size: 22px;
+  font-weight: 800;
+  padding: 16px 16px 12px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-surface);
+  border-radius: 14px;
+  padding: 11px 14px;
+  margin: 0 16px 14px;
+  border: 1px solid #ffffff08;
+}
+
+.search-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.search-bar input::placeholder { color: var(--text-dim); }
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 0 16px 8px;
+  border: 1px solid #ffffff08;
+}
+
+.user-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border: 2px solid #ffffff11;
+  flex-shrink: 0;
+}
+
+.user-avatar.following { border-color: var(--accent-dim); }
+
+.user-info { flex: 1; min-width: 0; }
+
+.user-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.user-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.platform-badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.platform-badge.xbox { color: var(--xbox-green); background: #a855f722; }
+.platform-badge.psn { color: var(--psn-blue); background: #00308722; }
+
+.user-tag { font-size: 12px; color: var(--text-dim); }
+.user-stats { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+.btn-follow {
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-follow.following {
+  background: transparent;
+  border: 1px solid var(--purple-dim);
+  color: var(--purple);
+}
+
+.btn-follow.not-following {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* ===== PROFILE PAGE ===== */
+.profile-header {
+  background: linear-gradient(180deg, #a855f711 0%, transparent 100%);
+  padding: 28px 16px 16px;
+  text-align: center;
+}
+
+.profile-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  border: 3px solid var(--accent-dim);
+  box-shadow: 0 0 40px var(--accent-glow);
+}
+
+.profile-name {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.profile-tag {
+  font-size: 13px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: center;
+  gap: 36px;
+  margin-top: 20px;
+}
+
+.profile-stat-value { font-size: 22px; font-weight: 800; }
+.profile-stat-label { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+
+.profile-tabs {
+  display: flex;
+  border-bottom: 1px solid #ffffff0a;
+  padding: 0 16px;
+}
+
+.profile-tab {
+  flex: 1;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.profile-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 16px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 16px 14px;
+  border: 1px solid #ffffff08;
+}
+
+.stat-icon { font-size: 22px; margin-bottom: 6px; }
+.stat-value { font-size: 20px; font-weight: 800; }
+.stat-label { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+
+/* ===== UPLOAD PAGE ===== */
+.mode-toggle {
+  display: flex;
+  background: var(--bg-surface);
+  border-radius: 14px;
+  padding: 4px;
+  margin: 0 16px 20px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s;
+  color: var(--text-dim);
+}
+
+.mode-btn.active {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.sync-card {
+  background: var(--bg-card);
+  border-radius: 18px;
+  padding: 22px;
+  margin: 0 16px 14px;
+  border: 1px solid #ff6b2b33;
+}
+
+.sync-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sync-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #a855f722;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--xbox-green);
+}
+
+.sync-title { font-size: 16px; font-weight: 700; }
+.sync-desc { font-size: 12px; color: var(--text-dim); }
+
+.btn-sync {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--xbox-green);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.btn-sync:active { transform: scale(0.97); }
+
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-surface);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+  transition: width 0.3s ease;
+}
+
+.settings-card {
+  background: var(--bg-card);
+  border-radius: 18px;
+  padding: 20px;
+  margin: 0 16px;
+  border: 1px solid #ffffff08;
+}
+
+.settings-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid #ffffff06;
+}
+
+.setting-row:last-child { border-bottom: none; }
+
+.setting-label { font-size: 13px; font-weight: 500; flex: 1; padding-right: 12px; }
+
+.toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle.on { background: var(--accent); }
+.toggle.off { background: var(--bg-surface); border: 1px solid #ffffff11; }
+
+.toggle-knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 3px;
+  transition: left 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.toggle.on .toggle-knob { left: 23px; }
+.toggle.off .toggle-knob { left: 3px; }
+
+.upload-drop {
+  background: var(--bg-card);
+  border-radius: 18px;
+  padding: 44px 24px;
+  margin: 0 16px;
+  border: 2px dashed #ffffff15;
+  text-align: center;
+}
+
+/* ===== DISCOVER PAGE ===== */
+.discover-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  padding: 0 16px;
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+
+.discover-section-title:first-of-type { margin-top: 4px; }
+
+.game-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.game-tag {
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 8px 14px;
+  border: 1px solid #ffffff08;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.game-tag:active { background: var(--bg-hover); }
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #ffffff05;
+}
+
+.leaderboard-rank {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--purple);
+  width: 26px;
+  text-align: center;
+}
+
+.leaderboard-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+/* ===== CLIP DETAIL MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000000dd;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  flex: 1;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+  overflow-y: auto;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #00000088;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  z-index: 10;
+  backdrop-filter: blur(6px);
+}
+
+.comment-section { padding: 16px; }
+
+.comment-input-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #ffffff08;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border: 1px solid #ffffff08;
+  border-radius: 20px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+}
+
+.comment-input:focus { border-color: var(--accent-dim); }
+
+.comment-send {
+  padding: 10px 18px;
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.comment-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.comment-name { font-size: 13px; font-weight: 700; }
+.comment-text { font-size: 13px; color: var(--text-dim); line-height: 1.4; margin-top: 2px; }
+.comment-time { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+
+/* ===== EMPTY STATES ===== */
+.empty-state {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-dim);
+}
+
+.empty-icon { font-size: 44px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.empty-desc { font-size: 13px; margin-top: 4px; line-height: 1.4; }
+
+/* Clip list items on profile */
+.clip-list-item {
+  display: flex;
+  gap: 12px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 16px 8px;
+  border: 1px solid #ffffff08;
+}
+
+.clip-list-thumb {
+  width: 130px;
+  min-height: 74px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.clip-list-info {
+  padding: 10px 12px 10px 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.clip-list-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clip-list-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* ===== LOADING SHIMMER ===== */
+.shimmer {
+  background: linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-hover) 50%, var(--bg-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease infinite;
+}
+</style>
+</head>
+<body>
+
+<div id="app" class="app-container"></div>
+
+<script>
+// =====================================================
+// GLITCH — Full PWA Application
+// =====================================================
+
+const APP = {
+  // Xbox OAuth Config - User needs to set their own Client ID
+  XBOX_CLIENT_ID: '', // Set via config screen
+  XBOX_REDIRECT_URI: window.location.origin + window.location.pathname,
+  XBOX_SCOPES: 'Xboxlive.signin Xboxlive.offline_access',
+
+  // State
+  state: {
+    screen: 'login', // login, config, main
+    page: 'feed',    // feed, discover, upload, friends, profile
+    platform: null,
+    user: null,
+    xboxToken: null,
+    xboxProfile: null,
+    clips: [],
+    likedClips: new Set(),
+    following: new Set([2, 3, 5]),
+    comments: {},
+    feedFilter: 'trending',
+    uploadMode: 'auto',
+    profileTab: 'clips',
+    friendsTab: 'friends',
+    searchQuery: '',
+    friendSearch: '',
+    syncProgress: -1,
+    selectedClip: null,
+    newComment: '',
+    aiSettings: [true, true, true, false, false],
+    loading: false,
+    demoMode: false,
+  },
+
+  // Mock data
+  MOCK_USERS: [
+    { id: 1, username: "xNightHawk", gamertag: "xNightHawk#2847", avatar: "🦅", platform: "xbox", followers: 1243, following: 89, clips: 47 },
+    { id: 2, username: "FragMaster99", gamertag: "FragMaster99", avatar: "💀", platform: "xbox", followers: 892, following: 134, clips: 31 },
+    { id: 3, username: "SilentScope", gamertag: "SilentScope_X", avatar: "🎯", platform: "xbox", followers: 2301, following: 201, clips: 63 },
+    { id: 4, username: "VelocityKing", gamertag: "VelocityKing", avatar: "⚡", platform: "xbox", followers: 567, following: 78, clips: 22 },
+    { id: 5, username: "LunarWraith", gamertag: "LunarWraith#1001", avatar: "🌙", platform: "xbox", followers: 3102, following: 156, clips: 89 },
+    { id: 6, username: "BlazeRunner", gamertag: "BlazeRunner_TV", avatar: "🔥", platform: "xbox", followers: 445, following: 62, clips: 18 },
+  ],
+
+  GAMES: ["Call of Duty: MW3", "Fortnite", "Apex Legends", "Halo Infinite", "Rocket League", "FIFA 25", "GTA Online", "Destiny 2", "Overwatch 2", "Diablo IV"],
+  CLIP_TYPES: ["Squad Wipe", "Clutch Round", "Insane Snipe", "Ace", "Trickshot", "Collateral", "1v4 Clutch", "No-Scope", "Team Play", "Buzzer Beater"],
+
+  COMMENTS: [
+    { user: { avatar: "💀", name: "FragMaster99" }, text: "That was absolutely filthy 🔥", time: "2m ago" },
+    { user: { avatar: "🎯", name: "SilentScope" }, text: "How do you even hit those shots lol", time: "8m ago" },
+    { user: { avatar: "⚡", name: "VelocityKing" }, text: "Bro I was in this lobby 💀", time: "14m ago" },
+  ],
+
+  THUMB_HUES: [
+    [200, 260], [340, 20], [140, 200], [260, 320], [20, 80],
+    [180, 240], [300, 360], [100, 160], [220, 280], [40, 100],
+  ],
+
+  // ===== INIT =====
+  init() {
+    // Check for stored client ID
+    const storedId = this.loadLocal('glitch_client_id');
+    if (storedId) this.XBOX_CLIENT_ID = storedId;
+
+    // Check for OAuth callback
+    this.handleOAuthCallback();
+
+    // Check for stored session
+    const session = this.loadLocal('glitch_session');
+    if (session) {
+      this.state.screen = 'main';
+      this.state.user = session.user;
+      this.state.demoMode = session.demoMode || false;
+      this.state.xboxToken = session.xboxToken || null;
+    }
+
+    // Generate mock clips
+    this.generateClips();
+
+    this.render();
+  },
+
+  // ===== LOCAL STORAGE HELPERS =====
+  saveLocal(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+  },
+  loadLocal(key) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch(e) { return null; }
+  },
+
+  // ===== XBOX OAUTH =====
+  startXboxOAuth() {
+    if (!this.XBOX_CLIENT_ID) {
+      this.state.screen = 'config';
+      this.render();
+      return;
+    }
+
+    const params = new URLSearchParams({
+      client_id: this.XBOX_CLIENT_ID,
+      response_type: 'token',
+      redirect_uri: this.XBOX_REDIRECT_URI,
+      scope: this.XBOX_SCOPES,
+    });
+
+    window.location.href = `https://login.live.com/oauth20_authorize.srf?${params.toString()}`;
+  },
+
+  handleOAuthCallback() {
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const token = params.get('access_token');
+      if (token) {
+        this.state.xboxToken = token;
+        this.state.demoMode = false;
+        this.loginWithXbox(token);
+        // Clean URL
+        history.replaceState(null, '', window.location.pathname);
+      }
+    }
+  },
+
+  async loginWithXbox(token) {
+    this.state.loading = true;
+    this.state.screen = 'main';
+    this.render();
+
+    try {
+      // Step 1: Get Xbox Live token
+      const xblRes = await fetch('https://user.auth.xboxlive.com/user/authenticate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          RelyingParty: 'http://auth.xboxlive.com',
+          TokenType: 'JWT',
+          Properties: { AuthMethod: 'RPS', SiteName: 'user.auth.xboxlive.com', RpsTicket: `d=${token}` }
+        })
+      });
+      const xblData = await xblRes.json();
+      const xblToken = xblData.Token;
+      const userHash = xblData.DisplayClaims.xui[0].uhs;
+
+      // Step 2: Get XSTS token
+      const xstsRes = await fetch('https://xsts.auth.xboxlive.com/xsts/authorize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          RelyingParty: 'http://xboxlive.com',
+          TokenType: 'JWT',
+          Properties: { SandboxId: 'RETAIL', UserTokens: [xblToken] }
+        })
+      });
+      const xstsData = await xstsRes.json();
+      const xstsToken = xstsData.Token;
+
+      // Step 3: Get profile
+      const profileRes = await fetch('https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag,GameDisplayPicRaw,Gamerscore,AccountTier', {
+        headers: { 'Authorization': `XBL3.0 x=${userHash};${xstsToken}` }
+      });
+      const profileData = await profileRes.json();
+
+      const settings = {};
+      profileData.profileUsers[0].settings.forEach(s => { settings[s.id] = s.value; });
+
+      this.state.user = {
+        id: 0,
+        username: settings.Gamertag || 'Player',
+        gamertag: settings.Gamertag || 'Player',
+        avatar: '🎮',
+        avatarUrl: settings.GameDisplayPicRaw || null,
+        platform: 'xbox',
+        followers: 0,
+        following: 0,
+        clips: 0,
+        gamerscore: settings.Gamerscore || '0',
+      };
+
+      this.state.xboxProfile = { userHash, xstsToken };
+
+      this.saveLocal('glitch_session', { user: this.state.user, xboxToken: token });
+      this.state.loading = false;
+      this.render();
+
+      // Fetch real clips
+      this.fetchXboxClips(userHash, xstsToken);
+
+    } catch(err) {
+      console.error('Xbox auth error:', err);
+      // Fallback to demo with Xbox branding
+      this.loginDemo('xbox');
+    }
+  },
+
+  async fetchXboxClips(userHash, xstsToken) {
+    try {
+      const res = await fetch('https://gameclipsmetadata.xboxlive.com/users/me/clips', {
+        headers: { 'Authorization': `XBL3.0 x=${userHash};${xstsToken}`, 'x-xbl-contract-version': '1' }
+      });
+      const data = await res.json();
+
+      if (data.gameClips && data.gameClips.length > 0) {
+        const realClips = data.gameClips.map((clip, i) => ({
+          id: 1000 + i,
+          user: this.state.user,
+          game: clip.titleName || 'Unknown Game',
+          clipType: clip.clipName || 'Gameplay Clip',
+          title: clip.clipName || `${clip.titleName} Clip`,
+          aiScore: this.calculateAIScore(clip),
+          likes: Math.floor(Math.random() * 50),
+          comments: Math.floor(Math.random() * 10),
+          shares: Math.floor(Math.random() * 5),
+          views: clip.views || Math.floor(Math.random() * 200),
+          duration: this.formatDuration(clip.durationInSeconds),
+          timeAgo: this.timeAgo(new Date(clip.dateRecorded)),
+          isAutoClip: true,
+          thumbnailUrl: clip.thumbnails && clip.thumbnails.length > 0 ? clip.thumbnails[0].uri : null,
+          videoUrl: clip.gameClipUris && clip.gameClipUris.length > 0 ? clip.gameClipUris[0].uri : null,
+          isReal: true,
+          thumbSeed: i,
+        }));
+
+        // Prepend real clips
+        this.state.clips = [...realClips, ...this.state.clips];
+        this.state.user.clips = realClips.length;
+        this.render();
+      }
+    } catch(err) {
+      console.error('Failed to fetch Xbox clips:', err);
+    }
+  },
+
+  calculateAIScore(clip) {
+    let score = 60;
+    const duration = clip.durationInSeconds || 30;
+    if (duration < 30) score += 15; // Short = likely action
+    if (duration < 15) score += 10;
+    if (clip.type === 'UserGenerated') score += 5;
+    if (clip.savedByUser) score += 5;
+    score += Math.floor(Math.random() * 15);
+    return Math.min(score, 99);
+  },
+
+  formatDuration(seconds) {
+    if (!seconds) return '0:30';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${String(s).padStart(2, '0')}`;
+  },
+
+  timeAgo(date) {
+    const mins = Math.floor((Date.now() - date.getTime()) / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1440) return `${Math.floor(mins / 60)}h ago`;
+    return `${Math.floor(mins / 1440)}d ago`;
+  },
+
+  loginDemo(platform) {
+    this.state.demoMode = true;
+    this.state.platform = platform || 'xbox';
+    this.state.user = {
+      ...this.MOCK_USERS[0],
+      platform: platform || 'xbox',
+    };
+    this.state.screen = 'main';
+    this.saveLocal('glitch_session', { user: this.state.user, demoMode: true });
+    this.state.loading = false;
+    this.render();
+  },
+
+  logout() {
+    localStorage.removeItem('glitch_session');
+    this.state.screen = 'login';
+    this.state.user = null;
+    this.state.xboxToken = null;
+    this.state.xboxProfile = null;
+    this.state.demoMode = false;
+    this.render();
+  },
+
+  // ===== DATA GENERATION =====
+  generateClips() {
+    const clips = [];
+    for (let i = 0; i < 20; i++) {
+      const user = this.MOCK_USERS[Math.floor(Math.random() * this.MOCK_USERS.length)];
+      const game = this.GAMES[Math.floor(Math.random() * this.GAMES.length)];
+      const clipType = this.CLIP_TYPES[Math.floor(Math.random() * this.CLIP_TYPES.length)];
+      const aiScore = Math.floor(Math.random() * 40) + 60;
+      const mins = Math.floor(Math.random() * 1440);
+      clips.push({
+        id: i + 1,
+        user,
+        game,
+        clipType,
+        title: `${clipType} on ${game}`,
+        aiScore,
+        likes: Math.floor(Math.random() * 500) + 10,
+        comments: Math.floor(Math.random() * 80),
+        shares: Math.floor(Math.random() * 40),
+        views: Math.floor(Math.random() * 5000) + 100,
+        duration: `0:${String(Math.floor(Math.random() * 45) + 5).padStart(2, '0')}`,
+        timeAgo: mins < 60 ? `${mins}m ago` : mins < 1440 ? `${Math.floor(mins / 60)}h ago` : `${Math.floor(mins / 1440)}d ago`,
+        isAutoClip: Math.random() > 0.3,
+        isReal: false,
+        thumbSeed: i,
+      });
+    }
+    this.state.clips = clips.sort((a, b) => b.aiScore - a.aiScore);
+  },
+
+  thumbGradient(seed) {
+    const [h1, h2] = this.THUMB_HUES[seed % this.THUMB_HUES.length];
+    return `linear-gradient(135deg, hsl(${h1}, 70%, 20%) 0%, hsl(${h2}, 80%, 15%) 100%)`;
+  },
+
+  // ===== ACTIONS =====
+  toggleLike(id) {
+    if (this.state.likedClips.has(id)) this.state.likedClips.delete(id);
+    else this.state.likedClips.add(id);
+    this.render();
+  },
+
+  toggleFollow(id) {
+    if (this.state.following.has(id)) this.state.following.delete(id);
+    else this.state.following.add(id);
+    this.render();
+  },
+
+  toggleAISetting(idx) {
+    this.state.aiSettings[idx] = !this.state.aiSettings[idx];
+    this.render();
+  },
+
+  startSync() {
+    this.state.syncProgress = 0;
+    this.render();
+    const interval = setInterval(() => {
+      this.state.syncProgress += Math.random() * 12 + 5;
+      if (this.state.syncProgress >= 100) {
+        this.state.syncProgress = 100;
+        clearInterval(interval);
+      }
+      this.render();
+    }, 350);
+  },
+
+  openClip(clip) {
+    this.state.selectedClip = clip;
+    this.render();
+  },
+
+  closeClip() {
+    this.state.selectedClip = null;
+    this.render();
+  },
+
+  addComment() {
+    if (!this.state.newComment.trim()) return;
+    const clipId = this.state.selectedClip.id;
+    if (!this.state.comments[clipId]) this.state.comments[clipId] = [];
+    this.state.comments[clipId].unshift({
+      user: { avatar: this.state.user.avatar, name: this.state.user.username },
+      text: this.state.newComment.trim(),
+      time: 'just now',
+    });
+    this.state.newComment = '';
+    this.render();
+  },
+
+  // ===== SVG ICONS =====
+  icon(name, size = 20) {
+    const icons = {
+      home: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+      search: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+      upload: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+      friends: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+      profile: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+      heart: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+      heartFilled: `<svg width="18" height="18" viewBox="0 0 24 24" fill="#ff4757" stroke="#ff4757" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+      comment: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+      share: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
+      play: `<svg width="32" height="32" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+      zap: `<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+      xbox: `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="bold" fill="currentColor">X</text></svg>`,
+      bell: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+      close: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+      eye: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+      check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+      settings: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+      logout: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+    };
+    return icons[name] || '';
+  },
+
+  // ===== AI BADGE =====
+  aiBadge(score) {
+    const cls = score >= 90 ? 'insane' : score >= 75 ? 'fire' : 'nice';
+    const label = score >= 90 ? 'INSANE' : score >= 75 ? 'FIRE' : 'NICE';
+    return `<span class="ai-badge ${cls}">${this.icon('zap', 14)} ${score} · ${label}</span>`;
+  },
+
+  // ===== RENDER ENGINE =====
+  render() {
+    const el = document.getElementById('app');
+    switch (this.state.screen) {
+      case 'login': el.innerHTML = this.renderLogin(); break;
+      case 'config': el.innerHTML = this.renderConfig(); break;
+      case 'main': el.innerHTML = this.renderMain(); break;
+    }
+    this.bindEvents();
+  },
+
+  // ===== LOGIN SCREEN =====
+  renderLogin() {
+    return `
+      <div class="login-screen">
+        <div class="login-logo fade-up">GLITCH</div>
+        <div class="login-subtitle fade-up stagger-1">AI-Powered Game Clips</div>
+        <div class="login-card fade-up stagger-2">
+          <div class="login-heading">Sign in to get started</div>
+          <div class="login-desc">Connect your gaming account to auto-import and share your best clips</div>
+          <button class="login-btn btn-xbox" data-action="login-xbox">
+            <span class="btn-icon">✕</span> Sign in with Xbox
+            <span class="btn-platform-label">XBOX LIVE</span>
+          </button>
+          <button class="login-btn btn-psn" data-action="login-psn">
+            <span class="btn-icon">△</span> Sign in with PlayStation
+            <span class="btn-platform-label">PSN</span>
+          </button>
+          <div class="btn-divider">OR</div>
+          <button class="btn-demo" data-action="login-demo">
+            Explore Demo Mode →
+          </button>
+          <div style="margin-top:20px;text-align:center;font-size:11px;color:var(--text-dim);line-height:1.5">
+            By signing in, you agree to Glitch's Terms of Service and Privacy Policy
+          </div>
+        </div>
+        <div class="login-features fade-up stagger-3">
+          <div class="login-feature">
+            <div class="login-feature-icon">🤖</div>
+            <div class="login-feature-label">Auto-Clip AI</div>
+          </div>
+          <div class="login-feature">
+            <div class="login-feature-icon">👥</div>
+            <div class="login-feature-label">Social Feed</div>
+          </div>
+          <div class="login-feature">
+            <div class="login-feature-icon">🎮</div>
+            <div class="login-feature-label">Xbox & PS5</div>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  // ===== CONFIG SCREEN =====
+  renderConfig() {
+    return `
+      <div class="config-screen">
+        <div class="config-card fade-up">
+          <h2>🔧 Xbox API Setup</h2>
+          <p>To connect your real Xbox account, you need a Microsoft Azure App Client ID. This is free and takes ~5 minutes.</p>
+          <p style="font-size:12px;line-height:1.6;background:var(--bg-surface);padding:12px;border-radius:10px;margin-bottom:16px">
+            <strong style="color:var(--accent)">Quick setup:</strong><br>
+            1. Go to <strong>portal.azure.com</strong> → App Registrations<br>
+            2. Click "New Registration"<br>
+            3. Name: "Glitch" — Redirect URI: <strong style="word-break:break-all">${this.XBOX_REDIRECT_URI}</strong><br>
+            4. Set it as "SPA" type<br>
+            5. Add API Permissions: <strong>Xboxlive.signin</strong><br>
+            6. Copy the Application (Client) ID below
+          </p>
+          <input class="config-input" id="clientIdInput" type="text" placeholder="Paste your Client ID here..." value="${this.XBOX_CLIENT_ID}">
+          <button class="btn-accent" data-action="save-config">Connect Xbox Account</button>
+          <button class="btn-ghost" data-action="login-demo">Skip — use Demo Mode instead</button>
+        </div>
+      </div>`;
+  },
+
+  // ===== MAIN APP =====
+  renderMain() {
+    const { page, selectedClip } = this.state;
+    let pageContent = '';
+    switch (page) {
+      case 'feed': pageContent = this.renderFeed(); break;
+      case 'discover': pageContent = this.renderDiscover(); break;
+      case 'upload': pageContent = this.renderUpload(); break;
+      case 'friends': pageContent = this.renderFriends(); break;
+      case 'profile': pageContent = this.renderProfile(); break;
+    }
+
+    return `
+      ${this.renderTopBar()}
+      <div class="page-content">${pageContent}</div>
+      ${this.renderBottomNav()}
+      ${selectedClip ? this.renderClipModal(selectedClip) : ''}
+    `;
+  },
+
+  renderTopBar() {
+    const user = this.state.user;
+    const avatarContent = user.avatarUrl
+      ? `<img src="${user.avatarUrl}" style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--accent-dim)">`
+      : `<div class="avatar-sm">${user.avatar}</div>`;
+
+    return `
+      <div class="top-bar">
+        <div class="top-bar-logo">GLITCH</div>
+        <div class="top-bar-actions">
+          ${this.state.demoMode ? '<span style="font-size:10px;color:var(--orange);font-weight:700;background:#f0a03022;padding:2px 8px;border-radius:6px">DEMO</span>' : ''}
+          <button class="notif-badge" style="color:var(--text-dim)">
+            ${this.icon('bell')}
+            <span class="notif-dot">3</span>
+          </button>
+          ${avatarContent}
+        </div>
+      </div>`;
+  },
+
+  renderBottomNav() {
+    const { page } = this.state;
+    const items = [
+      { id: 'feed', icon: 'home', label: 'Feed' },
+      { id: 'discover', icon: 'search', label: 'Discover' },
+      { id: 'upload', icon: 'upload', label: 'Upload' },
+      { id: 'friends', icon: 'friends', label: 'Friends' },
+      { id: 'profile', icon: 'profile', label: 'Profile' },
+    ];
+
+    return `
+      <div class="bottom-nav">
+        ${items.map(item => {
+          if (item.id === 'upload') {
+            return `
+              <button class="nav-item" data-nav="${item.id}">
+                <div class="nav-upload-btn ${page === item.id ? 'active' : ''}">${this.icon(item.icon)}</div>
+                <span class="nav-item-label">${item.label}</span>
+              </button>`;
+          }
+          return `
+            <button class="nav-item ${page === item.id ? 'active' : ''}" data-nav="${item.id}">
+              ${this.icon(item.icon)}
+              <span class="nav-item-label">${item.label}</span>
+            </button>`;
+        }).join('')}
+      </div>`;
+  },
+
+  // ===== FEED =====
+  renderFeed() {
+    const { feedFilter, clips, likedClips } = this.state;
+    const filters = ['trending', 'friends', 'auto-clips', 'top rated'];
+
+    let filtered = clips;
+    if (feedFilter === 'auto-clips') filtered = clips.filter(c => c.isAutoClip);
+    if (feedFilter === 'top rated') filtered = [...clips].sort((a, b) => b.aiScore - a.aiScore);
+
+    return `
+      <div class="filter-tabs">
+        ${filters.map(f => `
+          <button class="filter-tab ${feedFilter === f ? 'active' : ''}" data-filter="${f}">${f.charAt(0).toUpperCase() + f.slice(1)}</button>
+        `).join('')}
+      </div>
+      <div class="clip-feed">
+        ${filtered.map((clip, i) => this.renderClipCard(clip, i)).join('')}
+      </div>`;
+  },
+
+  renderClipCard(clip, i) {
+    const liked = this.state.likedClips.has(clip.id);
+    const thumbStyle = clip.thumbnailUrl
+      ? `background:url('${clip.thumbnailUrl}') center/cover no-repeat, var(--bg-surface)`
+      : this.thumbGradient(clip.thumbSeed);
+
+    return `
+      <div class="clip-card fade-up stagger-${Math.min(i + 1, 5)}" data-clip-id="${clip.id}">
+        <div class="clip-thumb" style="background:${thumbStyle}" data-action="open-clip" data-id="${clip.id}">
+          <div class="clip-play-btn">${this.icon('play', 32)}</div>
+          <span class="clip-duration">${clip.duration}</span>
+          ${clip.isAutoClip ? `<span class="clip-autoclip-badge">${this.icon('zap', 12)} AUTO-CLIP</span>` : ''}
+          <span class="clip-views">${this.icon('eye', 12)} ${clip.views.toLocaleString()}</span>
+        </div>
+        <div class="clip-body">
+          <div class="clip-header">
+            <div style="flex:1;min-width:0">
+              <div class="clip-user-row">
+                <div class="clip-avatar">${clip.user.avatar}</div>
+                <span class="clip-username">${clip.user.username}</span>
+                <span class="clip-time">${clip.timeAgo}</span>
+              </div>
+              <div class="clip-title">${clip.title}</div>
+              <span class="clip-game-tag">${clip.game}</span>
+            </div>
+            ${this.aiBadge(clip.aiScore)}
+          </div>
+          <div class="clip-actions">
+            <button class="clip-action-btn ${liked ? 'liked' : ''}" data-action="like" data-id="${clip.id}">
+              ${liked ? this.icon('heartFilled') : this.icon('heart')} ${clip.likes + (liked ? 1 : 0)}
+            </button>
+            <button class="clip-action-btn" data-action="open-clip" data-id="${clip.id}">
+              ${this.icon('comment')} ${clip.comments}
+            </button>
+            <button class="clip-action-btn">
+              ${this.icon('share')} ${clip.shares}
+            </button>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  // ===== CLIP MODAL =====
+  renderClipModal(clip) {
+    const liked = this.state.likedClips.has(clip.id);
+    const comments = [...(this.state.comments[clip.id] || []), ...this.COMMENTS];
+    const thumbStyle = clip.thumbnailUrl
+      ? `background:url('${clip.thumbnailUrl}') center/cover no-repeat, var(--bg-surface)`
+      : this.thumbGradient(clip.thumbSeed);
+
+    return `
+      <div class="modal-overlay" data-action="close-modal-bg">
+        <div class="modal-content" onclick="event.stopPropagation()">
+          <div style="position:relative">
+            <div class="clip-thumb" style="background:${thumbStyle};aspect-ratio:16/9">
+              ${clip.videoUrl ? `<video src="${clip.videoUrl}" controls autoplay playsinline style="width:100%;height:100%;object-fit:cover"></video>` : `<div class="clip-play-btn">${this.icon('play', 32)}</div>`}
+            </div>
+            <button class="modal-close" data-action="close-modal">${this.icon('close')}</button>
+          </div>
+
+          <div style="padding:16px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+              <div style="flex:1">
+                <div class="clip-title" style="font-size:18px">${clip.title}</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+                  <div class="clip-avatar">${clip.user.avatar}</div>
+                  <span class="clip-username">${clip.user.username}</span>
+                  <span class="clip-time">${clip.timeAgo}</span>
+                </div>
+              </div>
+              ${this.aiBadge(clip.aiScore)}
+            </div>
+
+            <div class="clip-actions" style="margin-top:16px;padding-top:14px">
+              <button class="clip-action-btn ${liked ? 'liked' : ''}" data-action="like" data-id="${clip.id}">
+                ${liked ? this.icon('heartFilled') : this.icon('heart')} ${clip.likes + (liked ? 1 : 0)}
+              </button>
+              <button class="clip-action-btn">
+                ${this.icon('comment')} ${clip.comments + (this.state.comments[clip.id]?.length || 0)}
+              </button>
+              <button class="clip-action-btn">
+                ${this.icon('share')} ${clip.shares}
+              </button>
+            </div>
+          </div>
+
+          <div class="comment-section">
+            <div style="font-size:15px;font-weight:700;margin-bottom:10px">Comments</div>
+            ${comments.map(c => `
+              <div class="comment-item">
+                <div class="comment-avatar">${c.user.avatar}</div>
+                <div>
+                  <div class="comment-name">${c.user.name}</div>
+                  <div class="comment-text">${c.text}</div>
+                  <div class="comment-time">${c.time}</div>
+                </div>
+              </div>
+            `).join('')}
+            <div class="comment-input-row">
+              <input class="comment-input" id="commentInput" placeholder="Add a comment..." value="${this.state.newComment}">
+              <button class="comment-send" data-action="send-comment">Post</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  // ===== DISCOVER =====
+  renderDiscover() {
+    return `
+      <div class="page-title">Discover</div>
+      <div class="search-bar">
+        ${this.icon('search')}
+        <input placeholder="Search clips, games, players..." id="discoverSearch" value="${this.state.searchQuery}">
+      </div>
+      <div class="discover-section-title">🔥 TRENDING GAMES</div>
+      <div class="game-tags">
+        ${this.GAMES.map(g => `<button class="game-tag">${g}</button>`).join('')}
+      </div>
+      <div class="discover-section-title">⚡ TOP CLIPPERS TODAY</div>
+      ${this.MOCK_USERS.slice(0, 5).map((u, i) => `
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank">#${i + 1}</span>
+          <div class="leaderboard-avatar">${u.avatar}</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">${u.username}</div>
+            <div style="font-size:11px;color:var(--text-dim)">${u.clips} clips · ${u.followers.toLocaleString()} followers</div>
+          </div>
+          ${this.aiBadge(Math.floor(Math.random() * 15) + 85)}
+        </div>
+      `).join('')}
+    `;
+  },
+
+  // ===== UPLOAD =====
+  renderUpload() {
+    const { uploadMode, syncProgress, aiSettings } = this.state;
+    const aiLabels = [
+      "Detect multi-kills & squad wipes",
+      "Detect clutch rounds (1vX)",
+      "Detect high-action moments (audio spikes)",
+      "Detect trick shots & long-range kills",
+      "Auto-post clips scoring 85+",
+    ];
+
+    return `
+      <div class="page-title">Upload & Auto-Clip</div>
+      <div class="mode-toggle">
+        <button class="mode-btn ${uploadMode === 'auto' ? 'active' : ''}" data-mode="auto">🤖 Auto-Clip</button>
+        <button class="mode-btn ${uploadMode === 'manual' ? 'active' : ''}" data-mode="manual">📤 Manual</button>
+      </div>
+
+      ${uploadMode === 'auto' ? `
+        <div class="sync-card">
+          <div class="sync-header">
+            <div class="sync-icon">🎮</div>
+            <div>
+              <div class="sync-title">Xbox Game DVR Sync</div>
+              <div class="sync-desc">${this.state.demoMode ? 'Demo mode — connect Xbox for real clips' : 'Auto-import captures from your Xbox account'}</div>
+            </div>
+          </div>
+          ${syncProgress >= 0 ? `
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:${Math.min(syncProgress, 100)}%"></div>
+            </div>
+            <div style="font-size:12px;color:var(--text-dim)">
+              ${syncProgress >= 100 ? '✅ Synced 8 new clips! AI is analyzing highlights...' : `Syncing clips from Xbox Live... ${Math.min(Math.floor(syncProgress), 99)}%`}
+            </div>
+          ` : `
+            <button class="btn-sync" data-action="sync">Sync Now</button>
+          `}
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-title">⚡ AI Auto-Clip Settings</div>
+          ${aiLabels.map((label, i) => `
+            <div class="setting-row">
+              <span class="setting-label">${label}</span>
+              <button class="toggle ${aiSettings[i] ? 'on' : 'off'}" data-action="toggle-ai" data-idx="${i}">
+                <div class="toggle-knob"></div>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      ` : `
+        <div class="upload-drop">
+          <div style="font-size:48px;margin-bottom:12px">📤</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:4px">Upload a clip manually</div>
+          <div style="font-size:13px;color:var(--text-dim);margin-bottom:20px">Drag & drop or choose from your Xbox captures</div>
+          <button class="btn-accent" style="width:auto;padding:10px 28px;display:inline-block">Choose File</button>
+        </div>
+      `}
+    `;
+  },
+
+  // ===== FRIENDS =====
+  renderFriends() {
+    const { friendsTab, friendSearch, following } = this.state;
+    const users = this.MOCK_USERS.filter(u =>
+      u.id !== (this.state.user?.id ?? 0) &&
+      u.username.toLowerCase().includes(friendSearch.toLowerCase())
+    );
+
+    const displayUsers = friendsTab === 'friends'
+      ? users.filter(u => following.has(u.id))
+      : users;
+
+    return `
+      <div class="page-title">Friends</div>
+      <div class="search-bar">
+        ${this.icon('search')}
+        <input placeholder="Search gamertags..." id="friendSearchInput" value="${friendSearch}">
+      </div>
+      <div class="filter-tabs" style="padding-top:0">
+        ${['friends', 'discover', 'requests'].map(t => `
+          <button class="filter-tab ${friendsTab === t ? 'active' : ''}" data-ftab="${t}">
+            ${t === 'friends' ? 'Following' : t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        `).join('')}
+      </div>
+      ${displayUsers.length === 0 ? `
+        <div class="empty-state">
+          <div class="empty-icon">👥</div>
+          <div class="empty-title">${friendsTab === 'friends' ? 'Not following anyone yet' : 'No results'}</div>
+          <div class="empty-desc">Discover players and follow them to see their clips</div>
+        </div>
+      ` : displayUsers.map(u => {
+        const isFollowing = following.has(u.id);
+        return `
+          <div class="user-card fade-up">
+            <div class="user-avatar ${isFollowing ? 'following' : ''}">${u.avatar}</div>
+            <div class="user-info">
+              <div class="user-name-row">
+                <span class="user-name">${u.username}</span>
+                <span class="platform-badge ${u.platform}">${u.platform.toUpperCase()}</span>
+              </div>
+              <div class="user-tag">${u.gamertag}</div>
+              <div class="user-stats">${u.clips} clips · ${u.followers.toLocaleString()} followers</div>
+            </div>
+            <button class="btn-follow ${isFollowing ? 'following' : 'not-following'}" data-action="follow" data-id="${u.id}">
+              ${isFollowing ? this.icon('check', 14) + ' Following' : 'Follow'}
+            </button>
+          </div>`;
+      }).join('')}
+    `;
+  },
+
+  // ===== PROFILE =====
+  renderProfile() {
+    const { user, profileTab, clips } = this.state;
+    const userClips = clips.filter(c => c.user.id === user.id);
+    const avatarContent = user.avatarUrl
+      ? `<img src="${user.avatarUrl}" style="width:84px;height:84px;border-radius:50%;border:3px solid var(--accent-dim);box-shadow:0 0 40px var(--accent-glow)">`
+      : `<div class="profile-avatar">${user.avatar}</div>`;
+
+    return `
+      <div class="profile-header">
+        ${avatarContent}
+        <div class="profile-name">${user.username}</div>
+        <div class="profile-tag">
+          <span class="platform-badge xbox">XBOX</span>
+          ${user.gamertag}
+          ${user.gamerscore ? `<span style="color:var(--accent);font-weight:700">🏆 ${user.gamerscore} G</span>` : ''}
+        </div>
+        <div class="profile-stats">
+          <div style="text-align:center"><div class="profile-stat-value">${user.clips}</div><div class="profile-stat-label">Clips</div></div>
+          <div style="text-align:center"><div class="profile-stat-value">${user.followers.toLocaleString()}</div><div class="profile-stat-label">Followers</div></div>
+          <div style="text-align:center"><div class="profile-stat-value">${user.following}</div><div class="profile-stat-label">Following</div></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:16px">
+          <button style="padding:8px 24px;border-radius:10px;background:var(--bg-surface);color:var(--text);border:1px solid #ffffff11;font-size:13px;font-weight:700">
+            ${this.icon('settings', 14)} Edit Profile
+          </button>
+          <button style="padding:8px 16px;border-radius:10px;background:var(--bg-surface);color:var(--red);border:1px solid #ffffff11;font-size:13px;font-weight:700" data-action="logout">
+            ${this.icon('logout', 14)} Logout
+          </button>
+        </div>
+      </div>
+
+      <div class="profile-tabs">
+        ${['clips', 'highlights', 'stats'].map(t => `
+          <button class="profile-tab ${profileTab === t ? 'active' : ''}" data-ptab="${t}">${t.toUpperCase()}</button>
+        `).join('')}
+      </div>
+
+      ${profileTab === 'clips' ? `
+        ${userClips.length > 0 ? userClips.map(clip => `
+          <div class="clip-list-item" data-action="open-clip" data-id="${clip.id}">
+            <div class="clip-list-thumb" style="background:${clip.thumbnailUrl ? `url('${clip.thumbnailUrl}') center/cover` : this.thumbGradient(clip.thumbSeed)}">
+              <span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:white;background:#000a;border-radius:4px;padding:1px 5px">${clip.duration}</span>
+            </div>
+            <div class="clip-list-info">
+              <div class="clip-list-title">${clip.title}</div>
+              <div class="clip-list-meta">${clip.game} · ${clip.views.toLocaleString()} views · ${clip.timeAgo}</div>
+              <div style="margin-top:6px">${this.aiBadge(clip.aiScore)}</div>
+            </div>
+          </div>
+        `).join('') : `
+          <div class="empty-state">
+            <div class="empty-icon">🎮</div>
+            <div class="empty-title">No clips yet</div>
+            <div class="empty-desc">Sync your Xbox captures or upload clips manually</div>
+          </div>
+        `}
+      ` : profileTab === 'highlights' ? `
+        <div class="empty-state">
+          <div class="empty-icon">🤖</div>
+          <div class="empty-title" style="color:var(--text)">AI Highlights Reel</div>
+          <div class="empty-desc">Glitch AI is analyzing your gameplay to create your best-of montage</div>
+          <div style="margin:20px auto 0;max-width:260px">
+            <div class="progress-bar"><div class="progress-fill" style="width:67%"></div></div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:6px">Processing 12 of 18 clips...</div>
+          </div>
+        </div>
+      ` : `
+        <div class="stats-grid">
+          ${[
+            { icon: '👁️', value: '24.3K', label: 'Total Views' },
+            { icon: '❤️', value: '1,892', label: 'Total Likes' },
+            { icon: '⚡', value: '82.4', label: 'Avg AI Score' },
+            { icon: '🏆', value: '96 pts', label: 'Best Clip' },
+            { icon: '🎮', value: 'Apex', label: 'Top Game' },
+            { icon: '🔥', value: '7 days', label: 'Clip Streak' },
+          ].map(s => `
+            <div class="stat-card">
+              <div class="stat-icon">${s.icon}</div>
+              <div class="stat-value">${s.value}</div>
+              <div class="stat-label">${s.label}</div>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    `;
+  },
+
+  // ===== EVENT BINDING =====
+  bindEvents() {
+    // Navigation
+    document.querySelectorAll('[data-nav]').forEach(btn => {
+      btn.onclick = () => { this.state.page = btn.dataset.nav; this.render(); };
+    });
+
+    // Login
+    document.querySelector('[data-action="login-xbox"]')?.addEventListener('click', () => this.startXboxOAuth());
+    document.querySelector('[data-action="login-psn"]')?.addEventListener('click', () => {
+      alert('PlayStation Network integration coming soon! Try Xbox or Demo mode.');
+    });
+    document.querySelector('[data-action="login-demo"]')?.addEventListener('click', () => this.loginDemo());
+
+    // Config
+    document.querySelector('[data-action="save-config"]')?.addEventListener('click', () => {
+      const id = document.getElementById('clientIdInput')?.value?.trim();
+      if (id) {
+        this.XBOX_CLIENT_ID = id;
+        this.saveLocal('glitch_client_id', id);
+        this.startXboxOAuth();
+      }
+    });
+
+    // Feed filters
+    document.querySelectorAll('[data-filter]').forEach(btn => {
+      btn.onclick = () => { this.state.feedFilter = btn.dataset.filter; this.render(); };
+    });
+
+    // Likes
+    document.querySelectorAll('[data-action="like"]').forEach(btn => {
+      btn.onclick = (e) => { e.stopPropagation(); this.toggleLike(parseInt(btn.dataset.id)); };
+    });
+
+    // Open clip
+    document.querySelectorAll('[data-action="open-clip"]').forEach(el => {
+      el.onclick = () => {
+        const clip = this.state.clips.find(c => c.id === parseInt(el.dataset.id));
+        if (clip) this.openClip(clip);
+      };
+    });
+
+    // Close modal
+    document.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => this.closeClip());
+    document.querySelector('[data-action="close-modal-bg"]')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) this.closeClip();
+    });
+
+    // Comments
+    document.querySelector('[data-action="send-comment"]')?.addEventListener('click', () => this.addComment());
+    document.getElementById('commentInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.addComment();
+    });
+    document.getElementById('commentInput')?.addEventListener('input', (e) => {
+      this.state.newComment = e.target.value;
+    });
+
+    // Follow
+    document.querySelectorAll('[data-action="follow"]').forEach(btn => {
+      btn.onclick = () => this.toggleFollow(parseInt(btn.dataset.id));
+    });
+
+    // Friends tabs
+    document.querySelectorAll('[data-ftab]').forEach(btn => {
+      btn.onclick = () => { this.state.friendsTab = btn.dataset.ftab; this.render(); };
+    });
+
+    // Friends search
+    document.getElementById('friendSearchInput')?.addEventListener('input', (e) => {
+      this.state.friendSearch = e.target.value;
+      this.render();
+      // Re-focus
+      setTimeout(() => {
+        const el = document.getElementById('friendSearchInput');
+        if (el) { el.focus(); el.selectionStart = el.selectionEnd = el.value.length; }
+      }, 0);
+    });
+
+    // Profile tabs
+    document.querySelectorAll('[data-ptab]').forEach(btn => {
+      btn.onclick = () => { this.state.profileTab = btn.dataset.ptab; this.render(); };
+    });
+
+    // Upload mode
+    document.querySelectorAll('[data-mode]').forEach(btn => {
+      btn.onclick = () => { this.state.uploadMode = btn.dataset.mode; this.render(); };
+    });
+
+    // Sync
+    document.querySelector('[data-action="sync"]')?.addEventListener('click', () => {
+      if (!this.state.demoMode && this.state.xboxProfile) {
+        this.fetchXboxClips(this.state.xboxProfile.userHash, this.state.xboxProfile.xstsToken);
+      }
+      this.startSync();
+    });
+
+    // AI toggles
+    document.querySelectorAll('[data-action="toggle-ai"]').forEach(btn => {
+      btn.onclick = () => this.toggleAISetting(parseInt(btn.dataset.idx));
+    });
+
+    // Logout
+    document.querySelector('[data-action="logout"]')?.addEventListener('click', () => this.logout());
+
+    // Discover search
+    document.getElementById('discoverSearch')?.addEventListener('input', (e) => {
+      this.state.searchQuery = e.target.value;
+    });
+  },
+};
+
+// Boot
+document.addEventListener('DOMContentLoaded', () => APP.init());
+</script>
+</body>
+</html>
