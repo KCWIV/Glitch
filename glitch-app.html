@@ -116,26 +116,29 @@ function updateLink() {
   var link = document.getElementById('xboxLink');
   if (id && id.length > 10) {
     localStorage.setItem('glitch_cid', id);
-    
-    // Generate PKCE verifier and store it
-    var verifier = generateCodeVerifier();
-    sessionStorage.setItem('glitch_pkce_verifier', verifier);
-    
-    // Generate challenge asynchronously, then set link
-    sha256(verifier).then(function(hashed) {
-      var challenge = base64urlencode(hashed);
-      var url = 'https://login.live.com/oauth20_authorize.srf'
-        + '?client_id=' + encodeURIComponent(id)
-        + '&response_type=code'
-        + '&redirect_uri=' + encodeURIComponent(REDIRECT_URI)
-        + '&scope=' + encodeURIComponent('Xboxlive.signin Xboxlive.offline_access')
-        + '&code_challenge=' + encodeURIComponent(challenge)
-        + '&code_challenge_method=S256';
-      link.href = url;
-      link.className = 'btn btn-xbox';
-    });
+    link.className = 'btn btn-xbox';
+    // We'll build the URL on click, not here
+    link.href = '#';
+    link.onclick = function(e) {
+      e.preventDefault();
+      // Generate fresh PKCE verifier at click time
+      var verifier = generateCodeVerifier();
+      localStorage.setItem('glitch_pkce_verifier', verifier);
+      sha256(verifier).then(function(hashed) {
+        var challenge = base64urlencode(hashed);
+        var url = 'https://login.live.com/oauth20_authorize.srf'
+          + '?client_id=' + encodeURIComponent(id)
+          + '&response_type=code'
+          + '&redirect_uri=' + encodeURIComponent(REDIRECT_URI)
+          + '&scope=' + encodeURIComponent('Xboxlive.signin Xboxlive.offline_access')
+          + '&code_challenge=' + encodeURIComponent(challenge)
+          + '&code_challenge_method=S256';
+        window.location.href = url;
+      });
+    };
   } else {
     link.href = '#';
+    link.onclick = null;
     link.className = 'btn btn-xbox disabled';
   }
 }
@@ -189,7 +192,7 @@ if (authCode) {
 function exchangeCodeForToken(code, clientId) {
   log('Exchanging code for token...');
   
-  var verifier = sessionStorage.getItem('glitch_pkce_verifier');
+  var verifier = localStorage.getItem('glitch_pkce_verifier');
   if (!verifier) {
     setStatus('Error: PKCE verifier not found. Please try signing in again.', 'error');
     return;
