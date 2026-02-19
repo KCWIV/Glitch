@@ -1410,7 +1410,12 @@ const APP = {
       scope: this.XBOX_SCOPES,
     });
 
-    window.location.href = `https://login.live.com/oauth20_authorize.srf?${params.toString()}`;
+    const url = `https://login.live.com/oauth20_authorize.srf?${params.toString()}`;
+    
+    // Use timeout to ensure redirect fires after any render cycle
+    setTimeout(() => {
+      window.location.replace(url);
+    }, 100);
   },
 
   handleOAuthCallback() {
@@ -2214,7 +2219,13 @@ const APP = {
     });
 
     // Login
-    document.querySelector('[data-action="login-xbox"]')?.addEventListener('click', () => this.startXboxOAuth());
+    document.querySelector('[data-action="login-xbox"]')?.addEventListener('click', () => {
+      const btn = document.querySelector('[data-action="login-xbox"]');
+      if (this.XBOX_CLIENT_ID) {
+        if (btn) { btn.innerHTML = 'Redirecting to Xbox...'; btn.style.opacity = '0.6'; }
+      }
+      this.startXboxOAuth();
+    });
     document.querySelector('[data-action="login-psn"]')?.addEventListener('click', () => {
       alert('PlayStation Network integration coming soon! Try Xbox or Demo mode.');
     });
@@ -2226,6 +2237,9 @@ const APP = {
       if (id) {
         this.XBOX_CLIENT_ID = id;
         this.saveLocal('glitch_client_id', id);
+        // Show loading state on the button
+        const btn = document.querySelector('[data-action="save-config"]');
+        if (btn) { btn.textContent = 'Redirecting to Xbox...'; btn.style.opacity = '0.6'; }
         this.startXboxOAuth();
       }
     });
