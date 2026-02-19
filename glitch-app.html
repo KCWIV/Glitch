@@ -88,18 +88,52 @@ if (savedId) {
   document.getElementById('clientId').value = savedId;
 }
 
+// PKCE helpers
+function generateCodeVerifier() {
+  var array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode.apply(null, array))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function sha256(plain) {
+  var encoder = new TextEncoder();
+  var data = encoder.encode(plain);
+  return crypto.subtle.digest('SHA-256', data);
+}
+
+function base64urlencode(buf) {
+  var str = '';
+  var bytes = new Uint8Array(buf);
+  for (var i = 0; i < bytes.byteLength; i++) {
+    str += String.fromCharCode(bytes[i]);
+  }
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
 function updateLink() {
   var id = document.getElementById('clientId').value.trim();
   var link = document.getElementById('xboxLink');
   if (id && id.length > 10) {
     localStorage.setItem('glitch_cid', id);
-    var url = 'https://login.live.com/oauth20_authorize.srf'
-      + '?client_id=' + encodeURIComponent(id)
-      + '&response_type=code'
-      + '&redirect_uri=' + encodeURIComponent(REDIRECT_URI)
-      + '&scope=' + encodeURIComponent('Xboxlive.signin Xboxlive.offline_access');
-    link.href = url;
-    link.className = 'btn btn-xbox';
+    
+    // Generate PKCE verifier and store it
+    var verifier = generateCodeVerifier();
+    sessionStorage.setItem('glitch_pkce_verifier', verifier);
+    
+    // Generate challenge asynchronously, then set link
+    sha256(verifier).then(function(hashed) {
+      var challenge = base64urlencode(hashed);
+      var url = 'https://login.live.com/oauth20_authorize.srf'
+        + '?client_id=' + encodeURIComponent(id)
+        + '&response_type=code'
+        + '&redirect_uri=' + encodeURIComponent(REDIRECT_URI)
+        + '&scope=' + encodeURIComponent('Xboxlive.signin Xboxlive.offline_access')
+        + '&code_challenge=' + encodeURIComponent(challenge)
+        + '&code_challenge_method=S256';
+      link.href = url;
+      link.className = 'btn btn-xbox';
+    });
   } else {
     link.href = '#';
     link.className = 'btn btn-xbox disabled';
@@ -155,12 +189,19 @@ if (authCode) {
 function exchangeCodeForToken(code, clientId) {
   log('Exchanging code for token...');
   
+  var verifier = sessionStorage.getItem('glitch_pkce_verifier');
+  if (!verifier) {
+    setStatus('Error: PKCE verifier not found. Please try signing in again.', 'error');
+    return;
+  }
+  
   var body = new URLSearchParams({
     client_id: clientId,
     code: code,
     redirect_uri: REDIRECT_URI,
     grant_type: 'authorization_code',
-    scope: 'Xboxlive.signin Xboxlive.offline_access'
+    scope: 'Xboxlive.signin Xboxlive.offline_access',
+    code_verifier: verifier
   });
 
   fetch('https://login.live.com/oauth20_token.srf', {
