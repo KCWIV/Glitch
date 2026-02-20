@@ -207,9 +207,9 @@ input,button,textarea{font-family:inherit}button{cursor:pointer;border:none;back
 /* Mute toggle in modal */
 .mute-btn{position:absolute;bottom:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#000a;color:#fff;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background .2s}
 .mute-btn:active{background:#fff3}
-/* Volume toggle on snap feed */
-.snap-vol{display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 3px #0008}
-.snap-vol svg{filter:drop-shadow(0 1px 3px #0008)}
+/* Volume toggle on snap feed — fixed position for all feed items */
+.snap-vol-fixed{position:fixed;bottom:calc(76px + var(--sb));left:16px;width:44px;height:44px;border-radius:50%;background:#000a;color:#fff;display:flex;align-items:center;justify-content:center;z-index:102;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background .2s;border:1.5px solid #fff3}
+.snap-vol-fixed:active{background:#fff3;transform:scale(.92)}
 </style>
 </head>
 <body>
@@ -497,7 +497,7 @@ rF:function(){var s=this,f=this.st.filter,cl=this.st.clips,isDemo=this.st.user&&
   if(this.st.clipsLoading)return this.rTB()+'<div class="pg"><div class="tabs">'+tabs.map(function(t){return'<button class="tab'+(f===t?' on':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div>'+this.rSkel()+'</div>'+this.rBN();
   if(cl.length===0)return this.rTB()+'<div class="pg"><div class="tabs">'+tabs.map(function(t){return'<button class="tab'+(f===t?' on':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="em"><div class="emi">\u{1F3AE}</div><div class="emt">No clips yet</div><div class="emd">Your Xbox clips will appear here after syncing</div></div></div>'+this.rBN();
   var ptrEl='<div class="ptr'+(this._refreshing?' show':'')+'" id="ptrEl"><div class="ptr-inner">'+(this._refreshing?'<div class="ptr-spin"></div><span class="ptr-txt">Refreshing...</span>':'<span class="ptr-txt">\u2193 Pull to refresh</span>')+'</div></div>';
-  return ptrEl+'<div class="feed" id="snapFeed">'+cl.map(function(c,i){return s.rSnapCard(c,i)}).join('')+'</div><div class="feed-tabs" style="position:fixed;top:calc(var(--st));left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101;padding:10px 14px;display:flex;gap:6px">'+tabs.map(function(t){return'<button class="tab" style="background:#0008;border-color:#fff3;color:#fffc;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);'+(f===t?'background:var(--a);border-color:var(--a);color:var(--bg)':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="feed-bnav" style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101">'+this.rBN2()+'</div>'+(this.st.selClip?this.rMo(this.st.selClip):'')},
+  return ptrEl+'<div class="feed" id="snapFeed">'+cl.map(function(c,i){return s.rSnapCard(c,i)}).join('')+'</div><div class="feed-tabs" style="position:fixed;top:calc(var(--st));left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101;padding:10px 14px;display:flex;gap:6px">'+tabs.map(function(t){return'<button class="tab" style="background:#0008;border-color:#fff3;color:#fffc;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);'+(f===t?'background:var(--a);border-color:var(--a);color:var(--bg)':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="feed-bnav" style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101">'+this.rBN2()+'</div>'+'<button class="snap-vol-fixed" id="snapVolBtn" title="Toggle sound"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></button>'+(this.st.selClip?this.rMo(this.st.selClip):'')},
 
 rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=u.avUrl?'<img src="'+u.avUrl+'">':u.av;
   var vidEl=c.vidUrl?'<video class="snap-vid" data-idx="'+i+'" src="'+c.vidUrl+'" poster="'+(c.thUrl||'')+'" playsinline muted loop preload="'+(i<2?'auto':'none')+'" style="width:100%;height:100%;object-fit:cover"></video>':'';
@@ -513,7 +513,6 @@ rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=
   +'<button class="snap-act" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+'<span>'+(c.lk+(lk?1:0))+'</span></button>'
   +'<button class="snap-act" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+'<span>'+(c.cm+(s.st.comments[c.id]||[]).length)+'</span></button>'
   +'<button class="snap-act" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+'<span>Share</span></button>'
-  +(c.vidUrl?'<button class="snap-vol" data-a="svol" data-idx="'+i+'"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg><span>Sound</span></button>':'')
   +'</div>'
   +'</div>'
   // Tap to pause/play indicator
@@ -666,22 +665,20 @@ bindAll:function(){
     };
   });
 
-  // Volume/mute toggle on snap feed
-  if(!s._snapMuted)s._snapMuted=true;
-  document.querySelectorAll('[data-a="svol"]').forEach(function(b){
-    b.onclick=function(e){
+  // Volume/mute toggle — fixed button on feed
+  if(s._snapMuted===undefined)s._snapMuted=true;
+  var snapVolBtn=document.getElementById('snapVolBtn');
+  if(snapVolBtn){
+    var mutedIc='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+    var unmutedIc='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+    snapVolBtn.innerHTML=s._snapMuted?mutedIc:unmutedIc;
+    snapVolBtn.onclick=function(e){
       e.stopPropagation();
       s._snapMuted=!s._snapMuted;
-      var mutedIc='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
-      var unmutedIc='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
-      // Update all volume buttons in feed
-      document.querySelectorAll('[data-a="svol"]').forEach(function(vb){
-        vb.innerHTML=(s._snapMuted?mutedIc:unmutedIc)+'<span>'+(s._snapMuted?'Sound':'Mute')+'</span>';
-      });
-      // Mute/unmute all snap videos
+      snapVolBtn.innerHTML=s._snapMuted?mutedIc:unmutedIc;
       document.querySelectorAll('.snap-vid').forEach(function(v){v.muted=s._snapMuted});
     };
-  });
+  }
 
   // Gamertag search
   var dsInput=document.getElementById('dsInput'),dsBtn=document.getElementById('dsBtn');
