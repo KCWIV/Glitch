@@ -256,6 +256,7 @@ sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
 ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
 svLikes:function(){this.sv('glitch_likes',Array.from(this.st.liked))},
 svFollows:function(){this.sv('glitch_follows',Array.from(this.st.following))},
+svClips:function(){try{this.sv('glitch_clips',this.st.clips.slice(0,30))}catch(e){}},
 restoreSocial:function(){var l=this.ld('glitch_likes'),f=this.ld('glitch_follows');if(l)this.st.liked=new Set(l);if(f)this.st.following=new Set(f)},
 tg:function(s){var h=this.HUES[s%10];return'linear-gradient(135deg,hsl('+h[0]+',70%,20%),hsl('+h[1]+',80%,15%))'},
 aib:function(s){return'<span class="ai '+(s>=90?'s3':s>=75?'s2':'s1')+'">'+this.ic('zap',14)+' '+s+' \u00b7 '+(s>=90?'INSANE':s>=75?'FIRE':'NICE')+'</span>'},
@@ -321,7 +322,7 @@ handleAuth:function(token){
     self.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+res.a.uh+';'+res.a.xt,'x-xbl-contract-version':'1'}}).then(function(r){
       if(r.ok&&r.data&&r.data.gameClips){
         var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:self.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
-        self.st.clips=rc;self.st.user.cl=rc.length;self.st.clipsLoading=false;console.log('Loaded',rc.length,'real clips');self.render();
+        self.st.clips=rc;self.st.user.cl=rc.length;self.st.clipsLoading=false;self.svClips();self.sv('glitch_sess',{user:self.st.user});console.log('Loaded',rc.length,'real clips');self.render();
       } else { self.st.clipsLoading=false;self.render(); }
     }).catch(function(e){console.log('Clips optional:',e);self.st.clipsLoading=false;self.render()});
   })
@@ -362,7 +363,7 @@ scoreClip:function(c){
 demoFB:function(){this.st.user={id:0,un:'DemoPlayer',gt:'Demo Mode',av:'\u{1F3AE}',frs:1243,fg:89,cl:47};this.st.screen='main';this.sv('glitch_sess',{user:this.st.user,demo:1});this.genClips();this.render()},
 setSt:function(m,t){var el=document.getElementById('ls');if(el){if(this.st.screen==='loading'){el.textContent=m}else{el.className='ls on '+t;el.textContent=m}}},
 loginDemo:function(){this.demoFB()},
-logout:function(){localStorage.removeItem('glitch_sess');localStorage.removeItem('glitch_xauth');this.st.screen='login';this.st.user=null;this.render()},
+logout:function(){localStorage.removeItem('glitch_sess');localStorage.removeItem('glitch_xauth');localStorage.removeItem('glitch_clips');this.st.screen='login';this.st.user=null;this.st.clips=[];this.render()},
 toggleLike:function(id){var s=this.st.liked;s.has(id)?s.delete(id):s.add(id);this.svLikes();this.render()},
 toggleFollow:function(id){var s=this.st.following;s.has(id)?s.delete(id):s.add(id);this.svFollows();this.render()},
 toggleAI:function(i){this.st.aiSet[i]=this.st.aiSet[i]?0:1;this.render()},
@@ -387,7 +388,7 @@ refreshFeed:function(){
         self.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r){
           if(r.ok&&r.data&&r.data.gameClips){
             var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:self.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
-            self.st.clips=rc;self.st.user.cl=rc.length;
+            self.st.clips=rc;self.st.user.cl=rc.length;self.svClips();
           }
           self._refreshing=false;self.render();self.toast('Feed refreshed','ok',1500);
         }).catch(function(){self._refreshing=false;self.render()});
@@ -708,8 +709,44 @@ document.addEventListener('DOMContentLoaded',function(){
   G.restoreSocial();
   // Check saved session
   var sess=G.ld('glitch_sess');
-  if(sess&&sess.user){G.st.user=sess.user;G.st.screen='main';G.genClips();G.render()}
-  else{G.render()}
+  if(sess&&sess.user){
+    G.st.user=sess.user;G.st.screen='main';
+    var isDemo=sess.user.un==='DemoPlayer';
+    if(isDemo){
+      G.genClips();G.render();
+    } else {
+      // Real Xbox user: restore cached clips immediately, then refresh from API
+      var cached=G.ld('glitch_clips');
+      if(cached&&cached.length>0){
+        // Reattach user ref (JSON parse loses it)
+        cached.forEach(function(c){if(!c.user||!c.user.un)c.user=sess.user});
+        G.st.clips=cached;G.st.user.cl=cached.length;G.render();
+        // Background refresh from Xbox API
+        var auth=G.ld('glitch_xauth');
+        if(auth){
+          G.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r){
+            if(r.ok&&r.data&&r.data.gameClips){
+              var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:G.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:G.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:G.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
+              G.st.clips=rc;G.st.user.cl=rc.length;G.svClips();G.sv('glitch_sess',{user:G.st.user});G.render();
+            }
+          }).catch(function(e){console.log('Background refresh skipped:',e.message)});
+        }
+      } else {
+        // No cache — show loading and fetch
+        var auth=G.ld('glitch_xauth');
+        if(auth){
+          G.st.clipsLoading=true;G.render();
+          G.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r){
+            if(r.ok&&r.data&&r.data.gameClips){
+              var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:G.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:G.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:G.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
+              G.st.clips=rc;G.st.user.cl=rc.length;G.svClips();G.sv('glitch_sess',{user:G.st.user});
+            }
+            G.st.clipsLoading=false;G.render();
+          }).catch(function(e){console.log('Clip fetch failed:',e.message);G.st.clipsLoading=false;G.render()});
+        } else { G.render(); }
+      }
+    }
+  } else{G.render()}
 });
 </script>
 </body>
