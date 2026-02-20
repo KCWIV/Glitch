@@ -3,750 +3,357 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Glitch">
 <meta name="theme-color" content="#0c0a12">
-<title>Glitch — AI Game Clips</title>
+<title>Glitch</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
-:root {
-  --accent: #ff6b2b;
-  --accent2: #a855f7;
-  --bg: #0c0a12;
-  --card: #13111d;
-  --surface: #1c1928;
-  --hover: #252233;
-  --text: #eae8f0;
-  --dim: #7b6f94;
-  --red: #ff4757;
-  --st: env(safe-area-inset-top,0px);
-  --sb: env(safe-area-inset-bottom,0px);
-}
+:root{--a:#ff6b2b;--a2:#a855f7;--bg:#0c0a12;--c:#13111d;--sf:#1c1928;--t:#eae8f0;--d:#7b6f94;--r:#ff4757;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-input,button,textarea{font-family:inherit}
-button{cursor:pointer;border:none;background:none}
-::-webkit-scrollbar{width:0;height:0}
-.app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;position:relative}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--t);min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+input,button,textarea{font-family:inherit}button{cursor:pointer;border:none;background:none}::-webkit-scrollbar{width:0;height:0}
+.app{max-width:480px;margin:0 auto;min-height:100dvh;position:relative}
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes pop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
-.fu{animation:fadeUp .4s ease both}.fi{animation:fadeIn .3s ease both}
+.fu{animation:fu .4s ease both}.fi{animation:fi .3s ease both}
 .d1{animation-delay:.05s;opacity:0}.d2{animation-delay:.1s;opacity:0}.d3{animation-delay:.15s;opacity:0}.d4{animation-delay:.2s;opacity:0}.d5{animation-delay:.25s;opacity:0}
 
-/* LOGIN */
-.login{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,#a855f70a 0%,transparent 50%),var(--bg);position:relative;overflow:hidden}
-.login::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:repeating-conic-gradient(#ffffff02 0deg 1deg,transparent 1deg 6deg);animation:rot 120s linear infinite}
-@keyframes rot{to{transform:rotate(360deg)}}
-.logo{font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;background:linear-gradient(135deg,#ff6b2b,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative;z-index:1}
-.login-sub{font-size:13px;color:var(--dim);letter-spacing:4px;text-transform:uppercase;font-weight:600;margin-bottom:40px;position:relative;z-index:1}
-.login-card{width:100%;max-width:380px;background:var(--card);border-radius:20px;border:1px solid #ffffff0a;padding:28px 24px;position:relative;z-index:1;backdrop-filter:blur(24px)}
-.login-card h2{font-size:20px;font-weight:700;text-align:center;margin-bottom:6px}
-.login-card p{font-size:13px;color:var(--dim);text-align:center;margin-bottom:24px;line-height:1.4}
-.login-input{width:100%;padding:13px 14px;background:var(--surface);border:1px solid #ffffff11;border-radius:12px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px;font-family:monospace}
-.login-input:focus{border-color:var(--accent)}
-.login-input::placeholder{color:var(--dim);font-family:'Rajdhani',sans-serif}
-.lbtn{display:block;width:100%;padding:15px 20px;border-radius:14px;font-size:15px;font-weight:700;letter-spacing:.5px;text-align:center;text-decoration:none;transition:all .3s;position:relative;overflow:hidden}
-.lbtn:active{transform:scale(.97)}
-.lbtn-xbox{background:linear-gradient(135deg,#ff6b2b18,#a855f718);border:1px solid #ff6b2b44;color:var(--text);display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px}
-.lbtn-xbox.disabled{opacity:.3;pointer-events:none}
-.lbtn-xbox .ico{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#ff6b2b33,#ff6b2b11);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.lbtn-xbox .tag{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;opacity:.5;margin-left:auto}
-.lbtn-demo{background:#ffffff06;border:1px solid #ffffff10;color:var(--dim);font-size:13px;font-weight:600;margin-top:0}
-.login-div{display:flex;align-items:center;gap:14px;margin:14px 0;color:var(--dim);font-size:11px;font-weight:600;letter-spacing:1px}
-.login-div::before,.login-div::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,#ffffff15,transparent)}
-.login-feat{display:flex;gap:28px;justify-content:center;margin-top:36px;position:relative;z-index:1}
-.login-feat-item{display:flex;flex-direction:column;align-items:center;gap:6px}
-.login-feat-icon{width:44px;height:44px;border-radius:14px;background:#ff6b2b22;display:flex;align-items:center;justify-content:center;font-size:20px}
-.login-feat-label{font-size:10px;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.login{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,#a855f70a 0%,transparent 50%),var(--bg)}
+.logo{font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;background:linear-gradient(135deg,#ff6b2b,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-sub{font-size:13px;color:var(--d);letter-spacing:4px;text-transform:uppercase;font-weight:600;margin-bottom:40px}
+.lcard{width:100%;max-width:380px;background:var(--c);border-radius:20px;border:1px solid #ffffff0a;padding:28px 24px}
+.lcard h2{font-size:20px;font-weight:700;text-align:center;margin-bottom:6px}
+.lcard p{font-size:13px;color:var(--d);text-align:center;margin-bottom:20px;line-height:1.4}
+.linp{width:100%;padding:12px 14px;background:var(--sf);border:1px solid #ffffff11;border-radius:12px;color:var(--t);font-size:13px;outline:none;margin-bottom:10px}
+.linp:focus{border-color:var(--a)}.linp::placeholder{color:var(--d)}
+.lbl{font-size:11px;color:var(--d);font-weight:600;margin-bottom:4px;display:block}
+.lb{display:block;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;text-align:center;text-decoration:none;transition:all .3s}
+.lb:active{transform:scale(.97)}
+.lb-x{background:linear-gradient(135deg,#ff6b2b18,#a855f718);border:1px solid #ff6b2b44;color:var(--t);display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px}
+.lb-x.off{opacity:.3;pointer-events:none}
+.lb-d{background:#ffffff06;border:1px solid #ffffff10;color:var(--d);font-size:13px}
+.ldiv{display:flex;align-items:center;gap:14px;margin:12px 0;color:var(--d);font-size:11px;font-weight:600;letter-spacing:1px}
+.ldiv::before,.ldiv::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,#ffffff15,transparent)}
+.lfeat{display:flex;gap:28px;justify-content:center;margin-top:36px}
+.lfi{display:flex;flex-direction:column;align-items:center;gap:6px}
+.lfi-i{width:44px;height:44px;border-radius:14px;background:#ff6b2b22;display:flex;align-items:center;justify-content:center;font-size:20px}
+.lfi-l{font-size:10px;color:var(--d);font-weight:700;text-transform:uppercase}
+.ls{margin-top:12px;padding:10px;border-radius:10px;font-size:12px;text-align:center;display:none;line-height:1.4}
+.ls.on{display:block}.ls.info{background:#ff6b2b15;border:1px solid #ff6b2b33;color:var(--a)}.ls.err{background:#ff475715;border:1px solid #ff475533;color:#ff6b6b}.ls.ok{background:#a855f715;border:1px solid #a855f733;color:var(--a2)}
 
-/* TOP BAR */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;padding-top:calc(10px + var(--st));position:sticky;top:0;background:#0c0a12ee;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:100;border-bottom:1px solid #ffffff06}
-.topbar-logo{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#ff6b2b,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.topbar-r{display:flex;align-items:center;gap:14px}
-.notif{position:relative;color:var(--dim)}
-.notif-dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff}
-.av-sm{width:30px;height:30px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:15px;border:1.5px solid #ff6b2b33}
+.tb{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;padding-top:calc(10px + var(--st));position:sticky;top:0;background:#0c0a12ee;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:100;border-bottom:1px solid #ffffff06}
+.tb-l{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#ff6b2b,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tb-r{display:flex;align-items:center;gap:14px}
+.ntf{position:relative;color:var(--d)}.ntf-d{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--r);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff}
+.avsm{width:30px;height:30px;border-radius:50%;background:var(--sf);display:flex;align-items:center;justify-content:center;font-size:15px;border:1.5px solid #ff6b2b33;overflow:hidden}
+.avsm img{width:100%;height:100%;object-fit:cover}
 
-/* BOTTOM NAV */
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;align-items:flex-start;justify-content:space-around;padding:6px 0;padding-bottom:calc(8px + var(--sb));background:#0c0a12f8;border-top:1px solid #ffffff06;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);z-index:100}
-.nv{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 14px;color:var(--dim);transition:color .2s}
-.nv.on{color:var(--accent)}
-.nv-lb{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.nv-up{width:46px;height:46px;border-radius:15px;background:var(--surface);border:1px solid #ffffff11;display:flex;align-items:center;justify-content:center;margin-top:-12px;color:var(--dim);transition:all .2s}
-.nv-up.on{background:var(--accent);color:var(--bg);border:none;box-shadow:0 4px 24px #ff6b2b33}
+.bn{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;align-items:flex-start;justify-content:space-around;padding:6px 0;padding-bottom:calc(8px + var(--sb));background:#0c0a12f8;border-top:1px solid #ffffff06;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);z-index:100}
+.ni{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 14px;color:var(--d)}.ni.on{color:var(--a)}
+.ni-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.ni-u{width:46px;height:46px;border-radius:15px;background:var(--sf);border:1px solid #ffffff11;display:flex;align-items:center;justify-content:center;margin-top:-12px;color:var(--d)}.ni-u.on{background:var(--a);color:var(--bg);border:none;box-shadow:0 4px 24px #ff6b2b33}
 
-/* PAGE */
-.page{padding-bottom:calc(76px + var(--sb))}
-.ptitle{font-size:22px;font-weight:800;padding:16px 16px 12px}
-
-/* FILTER TABS */
+.pg{padding-bottom:calc(76px + var(--sb))}
+.pt{font-size:22px;font-weight:800;padding:16px 16px 12px}
 .tabs{display:flex;gap:6px;padding:14px 16px 8px;overflow-x:auto;scrollbar-width:none}
-.tab{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;transition:all .2s;border:1px solid #ffffff0a;background:var(--surface);color:var(--dim)}
-.tab.on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.tab{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;border:1px solid #ffffff0a;background:var(--sf);color:var(--d)}.tab.on{background:var(--a);color:var(--bg);border-color:var(--a)}
 
-/* CLIP CARDS */
 .feed{display:flex;flex-direction:column;gap:14px;padding:10px 14px}
-.clip{background:var(--card);border-radius:18px;overflow:hidden;border:1px solid #ffffff08;transition:all .3s}
-.clip:active{transform:scale(.985)}
-.clip-th{position:relative;width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.clip-play{position:absolute;width:56px;height:56px;border-radius:50%;background:#00000077;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding-left:3px;opacity:.8}
-.clip-dur{position:absolute;bottom:8px;right:8px;background:#000000bb;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;color:#fff}
-.clip-auto{position:absolute;top:8px;left:8px;background:#a855f722;border:1px solid #a855f744;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--accent2);display:flex;align-items:center;gap:4px;backdrop-filter:blur(6px)}
-.clip-views{position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:4px;font-size:11px;color:#ffffffcc;background:#00000066;border-radius:6px;padding:2px 8px}
-.clip-body{padding:12px 14px 14px}
-.clip-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.clip-ur{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.clip-av{width:28px;height:28px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid #ffffff11;flex-shrink:0}
-.clip-un{font-size:13px;font-weight:700}
-.clip-tm{font-size:11px;color:var(--dim)}
-.clip-tt{font-size:15px;font-weight:700;margin-bottom:5px;line-height:1.2}
-.clip-gm{font-size:11px;color:var(--dim);font-weight:600;background:var(--surface);border-radius:6px;padding:2px 8px;display:inline-block}
-.ai{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px 3px 6px;font-size:11px;font-weight:700;letter-spacing:.5px;white-space:nowrap;flex-shrink:0;animation:pop .4s ease both}
-.ai.s3{background:#ff475722;border:1px solid #ff475755;color:var(--red)}.ai.s2{background:#a855f722;border:1px solid #a855f755;color:var(--accent2)}.ai.s1{background:#ff6b2b22;border:1px solid #ff6b2b55;color:var(--accent)}
-.clip-acts{display:flex;align-items:center;gap:18px;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff08}
-.clip-act{display:flex;align-items:center;gap:5px;color:var(--dim);font-size:13px;font-weight:600;padding:0;transition:color .2s}
-.clip-act.liked{color:var(--red)}
+.clip{background:var(--c);border-radius:18px;overflow:hidden;border:1px solid #ffffff08}.clip:active{transform:scale(.985)}
+.cth{position:relative;width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;background-size:cover;background-position:center}
+.cpl{position:absolute;width:56px;height:56px;border-radius:50%;background:#00000077;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding-left:3px;opacity:.8}
+.cdur{position:absolute;bottom:8px;right:8px;background:#000b;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;color:#fff}
+.cac{position:absolute;top:8px;left:8px;background:#a855f722;border:1px solid #a855f744;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--a2);display:flex;align-items:center;gap:4px;backdrop-filter:blur(6px)}
+.cvw{position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:4px;font-size:11px;color:#fffc;background:#0006;border-radius:6px;padding:2px 8px}
+.cbd{padding:12px 14px 14px}
+.chd{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.cur{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.cav{width:28px;height:28px;border-radius:50%;background:var(--sf);display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid #ffffff11;flex-shrink:0;overflow:hidden}
+.cav img{width:100%;height:100%;object-fit:cover}
+.cun{font-size:13px;font-weight:700}.ctm{font-size:11px;color:var(--d)}.ctt{font-size:15px;font-weight:700;margin-bottom:5px;line-height:1.2}
+.cgm{font-size:11px;color:var(--d);font-weight:600;background:var(--sf);border-radius:6px;padding:2px 8px;display:inline-block}
+.ai{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px 3px 6px;font-size:11px;font-weight:700;letter-spacing:.5px;white-space:nowrap;flex-shrink:0}
+.ai.s3{background:#ff475722;border:1px solid #ff475755;color:var(--r)}.ai.s2{background:#a855f722;border:1px solid #a855f755;color:var(--a2)}.ai.s1{background:#ff6b2b22;border:1px solid #ff6b2b55;color:var(--a)}
+.cas{display:flex;align-items:center;gap:18px;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff08}
+.ca{display:flex;align-items:center;gap:5px;color:var(--d);font-size:13px;font-weight:600;padding:0}.ca.lk{color:var(--r)}
 
-/* SEARCH BAR */
-.sbar{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:14px;padding:11px 14px;margin:0 16px 14px;border:1px solid #ffffff08}
-.sbar input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px}
-.sbar input::placeholder{color:var(--dim)}
+.sb{display:flex;align-items:center;gap:10px;background:var(--sf);border-radius:14px;padding:11px 14px;margin:0 16px 14px;border:1px solid #ffffff08}
+.sb input{flex:1;background:none;border:none;outline:none;color:var(--t);font-size:14px}.sb input::placeholder{color:var(--d)}
+.uc{display:flex;align-items:center;gap:12px;background:var(--c);border-radius:14px;padding:12px 14px;margin:0 16px 8px;border:1px solid #ffffff08}
+.uav{width:46px;height:46px;border-radius:50%;background:var(--sf);display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid #ffffff11;flex-shrink:0}.uav.fl{border-color:#a855f733}
+.ui{flex:1;min-width:0}.unr{display:flex;align-items:center;gap:6px}
+.un{font-size:15px;font-weight:700}.xb{font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;letter-spacing:.5px;color:#107c10;background:#107c1022}
+.ut{font-size:12px;color:var(--d)}.us{font-size:11px;color:var(--d);margin-top:2px}
+.fb{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;flex-shrink:0}.fb.fl{background:transparent;border:1px solid #a855f733;color:var(--a2)}.fb.nf{background:var(--a);color:var(--bg)}
 
-/* USER CARD */
-.ucard{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:12px 14px;margin:0 16px 8px;border:1px solid #ffffff08}
-.uav{width:46px;height:46px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid #ffffff11;flex-shrink:0}
-.uav.fol{border-color:#a855f733}
-.uinfo{flex:1;min-width:0}
-.unr{display:flex;align-items:center;gap:6px}
-.uname{font-size:15px;font-weight:700}
-.pbadge{font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;letter-spacing:.5px}
-.pbadge.xb{color:#107c10;background:#107c1022}.pbadge.ps{color:#003087;background:#00308722}
-.utag{font-size:12px;color:var(--dim)}.ustats{font-size:11px;color:var(--dim);margin-top:2px}
-.fbtn{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;transition:all .2s;flex-shrink:0}
-.fbtn.fol{background:transparent;border:1px solid #a855f733;color:var(--accent2)}
-.fbtn.nf{background:var(--accent);color:var(--bg)}
+.ph{background:linear-gradient(180deg,#a855f711 0%,transparent 100%);padding:28px 16px 16px;text-align:center}
+.pav{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;background:var(--sf);display:flex;align-items:center;justify-content:center;font-size:42px;border:3px solid #ff6b2b33;box-shadow:0 0 40px #ff6b2b22;overflow:hidden}
+.pav img{width:100%;height:100%;object-fit:cover}
+.pnm{font-size:26px;font-weight:800}
+.ptg{font-size:13px;color:var(--d);display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}
+.pss{display:flex;justify-content:center;gap:36px;margin-top:20px}
+.pv{font-size:22px;font-weight:800}.pl{font-size:11px;color:var(--d);font-weight:600}
+.ptabs{display:flex;border-bottom:1px solid #ffffff0a;padding:0 16px}
+.ptb{flex:1;padding:12px 0;text-align:center;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--d);border-bottom:2px solid transparent}.ptb.on{color:var(--t);border-bottom-color:var(--a)}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px}
+.sc{background:var(--c);border-radius:14px;padding:16px 14px;border:1px solid #ffffff08}
+.sci{font-size:22px;margin-bottom:6px}.scv{font-size:20px;font-weight:800}.scl{font-size:11px;color:var(--d);font-weight:600}
 
-/* PROFILE */
-.prof-hdr{background:linear-gradient(180deg,#a855f711 0%,transparent 100%);padding:28px 16px 16px;text-align:center}
-.prof-av{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:42px;border:3px solid #ff6b2b33;box-shadow:0 0 40px #ff6b2b22}
-.prof-name{font-size:26px;font-weight:800}
-.prof-tag{font-size:13px;color:var(--dim);display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}
-.prof-stats{display:flex;justify-content:center;gap:36px;margin-top:20px}
-.ps-val{font-size:22px;font-weight:800}.ps-lbl{font-size:11px;color:var(--dim);font-weight:600}
-.prof-tabs{display:flex;border-bottom:1px solid #ffffff0a;padding:0 16px}
-.ptab{flex:1;padding:12px 0;text-align:center;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);border-bottom:2px solid transparent;transition:all .2s}
-.ptab.on{color:var(--text);border-bottom-color:var(--accent)}
-.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px}
-.scard{background:var(--card);border-radius:14px;padding:16px 14px;border:1px solid #ffffff08}
-.scard-i{font-size:22px;margin-bottom:6px}.scard-v{font-size:20px;font-weight:800}.scard-l{font-size:11px;color:var(--dim);font-weight:600}
+.mt{display:flex;background:var(--sf);border-radius:14px;padding:4px;margin:0 16px 20px}
+.mb{flex:1;padding:10px 0;border-radius:11px;font-size:14px;font-weight:700;color:var(--d)}.mb.on{background:var(--a);color:var(--bg)}
+.syc{background:var(--c);border-radius:18px;padding:22px;margin:0 16px 14px;border:1px solid #ff6b2b33}
+.syh{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.syi{width:44px;height:44px;border-radius:12px;background:#a855f722;display:flex;align-items:center;justify-content:center;font-size:20px}
+.syt{font-size:16px;font-weight:700}.syd{font-size:12px;color:var(--d)}
+.bsy{width:100%;padding:12px;border-radius:12px;background:var(--a);color:var(--bg);font-size:14px;font-weight:700}
+.bsy:active{transform:scale(.97)}
+.pbr{height:8px;border-radius:4px;background:var(--sf);overflow:hidden;margin-bottom:8px}
+.pfl{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--a),var(--a2))}
+.aic{background:var(--c);border-radius:18px;padding:20px;margin:0 16px;border:1px solid #ffffff08}
+.ait{font-size:16px;font-weight:700;margin-bottom:14px}
+.air{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #ffffff06}.air:last-child{border-bottom:none}
+.ail{font-size:13px;font-weight:500;flex:1}
+.tg{width:44px;height:24px;border-radius:12px;position:relative;flex-shrink:0}.tg.on{background:var(--a)}.tg.off{background:var(--sf);border:1px solid #ffffff11}
+.tgk{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;box-shadow:0 1px 3px rgba(0,0,0,.3)}.tg.on .tgk{left:23px}.tg.off .tgk{left:3px}
 
-/* UPLOAD */
-.mtog{display:flex;background:var(--surface);border-radius:14px;padding:4px;margin:0 16px 20px}
-.mbtn{flex:1;padding:10px 0;border-radius:11px;font-size:14px;font-weight:700;transition:all .2s;color:var(--dim)}
-.mbtn.on{background:var(--accent);color:var(--bg)}
-.sync-card{background:var(--card);border-radius:18px;padding:22px;margin:0 16px 14px;border:1px solid #ff6b2b33}
-.sync-hdr{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.sync-ico{width:44px;height:44px;border-radius:12px;background:#a855f722;display:flex;align-items:center;justify-content:center;font-size:20px}
-.sync-tt{font-size:16px;font-weight:700}.sync-ds{font-size:12px;color:var(--dim)}
-.btn-sync{width:100%;padding:12px;border-radius:12px;background:var(--accent);color:var(--bg);font-size:14px;font-weight:700;transition:all .2s}
-.btn-sync:active{transform:scale(.97)}
-.pbar{height:8px;border-radius:4px;background:var(--surface);overflow:hidden;margin-bottom:8px}
-.pfill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s}
-.ai-card{background:var(--card);border-radius:18px;padding:20px;margin:0 16px;border:1px solid #ffffff08}
-.ai-tt{font-size:16px;font-weight:700;margin-bottom:14px}
-.ai-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #ffffff06}
-.ai-row:last-child{border-bottom:none}
-.ai-lbl{font-size:13px;font-weight:500;flex:1;padding-right:12px}
-.tog{width:44px;height:24px;border-radius:12px;position:relative;transition:background .2s;flex-shrink:0}
-.tog.on{background:var(--accent)}.tog.off{background:var(--surface);border:1px solid #ffffff11}
-.tog-k{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
-.tog.on .tog-k{left:23px}.tog.off .tog-k{left:3px}
+.mo{position:fixed;inset:0;background:#000d;z-index:200;display:flex;flex-direction:column;animation:fi .2s ease}
+.mc{flex:1;max-width:480px;width:100%;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;animation:su .3s ease;overflow-y:auto}
+.mx{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#000a;color:#fff;display:flex;align-items:center;justify-content:center;z-index:10}
+.cs{padding:16px}.cr{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid #ffffff08}
+.ci2{flex:1;padding:10px 14px;background:var(--sf);border:1px solid #ffffff08;border-radius:20px;color:var(--t);font-size:13px;outline:none}.ci2:focus{border-color:#ff6b2b33}
+.csb{padding:10px 18px;background:var(--a);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700}
+.cmi{display:flex;gap:10px;padding:10px 0}
+.cmav{width:32px;height:32px;border-radius:50%;background:var(--sf);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.cmn{font-size:13px;font-weight:700}.cmt2{font-size:13px;color:var(--d);line-height:1.4;margin-top:2px}.cmtm{font-size:10px;color:var(--d);margin-top:3px}
 
-/* MODAL */
-.modal-bg{position:fixed;inset:0;background:#000000dd;z-index:200;display:flex;flex-direction:column;animation:fadeIn .2s ease}
-.modal-c{flex:1;max-width:480px;width:100%;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;animation:slideUp .3s ease;overflow-y:auto}
-.modal-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#000000aa;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:10;backdrop-filter:blur(6px)}
-.cmt-sec{padding:16px}
-.cmt-row{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid #ffffff08}
-.cmt-inp{flex:1;padding:10px 14px;background:var(--surface);border:1px solid #ffffff08;border-radius:20px;color:var(--text);font-size:13px;outline:none}
-.cmt-inp:focus{border-color:#ff6b2b33}
-.cmt-send{padding:10px 18px;background:var(--accent);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700}
-.cmt-item{display:flex;gap:10px;padding:10px 0}
-.cmt-av{width:32px;height:32px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.cmt-name{font-size:13px;font-weight:700}.cmt-text{font-size:13px;color:var(--dim);line-height:1.4;margin-top:2px}.cmt-time{font-size:10px;color:var(--dim);margin-top:3px}
-
-.empty{text-align:center;padding:40px 24px;color:var(--dim)}
-.empty-i{font-size:44px;margin-bottom:12px}.empty-t{font-size:16px;font-weight:700;color:var(--text)}.empty-d{font-size:13px;margin-top:4px;line-height:1.4}
-
-/* Clip list */
-.cl-item{display:flex;gap:12px;background:var(--card);border-radius:12px;overflow:hidden;margin:0 16px 8px;border:1px solid #ffffff08}
-.cl-th{width:130px;min-height:74px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative}
-.cl-info{padding:10px 12px 10px 0;flex:1;min-width:0}
-.cl-tt{font-size:14px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cl-meta{font-size:11px;color:var(--dim)}
-
-/* Game tags */
-.gtags{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px}
-.gtag{background:var(--card);border-radius:10px;padding:8px 14px;border:1px solid #ffffff08;font-size:13px;font-weight:600;color:var(--text)}
-.gtag:active{background:var(--hover)}
-.lb-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #ffffff05}
-.lb-rank{font-size:16px;font-weight:800;color:var(--accent2);width:26px;text-align:center}
-.lb-av{width:38px;height:38px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:18px}
-.sec-tt{font-size:13px;font-weight:700;color:var(--dim);letter-spacing:1px;padding:0 16px;margin-bottom:10px;margin-top:20px}
+.em{text-align:center;padding:40px 24px;color:var(--d)}
+.emi{font-size:44px;margin-bottom:12px}.emt{font-size:16px;font-weight:700;color:var(--t)}.emd{font-size:13px;margin-top:4px}
+.gt{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px}
+.gti{background:var(--c);border-radius:10px;padding:8px 14px;border:1px solid #ffffff08;font-size:13px;font-weight:600}
+.lr{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #ffffff05}
+.lrk{font-size:16px;font-weight:800;color:var(--a2);width:26px;text-align:center}
+.lra{width:38px;height:38px;border-radius:50%;background:var(--sf);display:flex;align-items:center;justify-content:center;font-size:18px}
+.stt{font-size:13px;font-weight:700;color:var(--d);letter-spacing:1px;padding:0 16px;margin-bottom:10px;margin-top:20px}
+.cli{display:flex;gap:12px;background:var(--c);border-radius:12px;overflow:hidden;margin:0 16px 8px;border:1px solid #ffffff08}
+.clt{width:130px;min-height:74px;flex-shrink:0;position:relative;background-size:cover;background-position:center}
+.clif{padding:10px 12px 10px 0;flex:1;min-width:0}
+.cltt{font-size:14px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clm{font-size:11px;color:var(--d)}
 </style>
 </head>
 <body>
 <div id="app" class="app"></div>
 <script>
-// ===========================================================
-// GLITCH — Full App
-// ===========================================================
-var G = {
-  // PKCE
-  genVerifier: function() {
-    var a = new Uint8Array(32); crypto.getRandomValues(a);
-    return btoa(String.fromCharCode.apply(null,a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-  },
-  sha256: function(s) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); },
-  b64url: function(buf) { var s='',b=new Uint8Array(buf); for(var i=0;i<b.byteLength;i++) s+=String.fromCharCode(b[i]); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''); },
+var G={
+REDIR:location.origin+location.pathname,
+rv:function(){var a=new Uint8Array(32);crypto.getRandomValues(a);return btoa(String.fromCharCode.apply(null,a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')},
+s256:function(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))},
+b64u:function(b){var s='',a=new Uint8Array(b);for(var i=0;i<a.byteLength;i++)s+=String.fromCharCode(a[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')},
 
-  REDIR: window.location.origin + window.location.pathname,
-  SCOPES: 'Xboxlive.signin Xboxlive.offline_access',
+ic:function(n,z){z=z||20;var m={
+home:'<svg width="'+z+'" height="'+z+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+search:'<svg width="'+z+'" height="'+z+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+upload:'<svg width="'+z+'" height="'+z+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+friends:'<svg width="'+z+'" height="'+z+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+profile:'<svg width="'+z+'" height="'+z+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+heart:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+heartF:'<svg width="18" height="18" viewBox="0 0 24 24" fill="#ff4757" stroke="#ff4757" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+cmt:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+share:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+play:'<svg width="32" height="32" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+zap:'<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--a)" stroke="var(--a)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+bell:'<svg width="'+z+'" height="'+z+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+x:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+eye:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+chk:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>',
+out:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+};return m[n]||''},
 
-  s: {
-    screen:'login', page:'feed', user:null, demoMode:false,
-    clips:[], liked:new Set(), following:new Set([2,3,5]),
-    comments:{}, feedFilter:'trending', uploadMode:'auto',
-    profileTab:'clips', friendsTab:'friends', friendSearch:'',
-    syncProgress:-1, selectedClip:null, newComment:'',
-    aiSettings:[true,true,true,false,false],
-  },
+USERS:[{id:1,un:"xNightHawk",gt:"xNightHawk#2847",av:"\u{1F985}",frs:1243,fg:89,cl:47},{id:2,un:"FragMaster99",gt:"FragMaster99",av:"\u{1F480}",frs:892,fg:134,cl:31},{id:3,un:"SilentScope",gt:"SilentScope_X",av:"\u{1F3AF}",frs:2301,fg:201,cl:63},{id:4,un:"VelocityKing",gt:"VelocityKing",av:"\u{26A1}",frs:567,fg:78,cl:22},{id:5,un:"LunarWraith",gt:"LunarWraith#1001",av:"\u{1F319}",frs:3102,fg:156,cl:89},{id:6,un:"BlazeRunner",gt:"BlazeRunner_TV",av:"\u{1F525}",frs:445,fg:62,cl:18}],
+GAMES:["Call of Duty: MW3","Fortnite","Apex Legends","Halo Infinite","Rocket League","FIFA 25","GTA Online","Destiny 2","Overwatch 2","Diablo IV"],
+TYPES:["Squad Wipe","Clutch Round","Insane Snipe","Ace","Trickshot","Collateral","1v4 Clutch","No-Scope","Team Play","Buzzer Beater"],
+DCMTS:[{u:{av:"\u{1F480}",n:"FragMaster99"},t:"Absolutely filthy \u{1F525}",tm:"2m"},{u:{av:"\u{1F3AF}",n:"SilentScope"},t:"How do you hit those lol",tm:"8m"},{u:{av:"\u{26A1}",n:"VelocityKing"},t:"Bro I was in this lobby",tm:"14m"}],
+HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,160],[220,280],[40,100]],
 
-  USERS: [
-    {id:1,username:"xNightHawk",gamertag:"xNightHawk#2847",avatar:"\u{1F985}",platform:"xbox",followers:1243,following:89,clips:47},
-    {id:2,username:"FragMaster99",gamertag:"FragMaster99",avatar:"\u{1F480}",platform:"xbox",followers:892,following:134,clips:31},
-    {id:3,username:"SilentScope",gamertag:"SilentScope_X",avatar:"\u{1F3AF}",platform:"xbox",followers:2301,following:201,clips:63},
-    {id:4,username:"VelocityKing",gamertag:"VelocityKing",avatar:"\u{26A1}",platform:"xbox",followers:567,following:78,clips:22},
-    {id:5,username:"LunarWraith",gamertag:"LunarWraith#1001",avatar:"\u{1F319}",platform:"xbox",followers:3102,following:156,clips:89},
-    {id:6,username:"BlazeRunner",gamertag:"BlazeRunner_TV",avatar:"\u{1F525}",platform:"xbox",followers:445,following:62,clips:18},
-  ],
-  GAMES:["Call of Duty: MW3","Fortnite","Apex Legends","Halo Infinite","Rocket League","FIFA 25","GTA Online","Destiny 2","Overwatch 2","Diablo IV"],
-  TYPES:["Squad Wipe","Clutch Round","Insane Snipe","Ace","Trickshot","Collateral","1v4 Clutch","No-Scope","Team Play","Buzzer Beater"],
-  CMTS:[
-    {user:{avatar:"\u{1F480}",name:"FragMaster99"},text:"That was absolutely filthy \u{1F525}",time:"2m ago"},
-    {user:{avatar:"\u{1F3AF}",name:"SilentScope"},text:"How do you even hit those shots lol",time:"8m ago"},
-    {user:{avatar:"\u{26A1}",name:"VelocityKing"},text:"Bro I was in this lobby \u{1F480}",time:"14m ago"},
-  ],
-  HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,160],[220,280],[40,100]],
+st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'trending',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0]},
+sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
+tg:function(s){var h=this.HUES[s%10];return'linear-gradient(135deg,hsl('+h[0]+',70%,20%),hsl('+h[1]+',80%,15%))'},
+aib:function(s){return'<span class="ai '+(s>=90?'s3':s>=75?'s2':'s1')+'">'+this.ic('zap',14)+' '+s+' \u00b7 '+(s>=90?'INSANE':s>=75?'FIRE':'NICE')+'</span>'},
 
-  // Icons
-  ic: function(n,sz){
-    sz=sz||20;
-    var m={
-      home:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
-      search:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
-      upload:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
-      friends:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-      profile:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-      heart:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
-      heartF:'<svg width="18" height="18" viewBox="0 0 24 24" fill="#ff4757" stroke="#ff4757" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
-      comment:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-      share:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
-      play:'<svg width="32" height="32" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
-      zap:'<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-      bell:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
-      close:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-      eye:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-      check:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
-      logout:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
-      settings:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
-    };
-    return m[n]||'';
-  },
+genClips:function(){var c=[];for(var i=0;i<20;i++){var u=this.USERS[~~(Math.random()*6)],g=this.GAMES[~~(Math.random()*10)],t=this.TYPES[~~(Math.random()*10)],sc=~~(Math.random()*40)+60,m=~~(Math.random()*1440);c.push({id:i+1,user:u,game:g,type:t,title:t+' on '+g,ai:sc,lk:~~(Math.random()*500)+10,cm:~~(Math.random()*80),sh:~~(Math.random()*40),vw:~~(Math.random()*5000)+100,dur:'0:'+String(~~(Math.random()*45)+5).padStart(2,'0'),ago:m<60?m+'m':m<1440?~~(m/60)+'h':~~(m/1440)+'d',auto:Math.random()>.3,sd:i})}this.st.clips=c.sort(function(a,b){return b.ai-a.ai})},
+// === XBOX AUTH ===
+px:function(url,opts){
+  var proxy=localStorage.getItem('glitch_proxy');
+  return fetch(proxy+'/api/xbox',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,method:opts.method||'GET',headers:opts.headers||{},body:opts.body||undefined})}).then(function(r){return r.json()});
+},
 
-  tg: function(seed) { var h=this.HUES[seed%this.HUES.length]; return 'linear-gradient(135deg,hsl('+h[0]+',70%,20%) 0%,hsl('+h[1]+',80%,15%) 100%)'; },
-  aib: function(sc) { var c=sc>=90?'s3':sc>=75?'s2':'s1',l=sc>=90?'INSANE':sc>=75?'FIRE':'NICE'; return '<span class="ai '+c+'">'+this.ic('zap',14)+' '+sc+' \u00b7 '+l+'</span>'; },
+startLogin:function(){
+  var cid=localStorage.getItem('glitch_cid'),proxy=localStorage.getItem('glitch_proxy');
+  if(!cid||!proxy){alert('Enter both Client ID and Proxy URL');return}
+  var self=this,v=this.rv();
+  localStorage.setItem('glitch_pkce',v);
+  this.s256(v).then(function(h){
+    var ch=self.b64u(h);
+    location.href='https://login.live.com/oauth20_authorize.srf?client_id='+encodeURIComponent(cid)+'&response_type=code&redirect_uri='+encodeURIComponent(self.REDIR)+'&scope='+encodeURIComponent('Xboxlive.signin Xboxlive.offline_access')+'&code_challenge='+encodeURIComponent(ch)+'&code_challenge_method=S256';
+  });
+},
 
-  init: function() {
-    var sess = this.ld('glitch_sess');
-    if(sess) { this.s.screen='main'; this.s.user=sess.user; this.s.demoMode=sess.demo||false; }
-    this.genClips();
-    this.render();
-  },
+handleAuth:function(code){
+  var self=this,cid=localStorage.getItem('glitch_cid'),pkce=localStorage.getItem('glitch_pkce'),proxy=localStorage.getItem('glitch_proxy');
+  if(!cid||!pkce||!proxy){console.error('Missing auth data');self.demoFB();return}
+  self.setSt('Exchanging token...','info');
 
-  sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
-  ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
+  // Step 1: Code -> MS token (through PROXY because Microsoft requires Origin header for SPA)
+  self.px('https://login.live.com/oauth20_token.srf',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:cid,code:code,redirect_uri:self.REDIR,grant_type:'authorization_code',scope:'Xboxlive.signin Xboxlive.offline_access',code_verifier:pkce}).toString()})
+  .then(function(r){
+    if(!r.ok||!r.data.access_token)throw new Error('MS: '+(r.data.error_description||r.data.error||JSON.stringify(r.data)));
+    var msToken=r.data.access_token;
+    console.log('Step 1: Got MS token');self.setSt('Connecting to Xbox Live...','info');
 
-  doXboxLogin: function() {
-    var cid = localStorage.getItem('glitch_cid');
-    if(!cid) { this.s.screen='config'; this.render(); return; }
-    var self=this, v=this.genVerifier();
-    localStorage.setItem('glitch_pkce',v);
-    this.sha256(v).then(function(h){
-      var ch=self.b64url(h);
-      window.location.href='https://login.live.com/oauth20_authorize.srf'
-        +'?client_id='+encodeURIComponent(cid)
-        +'&response_type=code'
-        +'&redirect_uri='+encodeURIComponent(self.REDIR)
-        +'&scope='+encodeURIComponent(self.SCOPES)
-        +'&code_challenge='+encodeURIComponent(ch)
-        +'&code_challenge_method=S256';
+    // Step 2: MS token -> XBL token (PROXY - no CORS)
+    return self.px('https://user.auth.xboxlive.com/user/authenticate',{method:'POST',headers:{'Content-Type':'application/json'},body:{RelyingParty:'http://auth.xboxlive.com',TokenType:'JWT',Properties:{AuthMethod:'RPS',SiteName:'user.auth.xboxlive.com',RpsTicket:'d='+msToken}}});
+  })
+  .then(function(r){
+    if(!r.ok)throw new Error('XBL: '+JSON.stringify(r.data));
+    var tk=r.data.Token,uh=r.data.DisplayClaims.xui[0].uhs;
+    console.log('Step 2: Got XBL token');self.setSt('Authorizing...','info');
+
+    // Step 3: XBL -> XSTS token (PROXY)
+    return self.px('https://xsts.auth.xboxlive.com/xsts/authorize',{method:'POST',headers:{'Content-Type':'application/json'},body:{RelyingParty:'http://xboxlive.com',TokenType:'JWT',Properties:{SandboxId:'RETAIL',UserTokens:[tk]}}}).then(function(r2){
+      if(!r2.ok)throw new Error('XSTS: '+JSON.stringify(r2.data));
+      console.log('Step 3: Got XSTS token');return{uh:uh,xt:r2.data.Token};
     });
-  },
+  })
+  .then(function(auth){
+    self.setSt('Loading profile...','info');
 
-  PROXY: '', // Set after deploying Vercel proxy
+    // Step 4: Get profile (PROXY)
+    return self.px('https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag,GameDisplayPicRaw,Gamerscore',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt}}).then(function(r){
+      if(!r.ok)throw new Error('Profile: '+JSON.stringify(r.data));
+      console.log('Step 4: Got profile');return{p:r.data,a:auth};
+    });
+  })
+  .then(function(res){
+    var s={};res.p.profileUsers[0].settings.forEach(function(x){s[x.id]=x.value});
+    self.st.user={id:0,un:s.Gamertag||'Player',gt:s.Gamertag||'Player',av:'\u{1F3AE}',avUrl:s.GameDisplayPicRaw||null,frs:~~(Math.random()*500),fg:~~(Math.random()*100),cl:0,gs:s.Gamerscore||'0'};
+    self.st.screen='main';
+    self.sv('glitch_sess',{user:self.st.user});
+    self.sv('glitch_xauth',{uh:res.a.uh,xt:res.a.xt});
+    console.log('Logged in as',s.Gamertag);
+    self.genClips();self.render();
 
-  handleCallback: function() {
-    var p=new URLSearchParams(window.location.search), code=p.get('code'), err=p.get('error');
-    if(code) {
-      history.replaceState(null,'',window.location.pathname);
-      var cid=localStorage.getItem('glitch_cid');
-      var verifier=localStorage.getItem('glitch_pkce');
-      if(cid && verifier) {
-        this.exchangeAndAuth(code, cid, verifier);
-      } else {
-        this.loginDemo();
+    // Step 5: Get clips (PROXY, optional)
+    self.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+res.a.uh+';'+res.a.xt,'x-xbl-contract-version':'1'}}).then(function(r){
+      if(r.ok&&r.data&&r.data.gameClips){
+        var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:self.st.user,game:c.titleName||'Unknown',type:'Clip',title:c.clipName||c.titleName||'Gameplay',ai:Math.min(60+~~(Math.random()*35)+(c.durationInSeconds<30?10:0),99),lk:~~(Math.random()*50),cm:~~(Math.random()*10),sh:~~(Math.random()*5),vw:c.views||~~(Math.random()*200),dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:true,sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
+        self.st.clips=rc.concat(self.st.clips);self.st.user.cl=rc.length;console.log('Step 5:',rc.length,'clips');self.render();
       }
-      return true;
-    }
-    if(err) {
-      history.replaceState(null,'',window.location.pathname);
-      alert('Login error: '+(p.get('error_description')||err));
-      return true;
-    }
-    return false;
-  },
+    }).catch(function(){});
+  })
+  .catch(function(e){console.error('Auth failed:',e.message);self.setSt('Auth failed: '+e.message,'err');setTimeout(function(){self.demoFB()},3000)});
+},
 
-  proxyFetch: function(url, opts) {
-    var proxy = this.PROXY || localStorage.getItem('glitch_proxy');
-    if (!proxy) {
-      return fetch(url, opts); // Try direct if no proxy
-    }
-    return fetch(proxy + '/api/xbox', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: url,
-        method: opts.method || 'POST',
-        headers: opts.headers || {},
-        body: opts.body ? (typeof opts.body === 'string' ? JSON.parse(opts.body) : opts.body) : undefined,
-      })
-    }).then(function(res) { return res.json(); }).then(function(wrapper) {
-      if (wrapper.error) throw new Error(wrapper.error);
-      return { ok: wrapper.status >= 200 && wrapper.status < 300, status: wrapper.status, data: wrapper.data };
-    });
-  },
+fmA:function(d){var m=~~((Date.now()-d.getTime())/60000);return m<60?m+'m':m<1440?~~(m/60)+'h':~~(m/1440)+'d'},
+demoFB:function(){this.st.user={id:0,un:'DemoPlayer',gt:'Demo Mode',av:'\u{1F3AE}',frs:1243,fg:89,cl:47};this.st.screen='main';this.sv('glitch_sess',{user:this.st.user,demo:1});this.genClips();this.render()},
+setSt:function(m,t){var el=document.getElementById('ls');if(el){el.className='ls on '+t;el.textContent=m}},
+loginDemo:function(){this.demoFB()},
+logout:function(){localStorage.removeItem('glitch_sess');localStorage.removeItem('glitch_xauth');this.st.screen='login';this.st.user=null;this.render()},
+toggleLike:function(id){var s=this.st.liked;s.has(id)?s.delete(id):s.add(id);this.render()},
+toggleFollow:function(id){var s=this.st.following;s.has(id)?s.delete(id):s.add(id);this.render()},
+toggleAI:function(i){this.st.aiSet[i]=this.st.aiSet[i]?0:1;this.render()},
+startSync:function(){var self=this;this.st.syncProg=0;this.render();var iv=setInterval(function(){self.st.syncProg+=Math.random()*12+5;if(self.st.syncProg>=100){self.st.syncProg=100;clearInterval(iv)}self.render()},350)},
+addCmt:function(){if(!this.st.newCmt.trim())return;var id=this.st.selClip.id;if(!this.st.comments[id])this.st.comments[id]=[];this.st.comments[id].unshift({u:{av:this.st.user.av,n:this.st.user.un},t:this.st.newCmt.trim(),tm:'now'});this.st.newCmt='';this.render()},
+// === RENDER ===
+render:function(){document.getElementById('app').innerHTML=this.st.screen==='login'?this.rL():this.rM();this.bind()},
 
-  exchangeAndAuth: function(code, clientId, verifier) {
-    var self = this;
-    self.s.screen = 'main';
-    self.s.user = { id:0, username:'Connecting...', gamertag:'Authenticating with Xbox...', avatar:'\u{1F3AE}', platform:'xbox', followers:0, following:0, clips:0 };
-    self.s.demoMode = false;
-    self.genClips();
-    self.render();
+rL:function(){
+  var cid=localStorage.getItem('glitch_cid')||'',px=localStorage.getItem('glitch_proxy')||'',ok=cid.length>10&&px.length>8;
+  return'<div class="login"><div class="logo fu">GLITCH</div><div class="login-sub fu d1">AI-Powered Game Clips</div>'
+  +'<div class="lcard fu d2"><h2>Sign in to get started</h2><p>Connect your Xbox account to import and share your best clips</p>'
+  +'<label class="lbl">Azure Client ID</label><input class="linp" id="cid" placeholder="e.g. a1b2c3d4-e5f6-..." value="'+cid+'">'
+  +'<label class="lbl">Proxy URL</label><input class="linp" id="px" placeholder="e.g. https://glitch-proxy.vercel.app" value="'+px+'">'
+  +'<button id="xb" class="lb lb-x'+(ok?'':' off')+'" style="margin-top:6px">\u2715 Sign in with Xbox</button>'
+  +'<div class="ldiv">OR</div><button id="dm" class="lb lb-d">Explore Demo Mode \u2192</button>'
+  +'<div id="ls" class="ls"></div>'
+  +'</div><div class="lfeat fu d3"><div class="lfi"><div class="lfi-i">\u{1F916}</div><div class="lfi-l">Auto-Clip AI</div></div><div class="lfi"><div class="lfi-i">\u{1F465}</div><div class="lfi-l">Social Feed</div></div><div class="lfi"><div class="lfi-i">\u{1F3AE}</div><div class="lfi-l">Xbox Clips</div></div></div></div>';
+},
 
-    // Step 1: Exchange code for MS token
-    var tokenBody = new URLSearchParams({
-      client_id: clientId,
-      code: code,
-      redirect_uri: self.REDIR,
-      grant_type: 'authorization_code',
-      scope: 'Xboxlive.signin Xboxlive.offline_access',
-      code_verifier: verifier
-    });
+rM:function(){var p='';switch(this.st.page){case'feed':p=this.rF();break;case'discover':p=this.rD();break;case'upload':p=this.rU();break;case'friends':p=this.rFr();break;case'profile':p=this.rP();break}return this.rTB()+'<div class="pg">'+p+'</div>'+this.rBN()+(this.st.selClip?this.rMo(this.st.selClip):'')},
 
-    var proxy = self.PROXY || localStorage.getItem('glitch_proxy');
-    
-    fetch(proxy + '/api/xbox', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: 'https://login.live.com/oauth20_token.srf',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: tokenBody.toString(),
-      })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(w) {
-      if (w.error) throw new Error(w.error);
-      var msToken = w.data.access_token;
-      if (!msToken) throw new Error('No access_token: ' + JSON.stringify(w.data));
-      console.log('Got MS token');
+rTB:function(){var u=this.st.user,av=u.avUrl?'<img src="'+u.avUrl+'">':u.av;return'<div class="tb"><div class="tb-l">GLITCH</div><div class="tb-r"><button class="ntf">'+this.ic('bell')+'<span class="ntf-d">3</span></button><div class="avsm">'+av+'</div></div></div>'},
 
-      // Step 2: Xbox Live token
-      return self.proxyFetch('https://user.auth.xboxlive.com/user/authenticate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          RelyingParty: 'http://auth.xboxlive.com',
-          TokenType: 'JWT',
-          Properties: { AuthMethod: 'RPS', SiteName: 'user.auth.xboxlive.com', RpsTicket: 'd=' + msToken }
-        })
-      });
-    })
-    .then(function(r) {
-      if (!r.ok) throw new Error('XBL auth failed: ' + JSON.stringify(r.data));
-      var xblToken = r.data.Token;
-      var userHash = r.data.DisplayClaims.xui[0].uhs;
-      console.log('Got XBL token, hash:', userHash);
+rBN:function(){var s=this,p=this.st.page,ns=[['feed','home','Feed'],['discover','search','Discover'],['upload','upload','Upload'],['friends','friends','Friends'],['profile','profile','Profile']];return'<div class="bn">'+ns.map(function(n){if(n[0]==='upload')return'<button class="ni" data-nav="'+n[0]+'"><div class="ni-u'+(p===n[0]?' on':'')+'">'+s.ic(n[1])+'</div><span class="ni-l">'+n[2]+'</span></button>';return'<button class="ni'+(p===n[0]?' on':'')+'" data-nav="'+n[0]+'">'+s.ic(n[1])+'<span class="ni-l">'+n[2]+'</span></button>'}).join('')+'</div>'},
 
-      // Step 3: XSTS token
-      return self.proxyFetch('https://xsts.auth.xboxlive.com/xsts/authorize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          RelyingParty: 'http://xboxlive.com',
-          TokenType: 'JWT',
-          Properties: { SandboxId: 'RETAIL', UserTokens: [xblToken] }
-        })
-      }).then(function(r2) {
-        if (!r2.ok) throw new Error('XSTS failed: ' + JSON.stringify(r2.data));
-        return { userHash: userHash, xstsToken: r2.data.Token };
-      });
-    })
-    .then(function(auth) {
-      console.log('Got XSTS token');
+rF:function(){var s=this,f=this.st.filter,cl=this.st.clips;if(f==='auto-clips')cl=cl.filter(function(c){return c.auto});if(f==='top rated')cl=cl.slice().sort(function(a,b){return b.ai-a.ai});return'<div class="tabs">'+['trending','friends','auto-clips','top rated'].map(function(t){return'<button class="tab'+(f===t?' on':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="feed">'+cl.map(function(c,i){return s.rC(c,i)}).join('')+'</div>'},
 
-      // Step 4: Profile
-      return self.proxyFetch('https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag,GameDisplayPicRaw,Gamerscore', {
-        method: 'GET',
-        headers: { 'Authorization': 'XBL3.0 x=' + auth.userHash + ';' + auth.xstsToken }
-      }).then(function(r) {
-        if (!r.ok) throw new Error('Profile failed: ' + JSON.stringify(r.data));
-        return { profile: r.data, auth: auth };
-      });
-    })
-    .then(function(result) {
-      var settings = {};
-      result.profile.profileUsers[0].settings.forEach(function(s) { settings[s.id] = s.value; });
+rC:function(c,i){var lk=this.st.liked.has(c.id),bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+this.tg(c.sd);return'<div class="clip fu d'+(Math.min(i+1,5))+'"><div class="cth" style="'+bg+'" data-a="oc" data-id="'+c.id+'"><div class="cpl">'+this.ic('play',32)+'</div><span class="cdur">'+c.dur+'</span>'+(c.auto?'<span class="cac">'+this.ic('zap',12)+' AUTO</span>':'')+'<span class="cvw">'+this.ic('eye',12)+' '+c.vw.toLocaleString()+'</span></div><div class="cbd"><div class="chd"><div style="flex:1;min-width:0"><div class="cur"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div><div class="ctt">'+c.title+'</div><span class="cgm">'+c.game+'</span></div>'+this.aib(c.ai)+'</div><div class="cas"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+' '+c.cm+'</button><button class="ca">'+this.ic('share')+' '+c.sh+'</button></div></div></div>'},
 
-      self.s.user = {
-        id: 0,
-        username: settings.Gamertag || 'Xbox Player',
-        gamertag: settings.Gamertag || 'Player',
-        avatar: '\u{1F3AE}',
-        avatarUrl: settings.GameDisplayPicRaw || null,
-        platform: 'xbox',
-        followers: Math.floor(Math.random() * 500),
-        following: Math.floor(Math.random() * 100),
-        clips: 0,
-        gamerscore: settings.Gamerscore || '0',
-      };
-      self.s.demoMode = false;
-      self.sv('glitch_sess', { user: self.s.user, demo: false });
-      self.sv('glitch_auth', { userHash: result.auth.userHash, xstsToken: result.auth.xstsToken });
-      console.log('Logged in as', settings.Gamertag);
-      self.render();
+rMo:function(c){var lk=this.st.liked.has(c.id),cm=[].concat(this.st.comments[c.id]||[],this.DCMTS),bg=c.thUrl?'background-image:url('+c.thUrl+');background-size:cover;background-position:center':'background:'+this.tg(c.sd);return'<div class="mo" data-a="cbg"><div class="mc" onclick="event.stopPropagation()"><div style="position:relative"><div class="cth" style="'+bg+'"><div class="cpl">'+this.ic('play',32)+'</div></div><button class="mx" data-a="cm">'+this.ic('x')+'</button></div><div style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1"><div class="ctt" style="font-size:18px">'+c.title+'</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div></div>'+this.aib(c.ai)+'</div><div class="cas" style="margin-top:16px;padding-top:14px"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca">'+this.ic('cmt')+' '+c.cm+'</button><button class="ca">'+this.ic('share')+' '+c.sh+'</button></div></div><div class="cs"><div style="font-size:15px;font-weight:700;margin-bottom:10px">Comments</div>'+cm.map(function(m){return'<div class="cmi"><div class="cmav">'+m.u.av+'</div><div><div class="cmn">'+m.u.n+'</div><div class="cmt2">'+m.t+'</div><div class="cmtm">'+m.tm+'</div></div></div>'}).join('')+'<div class="cr"><input class="ci2" id="ci" placeholder="Add a comment..." value="'+this.st.newCmt+'"><button class="csb" data-a="sc">Post</button></div></div></div></div>'},
 
-      // Step 5: Fetch clips
-      self.proxyFetch('https://gameclipsmetadata.xboxlive.com/users/me/clips', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'XBL3.0 x=' + result.auth.userHash + ';' + result.auth.xstsToken,
-          'x-xbl-contract-version': '1'
-        }
-      }).then(function(r) {
-        if (r.ok && r.data.gameClips) {
-          var real = r.data.gameClips.map(function(clip, i) {
-            return {
-              id: 2000 + i, user: self.s.user, game: clip.titleName || 'Unknown',
-              clipType: clip.clipName || 'Clip', title: (clip.clipName || clip.titleName || 'Gameplay') + ' Clip',
-              aiScore: Math.min(60 + Math.floor(Math.random() * 35) + (clip.durationInSeconds < 30 ? 10 : 0), 99),
-              likes: Math.floor(Math.random() * 50), comments: Math.floor(Math.random() * 10),
-              shares: Math.floor(Math.random() * 5), views: clip.views || Math.floor(Math.random() * 200),
-              duration: self.fmtDur(clip.durationInSeconds),
-              timeAgo: self.fmtAgo(new Date(clip.dateRecorded)),
-              isAutoClip: true, seed: i,
-              thumbnailUrl: clip.thumbnails && clip.thumbnails[0] ? clip.thumbnails[0].uri : null,
-              videoUrl: clip.gameClipUris && clip.gameClipUris[0] ? clip.gameClipUris[0].uri : null,
-            };
-          });
-          self.s.clips = real.concat(self.s.clips);
-          self.s.user.clips = real.length;
-          self.render();
-        }
-      }).catch(function() {}); // Clips are optional
-    })
-    .catch(function(err) {
-      console.error('Auth chain failed:', err);
-      // Fall back to demo with message
-      self.s.user = { id:0, username:'Xbox Player', gamertag:'Connected (limited)', avatar:'\u{1F3AE}', platform:'xbox', followers:0, following:0, clips:0 };
-      self.s.demoMode = true;
-      self.sv('glitch_sess', { user: self.s.user, demo: true });
-      self.render();
-    });
-  },
+rD:function(){var s=this;return'<div class="pt">Discover</div><div class="sb">'+this.ic('search')+'<input placeholder="Search clips, games, players..."></div><div class="stt">\u{1F525} TRENDING GAMES</div><div class="gt">'+this.GAMES.map(function(g){return'<button class="gti">'+g+'</button>'}).join('')+'</div><div class="stt">\u{26A1} TOP CLIPPERS</div>'+this.USERS.slice(0,5).map(function(u,i){return'<div class="lr"><span class="lrk">#'+(i+1)+'</span><div class="lra">'+u.av+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">'+u.un+'</div><div style="font-size:11px;color:var(--d)">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div>'+s.aib(~~(Math.random()*15)+85)+'</div>'}).join('')},
 
-  fmtDur: function(sec) { if(!sec) return '0:30'; return Math.floor(sec/60)+':'+String(Math.floor(sec%60)).padStart(2,'0'); },
-  fmtAgo: function(d) { var m=Math.floor((Date.now()-d.getTime())/60000); return m<60?m+'m ago':m<1440?Math.floor(m/60)+'h ago':Math.floor(m/1440)+'d ago'; },
+rU:function(){var s=this,um=this.st.upMode,sp=this.st.syncProg,ai=this.st.aiSet,ls=["Detect multi-kills","Detect clutch rounds","Detect high-action","Detect trick shots","Auto-post 85+ clips"];return'<div class="pt">Upload</div><div class="mt"><button class="mb'+(um==='auto'?' on':'')+'" data-m="auto">\u{1F916} Auto</button><button class="mb'+(um==='manual'?' on':'')+'" data-m="manual">\u{1F4E4} Manual</button></div>'+(um==='auto'?'<div class="syc"><div class="syh"><div class="syi">\u{1F3AE}</div><div><div class="syt">Xbox Game DVR</div><div class="syd">Import captures from Xbox</div></div></div>'+(sp>=0?'<div class="pbr"><div class="pfl" style="width:'+Math.min(sp,100)+'%"></div></div><div style="font-size:12px;color:var(--d)">'+(sp>=100?'\u2705 Synced 8 clips!':'Syncing... '+~~(Math.min(sp,99))+'%')+'</div>':'<button class="bsy" data-a="sy">Sync Now</button>')+'</div><div class="aic"><div class="ait">\u{26A1} AI Settings</div>'+ls.map(function(l,i){return'<div class="air"><span class="ail">'+l+'</span><button class="tg '+(ai[i]?'on':'off')+'" data-a="ta" data-i="'+i+'"><div class="tgk"></div></button></div>'}).join('')+'</div>':'<div style="background:var(--c);border-radius:18px;padding:44px 24px;margin:0 16px;border:2px dashed #ffffff15;text-align:center"><div style="font-size:48px;margin-bottom:12px">\u{1F4E4}</div><div style="font-size:16px;font-weight:700">Upload a clip</div><div style="font-size:13px;color:var(--d);margin-top:4px;margin-bottom:20px">Choose from your captures</div><button class="bsy" style="width:auto;padding:10px 28px;display:inline-block">Choose File</button></div>')},
 
-  loginDemo: function() {
-    this.s.demoMode=true;
-    this.s.user=Object.assign({},this.USERS[0]);
-    this.s.screen='main';
-    this.sv('glitch_sess',{user:this.s.user,demo:true});
-    this.render();
-  },
+rFr:function(){var s=this,ft=this.st.fTab,fs=this.st.fSearch,fl=this.st.following,us=this.USERS.filter(function(u){return u.un.toLowerCase().indexOf(fs.toLowerCase())!==-1});if(ft==='friends')us=us.filter(function(u){return fl.has(u.id)});return'<div class="pt">Friends</div><div class="sb">'+this.ic('search')+'<input placeholder="Search gamertags..." id="fs" value="'+fs+'"></div><div class="tabs" style="padding-top:0">'+['friends','discover','requests'].map(function(t){return'<button class="tab'+(ft===t?' on':'')+'" data-ft="'+t+'">'+(t==='friends'?'Following':t[0].toUpperCase()+t.slice(1))+'</button>'}).join('')+'</div>'+(us.length===0?'<div class="em"><div class="emi">\u{1F465}</div><div class="emt">No results</div></div>':us.map(function(u){var f=fl.has(u.id);return'<div class="uc fu"><div class="uav'+(f?' fl':'')+'">'+u.av+'</div><div class="ui"><div class="unr"><span class="un">'+u.un+'</span><span class="xb">XBOX</span></div><div class="ut">'+u.gt+'</div><div class="us">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div><button class="fb'+(f?' fl':' nf')+'" data-a="fw" data-id="'+u.id+'">'+(f?s.ic('chk',14)+' Following':'Follow')+'</button></div>'}).join(''))},
 
-  logout: function() {
-    localStorage.removeItem('glitch_sess');
-    this.s.screen='login'; this.s.user=null;
-    this.render();
-  },
-
-  genClips: function() {
-    var clips=[];
-    for(var i=0;i<20;i++){
-      var u=this.USERS[Math.floor(Math.random()*this.USERS.length)],
-          g=this.GAMES[Math.floor(Math.random()*this.GAMES.length)],
-          t=this.TYPES[Math.floor(Math.random()*this.TYPES.length)],
-          sc=Math.floor(Math.random()*40)+60,
-          m=Math.floor(Math.random()*1440);
-      clips.push({id:i+1,user:u,game:g,clipType:t,title:t+' on '+g,aiScore:sc,
-        likes:Math.floor(Math.random()*500)+10,comments:Math.floor(Math.random()*80),
-        shares:Math.floor(Math.random()*40),views:Math.floor(Math.random()*5000)+100,
-        duration:'0:'+String(Math.floor(Math.random()*45)+5).padStart(2,'0'),
-        timeAgo:m<60?m+'m ago':m<1440?Math.floor(m/60)+'h ago':Math.floor(m/1440)+'d ago',
-        isAutoClip:Math.random()>.3,seed:i});
-    }
-    this.s.clips=clips.sort(function(a,b){return b.aiScore-a.aiScore});
-  },
-
-  toggleLike:function(id){if(this.s.liked.has(id))this.s.liked.delete(id);else this.s.liked.add(id);this.render()},
-  toggleFollow:function(id){if(this.s.following.has(id))this.s.following.delete(id);else this.s.following.add(id);this.render()},
-  toggleAI:function(i){this.s.aiSettings[i]=!this.s.aiSettings[i];this.render()},
-
-  startSync:function(){
-    var self=this; this.s.syncProgress=0; this.render();
-    var iv=setInterval(function(){self.s.syncProgress+=Math.random()*12+5;if(self.s.syncProgress>=100){self.s.syncProgress=100;clearInterval(iv)}self.render()},350);
-  },
-
-  addComment:function(){
-    if(!this.s.newComment.trim())return;
-    var id=this.s.selectedClip.id;
-    if(!this.s.comments[id])this.s.comments[id]=[];
-    this.s.comments[id].unshift({user:{avatar:this.s.user.avatar,name:this.s.user.username},text:this.s.newComment.trim(),time:'just now'});
-    this.s.newComment='';this.render();
-  },
-
-  // ===== RENDER =====
-  render:function(){
-    var el=document.getElementById('app');
-    if(this.s.screen==='login') el.innerHTML=this.rLogin();
-    else if(this.s.screen==='config') el.innerHTML=this.rConfig();
-    else el.innerHTML=this.rMain();
-    this.bind();
-  },
-
-  rLogin:function(){
-    var cid=localStorage.getItem('glitch_cid')||'';
-    var proxy=localStorage.getItem('glitch_proxy')||'';
-    return '<div class="login"><div class="logo fu">GLITCH</div><div class="login-sub fu d1">AI-Powered Game Clips</div>'
-    +'<div class="login-card fu d2"><h2>Sign in to get started</h2><p>Connect your Xbox account or explore with demo data</p>'
-    +'<input class="login-input" id="cid" type="text" placeholder="Azure Client ID..." value="'+cid+'">'
-    +'<input class="login-input" id="proxyUrl" type="text" placeholder="Proxy URL (e.g. https://glitch-proxy.vercel.app)" value="'+proxy+'" style="font-family:Rajdhani,sans-serif;font-size:13px">'
-    +'<a id="xboxBtn" href="#" class="lbtn lbtn-xbox'+(cid.length>10&&proxy.length>5?'':' disabled')+'"><span class="ico">\u2715</span> Sign in with Xbox <span class="tag">XBOX LIVE</span></a>'
-    +'<div class="login-div">OR</div>'
-    +'<button class="lbtn lbtn-demo" data-a="demo">Explore Demo Mode \u2192</button>'
-    +'<div style="margin-top:16px;text-align:center;font-size:11px;color:var(--dim)">By signing in, you agree to Glitch\'s Terms of Service</div></div>'
-    +'<div class="login-feat fu d3">'
-    +'<div class="login-feat-item"><div class="login-feat-icon">\u{1F916}</div><div class="login-feat-label">Auto-Clip AI</div></div>'
-    +'<div class="login-feat-item"><div class="login-feat-icon">\u{1F465}</div><div class="login-feat-label">Social Feed</div></div>'
-    +'<div class="login-feat-item"><div class="login-feat-icon">\u{1F3AE}</div><div class="login-feat-label">Xbox & PS5</div></div>'
-    +'</div></div>';
-  },
-
-  rConfig:function(){
-    return '<div class="login"><div class="logo fu">GLITCH</div><div class="login-sub fu d1">SETUP</div>'
-    +'<div class="login-card fu d2"><h2>\u{1F527} Xbox API Setup</h2>'
-    +'<p>You need a free Microsoft Azure App Client ID. Go to <strong>entra.microsoft.com</strong> \u2192 App registrations \u2192 New registration. Set redirect URI (SPA) to:<br><code style="font-size:11px;color:var(--accent);word-break:break-all">'+this.REDIR+'</code></p>'
-    +'<input class="login-input" id="cidInput" type="text" placeholder="Paste Client ID here...">'
-    +'<button class="lbtn lbtn-xbox" data-a="saveConfig" style="justify-content:center">\u{1F3AE} Connect Xbox Account</button>'
-    +'<button class="lbtn lbtn-demo" data-a="demo">Skip \u2014 use Demo Mode</button></div></div>';
-  },
-
-  rMain:function(){
-    var pg='';
-    switch(this.s.page){
-      case 'feed':pg=this.rFeed();break;
-      case 'discover':pg=this.rDiscover();break;
-      case 'upload':pg=this.rUpload();break;
-      case 'friends':pg=this.rFriends();break;
-      case 'profile':pg=this.rProfile();break;
-    }
-    return this.rTopBar()+'\n<div class="page">'+pg+'</div>'+this.rBNav()+(this.s.selectedClip?this.rModal(this.s.selectedClip):'');
-  },
-
-  rTopBar:function(){
-    var u=this.s.user;
-    return '<div class="topbar"><div class="topbar-logo">GLITCH</div><div class="topbar-r">'
-    +(this.s.demoMode?'<span style="font-size:10px;color:var(--accent);font-weight:700;background:#ff6b2b22;padding:2px 8px;border-radius:6px">DEMO</span>':'')
-    +'<button class="notif" style="color:var(--dim)">'+this.ic('bell')+'<span class="notif-dot">3</span></button>'
-    +'<div class="av-sm">'+u.avatar+'</div></div></div>';
-  },
-
-  rBNav:function(){
-    var self=this,its=[{id:'feed',ic:'home',l:'Feed'},{id:'discover',ic:'search',l:'Discover'},{id:'upload',ic:'upload',l:'Upload'},{id:'friends',ic:'friends',l:'Friends'},{id:'profile',ic:'profile',l:'Profile'}];
-    return '<div class="bnav">'+its.map(function(it){
-      if(it.id==='upload') return '<button class="nv" data-nav="'+it.id+'"><div class="nv-up'+(self.s.page===it.id?' on':'')+'">'+self.ic(it.ic)+'</div><span class="nv-lb">'+it.l+'</span></button>';
-      return '<button class="nv'+(self.s.page===it.id?' on':'')+'" data-nav="'+it.id+'">'+self.ic(it.ic)+'<span class="nv-lb">'+it.l+'</span></button>';
-    }).join('')+'</div>';
-  },
-
-  rFeed:function(){
-    var self=this,f=this.s.feedFilter,clips=this.s.clips;
-    if(f==='auto-clips') clips=clips.filter(function(c){return c.isAutoClip});
-    if(f==='top rated') clips=clips.slice().sort(function(a,b){return b.aiScore-a.aiScore});
-    return '<div class="tabs">'+['trending','friends','auto-clips','top rated'].map(function(t){
-      return '<button class="tab'+(f===t?' on':'')+'" data-filter="'+t+'">'+t.charAt(0).toUpperCase()+t.slice(1)+'</button>';
-    }).join('')+'</div><div class="feed">'+clips.map(function(c,i){return self.rClip(c,i)}).join('')+'</div>';
-  },
-
-  rClip:function(c,i){
-    var lk=this.s.liked.has(c.id);
-    return '<div class="clip fu d'+(Math.min(i+1,5))+'">'
-    +'<div class="clip-th" style="background:'+this.tg(c.seed)+'" data-a="openClip" data-id="'+c.id+'">'
-    +'<div class="clip-play">'+this.ic('play',32)+'</div>'
-    +'<span class="clip-dur">'+c.duration+'</span>'
-    +(c.isAutoClip?'<span class="clip-auto">'+this.ic('zap',12)+' AUTO-CLIP</span>':'')
-    +'<span class="clip-views">'+this.ic('eye',12)+' '+c.views.toLocaleString()+'</span></div>'
-    +'<div class="clip-body"><div class="clip-hdr"><div style="flex:1;min-width:0">'
-    +'<div class="clip-ur"><div class="clip-av">'+c.user.avatar+'</div><span class="clip-un">'+c.user.username+'</span><span class="clip-tm">'+c.timeAgo+'</span></div>'
-    +'<div class="clip-tt">'+c.title+'</div><span class="clip-gm">'+c.game+'</span></div>'+this.aib(c.aiScore)+'</div>'
-    +'<div class="clip-acts">'
-    +'<button class="clip-act'+(lk?' liked':'')+'" data-a="like" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.likes+(lk?1:0))+'</button>'
-    +'<button class="clip-act" data-a="openClip" data-id="'+c.id+'">'+this.ic('comment')+' '+c.comments+'</button>'
-    +'<button class="clip-act">'+this.ic('share')+' '+c.shares+'</button></div></div></div>';
-  },
-
-  rModal:function(c){
-    var lk=this.s.liked.has(c.id),cmts=[].concat(this.s.comments[c.id]||[],this.CMTS);
-    return '<div class="modal-bg" data-a="closeBg"><div class="modal-c" onclick="event.stopPropagation()">'
-    +'<div style="position:relative"><div class="clip-th" style="background:'+this.tg(c.seed)+';aspect-ratio:16/9"><div class="clip-play">'+this.ic('play',32)+'</div></div>'
-    +'<button class="modal-x" data-a="closeModal">'+this.ic('close')+'</button></div>'
-    +'<div style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1">'
-    +'<div class="clip-tt" style="font-size:18px">'+c.title+'</div>'
-    +'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div class="clip-av">'+c.user.avatar+'</div><span class="clip-un">'+c.user.username+'</span><span class="clip-tm">'+c.timeAgo+'</span></div>'
-    +'</div>'+this.aib(c.aiScore)+'</div>'
-    +'<div class="clip-acts" style="margin-top:16px;padding-top:14px">'
-    +'<button class="clip-act'+(lk?' liked':'')+'" data-a="like" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.likes+(lk?1:0))+'</button>'
-    +'<button class="clip-act">'+this.ic('comment')+' '+(c.comments+(this.s.comments[c.id]||[]).length)+'</button>'
-    +'<button class="clip-act">'+this.ic('share')+' '+c.shares+'</button></div></div>'
-    +'<div class="cmt-sec"><div style="font-size:15px;font-weight:700;margin-bottom:10px">Comments</div>'
-    +cmts.map(function(cm){return '<div class="cmt-item"><div class="cmt-av">'+cm.user.avatar+'</div><div><div class="cmt-name">'+cm.user.name+'</div><div class="cmt-text">'+cm.text+'</div><div class="cmt-time">'+cm.time+'</div></div></div>'}).join('')
-    +'<div class="cmt-row"><input class="cmt-inp" id="cmtInput" placeholder="Add a comment..." value="'+this.s.newComment+'"><button class="cmt-send" data-a="sendCmt">Post</button></div></div></div></div>';
-  },
-
-  rDiscover:function(){
-    var self=this;
-    return '<div class="ptitle">Discover</div><div class="sbar">'+this.ic('search')+'<input placeholder="Search clips, games, players..."></div>'
-    +'<div class="sec-tt">\u{1F525} TRENDING GAMES</div><div class="gtags">'+this.GAMES.map(function(g){return '<button class="gtag">'+g+'</button>'}).join('')+'</div>'
-    +'<div class="sec-tt">\u{26A1} TOP CLIPPERS TODAY</div>'
-    +this.USERS.slice(0,5).map(function(u,i){return '<div class="lb-row"><span class="lb-rank">#'+(i+1)+'</span><div class="lb-av">'+u.avatar+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">'+u.username+'</div><div style="font-size:11px;color:var(--dim)">'+u.clips+' clips \u00b7 '+u.followers.toLocaleString()+' followers</div></div>'+self.aib(Math.floor(Math.random()*15)+85)+'</div>'}).join('');
-  },
-
-  rUpload:function(){
-    var self=this,um=this.s.uploadMode,sp=this.s.syncProgress,ai=this.s.aiSettings;
-    var labels=["Detect multi-kills & squad wipes","Detect clutch rounds (1vX)","Detect high-action moments","Detect trick shots","Auto-post clips scoring 85+"];
-    return '<div class="ptitle">Upload & Auto-Clip</div><div class="mtog"><button class="mbtn'+(um==='auto'?' on':'')+'" data-mode="auto">\u{1F916} Auto-Clip</button><button class="mbtn'+(um==='manual'?' on':'')+'" data-mode="manual">\u{1F4E4} Manual</button></div>'
-    +(um==='auto'?
-      '<div class="sync-card"><div class="sync-hdr"><div class="sync-ico">\u{1F3AE}</div><div><div class="sync-tt">Xbox Game DVR Sync</div><div class="sync-ds">Auto-import captures from your Xbox account</div></div></div>'
-      +(sp>=0?'<div class="pbar"><div class="pfill" style="width:'+Math.min(sp,100)+'%"></div></div><div style="font-size:12px;color:var(--dim)">'+(sp>=100?'\u2705 Synced 8 new clips! AI is analyzing...':'Syncing clips... '+Math.min(Math.floor(sp),99)+'%')+'</div>'
-        :'<button class="btn-sync" data-a="sync">Sync Now</button>')
-      +'</div><div class="ai-card"><div class="ai-tt">\u{26A1} AI Auto-Clip Settings</div>'
-      +labels.map(function(l,i){return '<div class="ai-row"><span class="ai-lbl">'+l+'</span><button class="tog '+(ai[i]?'on':'off')+'" data-a="togAI" data-idx="'+i+'"><div class="tog-k"></div></button></div>'}).join('')+'</div>'
-    : '<div style="background:var(--card);border-radius:18px;padding:44px 24px;margin:0 16px;border:2px dashed #ffffff15;text-align:center"><div style="font-size:48px;margin-bottom:12px">\u{1F4E4}</div><div style="font-size:16px;font-weight:700;margin-bottom:4px">Upload a clip manually</div><div style="font-size:13px;color:var(--dim);margin-bottom:20px">Drag & drop or choose from your Xbox captures</div><button class="btn-sync" style="width:auto;padding:10px 28px;display:inline-block">Choose File</button></div>');
-  },
-
-  rFriends:function(){
-    var self=this,ft=this.s.friendsTab,fs=this.s.friendSearch,fol=this.s.following;
-    var users=this.USERS.filter(function(u){return u.id!==(self.s.user?self.s.user.id:-1)&&u.username.toLowerCase().indexOf(fs.toLowerCase())!==-1});
-    if(ft==='friends') users=users.filter(function(u){return fol.has(u.id)});
-    return '<div class="ptitle">Friends</div><div class="sbar">'+this.ic('search')+'<input placeholder="Search gamertags..." id="fsInput" value="'+fs+'"></div>'
-    +'<div class="tabs" style="padding-top:0">'+['friends','discover','requests'].map(function(t){return '<button class="tab'+(ft===t?' on':'')+'" data-ftab="'+t+'">'+(t==='friends'?'Following':t.charAt(0).toUpperCase()+t.slice(1))+'</button>'}).join('')+'</div>'
-    +(users.length===0?'<div class="empty"><div class="empty-i">\u{1F465}</div><div class="empty-t">'+(ft==='friends'?'Not following anyone yet':'No results')+'</div><div class="empty-d">Discover players and follow them</div></div>'
-    :users.map(function(u){var f=fol.has(u.id);return '<div class="ucard fu"><div class="uav'+(f?' fol':'')+'">'+u.avatar+'</div><div class="uinfo"><div class="unr"><span class="uname">'+u.username+'</span><span class="pbadge xb">XBOX</span></div><div class="utag">'+u.gamertag+'</div><div class="ustats">'+u.clips+' clips \u00b7 '+u.followers.toLocaleString()+' followers</div></div><button class="fbtn'+(f?' fol':' nf')+'" data-a="follow" data-id="'+u.id+'">'+(f?self.ic('check',14)+' Following':'Follow')+'</button></div>'}).join(''));
-  },
-
-  rProfile:function(){
-    var u=this.s.user,pt=this.s.profileTab,clips=this.s.clips.filter(function(c){return c.user.id===u.id}),self=this;
-    return '<div class="prof-hdr"><div class="prof-av">'+u.avatar+'</div><div class="prof-name">'+u.username+'</div>'
-    +'<div class="prof-tag"><span class="pbadge xb">XBOX</span> '+u.gamertag+'</div>'
-    +'<div class="prof-stats"><div style="text-align:center"><div class="ps-val">'+u.clips+'</div><div class="ps-lbl">Clips</div></div><div style="text-align:center"><div class="ps-val">'+u.followers.toLocaleString()+'</div><div class="ps-lbl">Followers</div></div><div style="text-align:center"><div class="ps-val">'+u.following+'</div><div class="ps-lbl">Following</div></div></div>'
-    +'<div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button style="padding:8px 24px;border-radius:10px;background:var(--surface);color:var(--text);border:1px solid #ffffff11;font-size:13px;font-weight:700">'+this.ic('settings',14)+' Edit Profile</button>'
-    +'<button style="padding:8px 16px;border-radius:10px;background:var(--surface);color:var(--red);border:1px solid #ffffff11;font-size:13px;font-weight:700" data-a="logout">'+this.ic('logout',14)+' Logout</button></div></div>'
-    +'<div class="prof-tabs">'+['clips','highlights','stats'].map(function(t){return '<button class="ptab'+(pt===t?' on':'')+'" data-ptab="'+t+'">'+t.toUpperCase()+'</button>'}).join('')+'</div>'
-    +(pt==='clips'?(clips.length>0?clips.map(function(c){return '<div class="cl-item" data-a="openClip" data-id="'+c.id+'"><div class="cl-th" style="background:'+self.tg(c.seed)+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.duration+'</span></div><div class="cl-info"><div class="cl-tt">'+c.title+'</div><div class="cl-meta">'+c.game+' \u00b7 '+c.views.toLocaleString()+' views</div><div style="margin-top:6px">'+self.aib(c.aiScore)+'</div></div></div>'}).join(''):'<div class="empty"><div class="empty-i">\u{1F3AE}</div><div class="empty-t">No clips yet</div><div class="empty-d">Sync your Xbox captures or upload clips</div></div>')
-    :pt==='highlights'?'<div class="empty"><div class="empty-i">\u{1F916}</div><div class="empty-t" style="color:var(--text)">AI Highlights Reel</div><div class="empty-d">Analyzing your gameplay for best-of montage</div><div style="margin:20px auto 0;max-width:260px"><div class="pbar"><div class="pfill" style="width:67%"></div></div><div style="font-size:11px;color:var(--dim);margin-top:6px">Processing 12 of 18 clips...</div></div></div>'
-    :'<div class="sgrid">'+[{i:'\u{1F441}',v:'24.3K',l:'Total Views'},{i:'\u{2764}',v:'1,892',l:'Total Likes'},{i:'\u{26A1}',v:'82.4',l:'Avg AI Score'},{i:'\u{1F3C6}',v:'96 pts',l:'Best Clip'},{i:'\u{1F3AE}',v:'Apex',l:'Top Game'},{i:'\u{1F525}',v:'7 days',l:'Clip Streak'}].map(function(s){return '<div class="scard"><div class="scard-i">'+s.i+'</div><div class="scard-v">'+s.v+'</div><div class="scard-l">'+s.l+'</div></div>'}).join('')+'</div>');
-  },
-
-  // ===== EVENTS =====
-  bind:function(){
-    var self=this;
-    // Nav
-    document.querySelectorAll('[data-nav]').forEach(function(b){b.onclick=function(){self.s.page=b.dataset.nav;self.render()}});
-    // Xbox login link
-    var xb=document.getElementById('xboxBtn');
-    if(xb){
-      xb.onclick=function(e){e.preventDefault();self.doXboxLogin()};
-    }
-    var ci=document.getElementById('cid');
-    var pu=document.getElementById('proxyUrl');
-    function updateBtn(){
-      var c=(ci?ci.value.trim():''), p=(pu?pu.value.trim():'');
-      if(ci) localStorage.setItem('glitch_cid',c);
-      if(pu) localStorage.setItem('glitch_proxy',p.replace(/\/$/,''));
-      var b=document.getElementById('xboxBtn');
-      if(b) b.className='lbtn lbtn-xbox'+(c.length>10&&p.length>5?'':' disabled');
-    }
-    if(ci) ci.addEventListener('input',updateBtn);
-    if(pu) pu.addEventListener('input',updateBtn);
-    // Demo
-    document.querySelectorAll('[data-a="demo"]').forEach(function(b){b.onclick=function(){self.loginDemo()}});
-    // Config save
-    var sc=document.querySelector('[data-a="saveConfig"]');
-    if(sc) sc.onclick=function(){var v=document.getElementById('cidInput');if(v&&v.value.trim()){localStorage.setItem('glitch_cid',v.value.trim());self.doXboxLogin()}};
-    // Filters
-    document.querySelectorAll('[data-filter]').forEach(function(b){b.onclick=function(){self.s.feedFilter=b.dataset.filter;self.render()}});
-    // Likes
-    document.querySelectorAll('[data-a="like"]').forEach(function(b){b.onclick=function(e){e.stopPropagation();self.toggleLike(parseInt(b.dataset.id))}});
-    // Open clip
-    document.querySelectorAll('[data-a="openClip"]').forEach(function(b){b.onclick=function(){var c=self.s.clips.find(function(x){return x.id===parseInt(b.dataset.id)});if(c){self.s.selectedClip=c;self.render()}}});
-    // Close modal
-    var cm=document.querySelector('[data-a="closeModal"]');if(cm)cm.onclick=function(){self.s.selectedClip=null;self.render()};
-    var cb=document.querySelector('[data-a="closeBg"]');if(cb)cb.onclick=function(e){if(e.target===e.currentTarget){self.s.selectedClip=null;self.render()}};
-    // Comments
-    var cs=document.querySelector('[data-a="sendCmt"]');if(cs)cs.onclick=function(){self.addComment()};
-    var cinp=document.getElementById('cmtInput');if(cinp){cinp.addEventListener('input',function(e){self.s.newComment=e.target.value});cinp.addEventListener('keydown',function(e){if(e.key==='Enter')self.addComment()})}
-    // Follow
-    document.querySelectorAll('[data-a="follow"]').forEach(function(b){b.onclick=function(){self.toggleFollow(parseInt(b.dataset.id))}});
-    // Friends tabs
-    document.querySelectorAll('[data-ftab]').forEach(function(b){b.onclick=function(){self.s.friendsTab=b.dataset.ftab;self.render()}});
-    // Friends search
-    var fsi=document.getElementById('fsInput');if(fsi){fsi.addEventListener('input',function(e){self.s.friendSearch=e.target.value;self.render();setTimeout(function(){var el=document.getElementById('fsInput');if(el){el.focus();el.selectionStart=el.selectionEnd=el.value.length}},0)})}
-    // Profile tabs
-    document.querySelectorAll('[data-ptab]').forEach(function(b){b.onclick=function(){self.s.profileTab=b.dataset.ptab;self.render()}});
-    // Upload mode
-    document.querySelectorAll('[data-mode]').forEach(function(b){b.onclick=function(){self.s.uploadMode=b.dataset.mode;self.render()}});
-    // Sync
-    var sy=document.querySelector('[data-a="sync"]');if(sy)sy.onclick=function(){self.startSync()};
-    // AI toggles
-    document.querySelectorAll('[data-a="togAI"]').forEach(function(b){b.onclick=function(){self.toggleAI(parseInt(b.dataset.idx))}});
-    // Logout
-    var lo=document.querySelector('[data-a="logout"]');if(lo)lo.onclick=function(){self.logout()};
-  },
+rP:function(){var u=this.st.user,pt=this.st.pTab,s=this,cl=this.st.clips.filter(function(c){return c.user.id===u.id}),av=u.avUrl?'<img src="'+u.avUrl+'">':u.av;return'<div class="ph"><div class="pav">'+av+'</div><div class="pnm">'+u.un+'</div><div class="ptg"><span class="xb">XBOX</span> '+u.gt+(u.gs?' \u00b7 \u{1F3C6} '+u.gs:'')+'</div><div class="pss"><div style="text-align:center"><div class="pv">'+u.cl+'</div><div class="pl">Clips</div></div><div style="text-align:center"><div class="pv">'+u.frs.toLocaleString()+'</div><div class="pl">Followers</div></div><div style="text-align:center"><div class="pv">'+u.fg+'</div><div class="pl">Following</div></div></div><div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button style="padding:8px 16px;border-radius:10px;background:var(--sf);color:var(--r);border:1px solid #ffffff11;font-size:13px;font-weight:700" data-a="lo">'+this.ic('out',14)+' Logout</button></div></div><div class="ptabs">'+['clips','highlights','stats'].map(function(t){return'<button class="ptb'+(pt===t?' on':'')+'" data-pt="'+t+'">'+t.toUpperCase()+'</button>'}).join('')+'</div>'+(pt==='clips'?(cl.length>0?cl.map(function(c){var bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+s.tg(c.sd);return'<div class="cli" data-a="oc" data-id="'+c.id+'"><div class="clt" style="'+bg+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.dur+'</span></div><div class="clif"><div class="cltt">'+c.title+'</div><div class="clm">'+c.game+' \u00b7 '+c.vw.toLocaleString()+' views</div><div style="margin-top:6px">'+s.aib(c.ai)+'</div></div></div>'}).join(''):'<div class="em"><div class="emi">\u{1F3AE}</div><div class="emt">No clips yet</div><div class="emd">Sync your Xbox captures</div></div>'):pt==='stats'?'<div class="sg">'+[{i:'\u{1F441}',v:'24.3K',l:'Views'},{i:'\u{2764}',v:'1,892',l:'Likes'},{i:'\u{26A1}',v:'82.4',l:'Avg AI'},{i:'\u{1F3C6}',v:'96',l:'Best'},{i:'\u{1F3AE}',v:'Apex',l:'Top Game'},{i:'\u{1F525}',v:'7d',l:'Streak'}].map(function(x){return'<div class="sc"><div class="sci">'+x.i+'</div><div class="scv">'+x.v+'</div><div class="scl">'+x.l+'</div></div>'}).join('')+'</div>':'<div class="em"><div class="emi">\u{1F916}</div><div class="emt">AI Highlights Reel</div><div class="emd">Processing your gameplay...</div><div style="margin:20px auto 0;max-width:260px"><div class="pbr"><div class="pfl" style="width:67%"></div></div></div></div>')},
+// === EVENT BINDING ===
+bind:function(){
+  var s=this;
+  document.querySelectorAll('[data-nav]').forEach(function(b){b.onclick=function(){s.st.page=b.dataset.nav;s.render()}});
+  var xb=document.getElementById('xb');if(xb)xb.onclick=function(){s.startLogin()};
+  var dm=document.getElementById('dm');if(dm)dm.onclick=function(){s.loginDemo()};
+  var ci=document.getElementById('cid'),px=document.getElementById('px');
+  function upd(){
+    var c=ci?ci.value.trim():'',p=px?px.value.trim():'';
+    if(ci)localStorage.setItem('glitch_cid',c);
+    if(px)localStorage.setItem('glitch_proxy',p.replace(/\/$/,''));
+    var b=document.getElementById('xb');if(b)b.className='lb lb-x'+(c.length>10&&p.length>8?'':' off');
+  }
+  if(ci)ci.addEventListener('input',upd);
+  if(px)px.addEventListener('input',upd);
+  document.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){s.st.filter=b.dataset.f;s.render()}});
+  document.querySelectorAll('[data-a="lk"]').forEach(function(b){b.onclick=function(e){e.stopPropagation();s.toggleLike(parseInt(b.dataset.id))}});
+  document.querySelectorAll('[data-a="oc"]').forEach(function(b){b.onclick=function(){var c=s.st.clips.find(function(x){return x.id===parseInt(b.dataset.id)});if(c){s.st.selClip=c;s.render()}}});
+  var cm=document.querySelector('[data-a="cm"]');if(cm)cm.onclick=function(){s.st.selClip=null;s.render()};
+  var cbg=document.querySelector('[data-a="cbg"]');if(cbg)cbg.onclick=function(e){if(e.target===e.currentTarget){s.st.selClip=null;s.render()}};
+  var sc=document.querySelector('[data-a="sc"]');if(sc)sc.onclick=function(){s.addCmt()};
+  var cin=document.getElementById('ci');if(cin){cin.addEventListener('input',function(e){s.st.newCmt=e.target.value});cin.addEventListener('keydown',function(e){if(e.key==='Enter')s.addCmt()})}
+  document.querySelectorAll('[data-a="fw"]').forEach(function(b){b.onclick=function(){s.toggleFollow(parseInt(b.dataset.id))}});
+  document.querySelectorAll('[data-ft]').forEach(function(b){b.onclick=function(){s.st.fTab=b.dataset.ft;s.render()}});
+  var fs=document.getElementById('fs');if(fs){fs.addEventListener('input',function(e){s.st.fSearch=e.target.value;s.render();setTimeout(function(){var el=document.getElementById('fs');if(el){el.focus();el.selectionStart=el.selectionEnd=el.value.length}},0)})}
+  document.querySelectorAll('[data-pt]').forEach(function(b){b.onclick=function(){s.st.pTab=b.dataset.pt;s.render()}});
+  document.querySelectorAll('[data-m]').forEach(function(b){b.onclick=function(){s.st.upMode=b.dataset.m;s.render()}});
+  var sy=document.querySelector('[data-a="sy"]');if(sy)sy.onclick=function(){s.startSync()};
+  document.querySelectorAll('[data-a="ta"]').forEach(function(b){b.onclick=function(){s.toggleAI(parseInt(b.dataset.i))}});
+  var lo=document.querySelector('[data-a="lo"]');if(lo)lo.onclick=function(){s.logout()};
+}
 };
 
-// Boot
+// === BOOT ===
 document.addEventListener('DOMContentLoaded',function(){
-  if(!G.handleCallback()) G.init();
-  else { G.genClips(); G.render(); }
+  // Check for OAuth callback first
+  var code=new URLSearchParams(location.search).get('code');
+  var err=new URLSearchParams(location.search).get('error');
+  if(code){
+    history.replaceState(null,'',location.pathname);
+    G.st.screen='login';G.render();
+    G.handleAuth(code);
+  } else if(err){
+    history.replaceState(null,'',location.pathname);
+    G.st.screen='login';G.render();
+    G.setSt('Login error: '+(new URLSearchParams(location.search).get('error_description')||err),'err');
+  } else {
+    // Check for saved session
+    var sess=G.ld('glitch_sess');
+    if(sess&&sess.user){G.st.user=sess.user;G.st.screen='main';G.genClips();G.render()}
+    else{G.render()}
+  }
 });
 </script>
 </body>
