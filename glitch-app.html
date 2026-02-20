@@ -107,7 +107,22 @@ input,button,textarea{font-family:inherit}button{cursor:pointer;border:none;back
 .pg{padding-bottom:calc(76px + var(--sb))}.pt{font-size:22px;font-weight:800;padding:16px 16px 12px}
 .tabs{display:flex;gap:6px;padding:14px 16px 8px;overflow-x:auto;scrollbar-width:none}
 .tab{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;border:1px solid #ffffff0a;background:var(--sf);color:var(--d)}.tab.on{background:var(--a);color:var(--bg);border-color:var(--a)}
-.feed{display:flex;flex-direction:column;gap:14px;padding:10px 14px}
+.feed{display:flex;flex-direction:column;gap:0;padding:0;scroll-snap-type:y mandatory;overflow-y:auto;height:100dvh;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.snap-item{position:relative;width:100%;height:100dvh;flex-shrink:0;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center}
+.snap-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.snap-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(180deg,#0006 0%,transparent 20%,transparent 50%,#000a 100%);padding:16px;padding-bottom:calc(72px + var(--sb));pointer-events:none}
+.snap-overlay *{pointer-events:auto}
+.snap-top{position:absolute;top:calc(14px + var(--st) + 44px);left:16px}
+.snap-user{display:flex;align-items:center;gap:8px}
+.snap-bot{padding-right:60px}
+.snap-title{font-size:16px;font-weight:700;text-shadow:0 1px 6px #000a;line-height:1.3}
+.snap-acts{position:absolute;right:12px;bottom:calc(90px + var(--sb));display:flex;flex-direction:column;align-items:center;gap:20px}
+.snap-act{display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 3px #0008}
+.snap-act svg{filter:drop-shadow(0 1px 3px #0008)}
+.snap-act span{font-size:11px}
+.snap-pause{position:absolute;inset:0;z-index:1}
+@keyframes pauseIcon{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+.snap-pause-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:#0009;display:flex;align-items:center;justify-content:center;animation:pauseIcon .6s ease forwards}
 .clip{background:var(--c);border-radius:18px;overflow:hidden;border:1px solid #ffffff08}.clip:active{transform:scale(.985)}
 .cth{position:relative;width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;background-size:cover;background-position:center}
 .cpl{position:absolute;width:56px;height:56px;border-radius:50%;background:#00000077;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding-left:3px;opacity:.8}
@@ -221,7 +236,7 @@ TYPES:["Squad Wipe","Clutch Round","Insane Snipe","Ace","Trickshot","Collateral"
 DCMTS:[{u:{av:"\u{1F480}",n:"FragMaster99"},t:"Absolutely filthy \u{1F525}",tm:"2m"},{u:{av:"\u{1F3AF}",n:"SilentScope"},t:"How do you hit those lol",tm:"8m"},{u:{av:"\u{26A1}",n:"VelocityKing"},t:"Bro I was in this lobby",tm:"14m"}],
 HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,160],[220,280],[40,100]],
 
-st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:''},
+st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:''},
 sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
 ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
 tg:function(s){var h=this.HUES[s%10];return'linear-gradient(135deg,hsl('+h[0]+',70%,20%),hsl('+h[1]+',80%,15%))'},
@@ -347,6 +362,43 @@ shareApp:function(){
   if(navigator.share){navigator.share({title:'Join Glitch',text:text,url:url}).catch(function(){})}
   else{navigator.clipboard.writeText(text+' '+url).then(function(){alert('Invite link copied!')}).catch(function(){prompt('Copy this link:',url)})}
 },
+
+// Search any Xbox gamertag and load their public clips
+searchGamertag:function(gt){
+  var self=this,auth=this.ld('glitch_xauth');
+  if(!auth){self.toast('Sign in with Xbox first','err');return}
+  self.st.dsLoading=true;self.st.dsResults=null;self.st.dsError=null;self.st.dsQuery=gt;self.render();
+
+  // Step 1: Look up XUID by gamertag
+  self.px('https://profile.xboxlive.com/users/gt('+encodeURIComponent(gt)+')/profile/settings?settings=Gamertag,GameDisplayPicRaw,Gamerscore',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'2','Content-Type':'application/json'}})
+  .then(function(r){
+    if(!r.ok)throw new Error('not_found');
+    var pu=r.data.profileUsers[0],sets={};pu.settings.forEach(function(x){sets[x.id]=x.value});
+    var xuid=pu.id,user={id:'x_'+xuid,un:sets.Gamertag||gt,gt:sets.Gamertag||gt,av:'\u{1F3AE}',avUrl:sets.GameDisplayPicRaw||null,gs:sets.Gamerscore||'0'};
+    console.log('Found user:',user.un,'XUID:',xuid);
+
+    // Step 2: Get their clips
+    return self.px('https://gameclipsmetadata.xboxlive.com/users/xuid('+xuid+')/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r2){
+      var clips=[];
+      if(r2.ok&&r2.data&&r2.data.gameClips){
+        clips=r2.data.gameClips.map(function(c,i){return{id:5000+i,user:user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
+      }
+      self.st.dsLoading=false;self.st.dsResults={user:user,clips:clips};self.render();
+    });
+  })
+  .catch(function(e){
+    console.log('Search error:',e);
+    self.st.dsLoading=false;self.st.dsError=e.message==='not_found'?'Gamertag "'+gt+'" not found. Check the spelling and try again.':'Search failed: '+e.message;
+    self.render();
+  });
+},
+
+// View a searched player's clip in feed
+viewPlayerClips:function(clips){
+  if(clips.length===0){this.toast('This player has no public clips','err');return}
+  this.st.clips=clips.concat(this.st.clips.filter(function(c){return c.id<5000}));
+  this.st.page='feed';this.st.filter='all clips';this.render();
+},
 // === RENDER ===
 render:function(){var el=document.getElementById('app');if(this.st.screen==='login')el.innerHTML=this.rL();else if(this.st.screen==='loading')el.innerHTML=this.rLd();else el.innerHTML=this.rM();this.bindAll()},
 
@@ -374,13 +426,52 @@ rL:function(){
   +'<div class="ldiv">OR</div><button id="dm" class="lb lb-d">Explore Demo Mode \u2192</button>'
   +'<div id="ls" class="ls"></div></div></div>';
 },
-rM:function(){var p='';switch(this.st.page){case'feed':p=this.rF();break;case'discover':p=this.rD();break;case'upload':p=this.rU();break;case'friends':p=this.rFr();break;case'profile':p=this.rP();break}return this.rTB()+'<div class="pg">'+p+'</div>'+this.rBN()+(this.st.selClip?this.rMo(this.st.selClip):'')},
+rM:function(){var p='';switch(this.st.page){case'feed':return this.rF();case'discover':p=this.rD();break;case'upload':p=this.rU();break;case'friends':p=this.rFr();break;case'profile':p=this.rP();break}return this.rTB()+'<div class="pg">'+p+'</div>'+this.rBN()+(this.st.selClip?this.rMo(this.st.selClip):'')},
 rTB:function(){var u=this.st.user,av=u.avUrl?'<img src="'+u.avUrl+'">':u.av,isDemo=u.un==='DemoPlayer';return'<div class="tb"><div class="tb-l">GLITCH</div><div class="tb-r">'+(isDemo?'<button class="ntf">'+this.ic('bell')+'<span class="ntf-d">3</span></button>':'')+'<button class="avsm" data-nav="profile">'+av+'</button></div></div>'},
 rBN:function(){var s=this,p=this.st.page,ns=[['feed','home','Feed'],['discover','search','Discover'],['upload','upload','Upload'],['friends','friends','Friends'],['profile','profile','Profile']];return'<div class="bn">'+ns.map(function(n){if(n[0]==='upload')return'<button class="ni" data-nav="'+n[0]+'"><div class="ni-u'+(p===n[0]?' on':'')+'">'+s.ic(n[1])+'</div><span class="ni-l">'+n[2]+'</span></button>';return'<button class="ni'+(p===n[0]?' on':'')+'" data-nav="'+n[0]+'">'+s.ic(n[1])+'<span class="ni-l">'+n[2]+'</span></button>'}).join('')+'</div>'},
-rF:function(){var s=this,f=this.st.filter,cl=this.st.clips,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';if(f==='auto-clips')cl=cl.filter(function(c){return c.auto});if(f==='top rated')cl=cl.slice().sort(function(a,b){return b.ai-a.ai});var tabs=isDemo?['trending','friends','auto-clips','top rated']:['all clips','top rated'];return'<div class="tabs">'+tabs.map(function(t){return'<button class="tab'+(f===t?' on':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div>'+(this.st.clipsLoading?this.rSkel():cl.length>0?'<div class="feed">'+cl.map(function(c,i){return s.rC(c,i)}).join('')+'</div>':'<div class="em"><div class="emi">\u{1F3AE}</div><div class="emt">No clips yet</div><div class="emd">Your Xbox clips will appear here after syncing</div></div>')},
+rF:function(){var s=this,f=this.st.filter,cl=this.st.clips,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';if(f==='auto-clips')cl=cl.filter(function(c){return c.auto});if(f==='top rated')cl=cl.slice().sort(function(a,b){return b.ai-a.ai});var tabs=isDemo?['trending','friends','auto-clips','top rated']:['all clips','top rated'];
+  if(this.st.clipsLoading)return this.rTB()+'<div class="pg"><div class="tabs">'+tabs.map(function(t){return'<button class="tab'+(f===t?' on':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div>'+this.rSkel()+'</div>'+this.rBN();
+  if(cl.length===0)return this.rTB()+'<div class="pg"><div class="tabs">'+tabs.map(function(t){return'<button class="tab'+(f===t?' on':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="em"><div class="emi">\u{1F3AE}</div><div class="emt">No clips yet</div><div class="emd">Your Xbox clips will appear here after syncing</div></div></div>'+this.rBN();
+  return'<div class="feed" id="snapFeed">'+cl.map(function(c,i){return s.rSnapCard(c,i)}).join('')+'</div><div class="feed-tabs" style="position:fixed;top:calc(var(--st));left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101;padding:10px 14px;display:flex;gap:6px">'+tabs.map(function(t){return'<button class="tab" style="background:#0008;border-color:#fff3;color:#fffc;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);'+(f===t?'background:var(--a);border-color:var(--a);color:var(--bg)':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="feed-bnav" style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101">'+this.rBN2()+'</div>'+(this.st.selClip?this.rMo(this.st.selClip):'')},
+
+rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=u.avUrl?'<img src="'+u.avUrl+'">':u.av;
+  var vidEl=c.vidUrl?'<video class="snap-vid" data-idx="'+i+'" src="'+c.vidUrl+'" poster="'+(c.thUrl||'')+'" playsinline muted loop preload="'+(i<2?'auto':'none')+'" style="width:100%;height:100%;object-fit:cover"></video>':'';
+  var bg=!c.vidUrl?(c.thUrl?'background-image:url('+c.thUrl+');background-size:cover;background-position:center':'background:'+this.tg(c.sd)):'background:#000';
+  return'<div class="snap-item" data-idx="'+i+'" style="'+bg+'">'+vidEl
+  +'<div class="snap-overlay">'
+  // Top info
+  +'<div class="snap-top"><div class="snap-user"><div class="cav" style="width:32px;height:32px;font-size:16px;border-color:#fff3">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span style="font-size:14px;font-weight:700;text-shadow:0 1px 4px #0008">'+c.user.un+'</span><span style="font-size:12px;color:#fff9;text-shadow:0 1px 4px #0008">'+c.ago+'</span></div></div>'
+  // Bottom info
+  +'<div class="snap-bot"><div class="snap-title">'+c.title+'</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="cgm" style="background:#fff2;color:#fffc">'+c.game+'</span>'+this.aib(c.ai)+'</div></div>'
+  // Right actions
+  +'<div class="snap-acts">'
+  +'<button class="snap-act" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+'<span>'+(c.lk+(lk?1:0))+'</span></button>'
+  +'<button class="snap-act" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+'<span>'+c.cm+'</span></button>'
+  +'<button class="snap-act" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+'<span>Share</span></button>'
+  +'</div>'
+  +'</div>'
+  // Tap to pause/play indicator
+  +'<div class="snap-pause" data-idx="'+i+'"></div>'
+  +'</div>'},
+
+// Alternate bottom nav for feed (transparent)
+rBN2:function(){var s=this,p=this.st.page,ns=[['feed','home','Feed'],['discover','search','Discover'],['upload','upload','Upload'],['friends','friends','Friends'],['profile','profile','Profile']];return'<div style="display:flex;align-items:flex-start;justify-content:space-around;padding:6px 0;padding-bottom:calc(8px + var(--sb));background:#0008;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)">'+ns.map(function(n){if(n[0]==='upload')return'<button class="ni" data-nav="'+n[0]+'" style="color:#fffc"><div class="ni-u'+(p===n[0]?' on':'')+'">'+s.ic(n[1])+'</div><span class="ni-l">'+n[2]+'</span></button>';return'<button class="ni'+(p===n[0]?' on':'')+'" data-nav="'+n[0]+'" style="'+(p===n[0]?'':'color:#fff9')+'">'+s.ic(n[1])+'<span class="ni-l">'+n[2]+'</span></button>'}).join('')+'</div>'},
 rC:function(c,i){var lk=this.st.liked.has(c.id),bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+this.tg(c.sd);var thContent=c.vidUrl?'<video class="feed-vid" data-clipid="'+c.id+'" src="'+c.vidUrl+'" poster="'+(c.thUrl||'')+'" playsinline muted loop preload="none" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video>':'';return'<div class="clip fu d'+(Math.min(i+1,5))+'"><div class="cth" style="'+bg+'" data-a="oc" data-id="'+c.id+'">'+thContent+'<div class="cpl feed-play" data-clipid="'+c.id+'">'+this.ic('play',32)+'</div><span class="cdur">'+c.dur+'</span>'+(c.auto?'<span class="cac">'+this.ic('zap',12)+' AUTO</span>':'')+'<span class="cvw">'+this.ic('eye',12)+' '+c.vw.toLocaleString()+'</span></div><div class="cbd"><div class="chd"><div style="flex:1;min-width:0"><div class="cur"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div><div class="ctt">'+c.title+'</div><span class="cgm">'+c.game+'</span></div>'+this.aib(c.ai)+'</div><div class="cas"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+' '+c.cm+'</button><button class="ca" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+' Share</button></div></div></div>'},
 rMo:function(c){var lk=this.st.liked.has(c.id),isDemo=this.st.user&&this.st.user.un==='DemoPlayer',cm=[].concat(this.st.comments[c.id]||[],isDemo?this.DCMTS:[]),bg=c.thUrl?'background-image:url('+c.thUrl+');background-size:cover;background-position:center':'background:'+this.tg(c.sd);var vidHtml=c.vidUrl?'<video id="clipVid" style="width:100%;aspect-ratio:16/9;background:#000;object-fit:contain" poster="'+(c.thUrl||'')+'" playsinline controls><source src="'+c.vidUrl+'" type="video/mp4"></video>':'<div class="cth" style="'+bg+'"><div class="cpl" data-a="noVid">'+this.ic('play',32)+'</div></div>';return'<div class="mo" data-a="cbg"><div class="mc" onclick="event.stopPropagation()"><div style="position:relative">'+vidHtml+'<button class="mx" data-a="cm">'+this.ic('x')+'</button></div><div style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1"><div class="ctt" style="font-size:18px">'+c.title+'</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div></div>'+this.aib(c.ai)+'</div><div class="cas" style="margin-top:16px;padding-top:14px"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca">'+this.ic('cmt')+' '+(c.cm+(this.st.comments[c.id]||[]).length)+'</button><button class="ca" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+' Share</button></div></div><div class="cs"><div style="font-size:15px;font-weight:700;margin-bottom:10px">Comments</div>'+(cm.length===0?'<div style="text-align:center;padding:20px 0;color:var(--d);font-size:13px">No comments yet \u2014 be the first!</div>':cm.map(function(m){return'<div class="cmi"><div class="cmav">'+m.u.av+'</div><div><div class="cmn">'+m.u.n+'</div><div class="cmt2">'+m.t+'</div><div class="cmtm">'+m.tm+'</div></div></div>'}).join(''))+'<div class="cr"><input class="ci2" id="ci" placeholder="Add a comment..." value="'+this.st.newCmt+'"><button class="csb" data-a="sc">Post</button></div></div></div></div>'},
-rD:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';return'<div class="pt">Discover</div><div class="sb">'+this.ic('search')+'<input placeholder="Search clips, games, players..."></div>'+(isDemo?'<div class="stt">\u{1F525} TRENDING GAMES</div><div class="gt">'+this.GAMES.map(function(g){return'<button class="gti">'+g+'</button>'}).join('')+'</div><div class="stt">\u{26A1} TOP CLIPPERS</div>'+this.USERS.slice(0,5).map(function(u,i){return'<div class="lr"><span class="lrk">#'+(i+1)+'</span><div class="lra">'+u.av+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">'+u.un+'</div><div style="font-size:11px;color:var(--d)">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div>'+s.aib(~~(Math.random()*15)+85)+'</div>'}).join(''):'<div class="em" style="margin-top:20px"><div class="emi">\u{1F50D}</div><div class="emt">Discover Players</div><div class="emd">Search for other gamertags to find and follow players. As more people join Glitch, trending clips and top players will appear here.</div></div>')},
+rD:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer',dsl=this.st.dsLoading,dsr=this.st.dsResults,dse=this.st.dsError,dsq=this.st.dsQuery||'';
+  if(isDemo)return'<div class="pt">Discover</div><div class="sb">'+this.ic('search')+'<input placeholder="Search clips, games, players..."></div><div class="stt">\u{1F525} TRENDING GAMES</div><div class="gt">'+this.GAMES.map(function(g){return'<button class="gti">'+g+'</button>'}).join('')+'</div><div class="stt">\u{26A1} TOP CLIPPERS</div>'+this.USERS.slice(0,5).map(function(u,i){return'<div class="lr"><span class="lrk">#'+(i+1)+'</span><div class="lra">'+u.av+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">'+u.un+'</div><div style="font-size:11px;color:var(--d)">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div>'+s.aib(~~(Math.random()*15)+85)+'</div>'}).join('');
+  // Real user — gamertag search
+  var results='';
+  if(dsl){results='<div style="text-align:center;padding:40px 0"><div class="load-spin" style="margin:0 auto 12px"></div><div style="color:var(--d);font-size:13px">Searching for "'+dsq+'"...</div></div>'}
+  else if(dse){results='<div class="em" style="margin-top:10px"><div class="emi">\u{1F615}</div><div class="emt">Not Found</div><div class="emd">'+dse+'</div></div>'}
+  else if(dsr){
+    var u=dsr.user,cl=dsr.clips;
+    results='<div class="uc fu" style="margin-top:6px"><div class="uav" style="border-color:#ff6b2b33">'+(u.avUrl?'<img src="'+u.avUrl+'" style="width:100%;height:100%;object-fit:cover">':u.av)+'</div><div class="ui"><div class="unr"><span class="un">'+u.un+'</span><span class="xb">XBOX</span></div><div class="ut">\u{1F3C6} '+u.gs+' Gamerscore</div><div class="us">'+cl.length+' public clips</div></div>'+(cl.length>0?'<button class="fb nf" data-a="vpc">View Clips</button>':'')+'</div>'
+    +(cl.length>0?'<div class="stt" style="margin-top:16px">\u{1F3AC} PUBLIC CLIPS</div>'+cl.slice(0,6).map(function(c){var bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+s.tg(c.sd);return'<div class="cli" data-a="oc2" data-idx="'+cl.indexOf(c)+'"><div class="clt" style="'+bg+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.dur+'</span></div><div class="clif"><div class="cltt">'+c.title+'</div><div class="clm">'+c.game+' \u00b7 '+c.ago+'</div><div style="margin-top:6px">'+s.aib(c.ai)+'</div></div></div>'}).join(''):'<div style="padding:16px;text-align:center;color:var(--d);font-size:13px">This player has no public clips</div>');
+  } else {
+    results='<div class="em" style="margin-top:20px"><div class="emi">\u{1F50D}</div><div class="emt">Search Any Xbox Player</div><div class="emd">Enter a gamertag to view their public clips, gamerscore, and profile. Works with any Xbox account!</div></div>';
+  }
+  return'<div class="pt">Discover</div><div style="display:flex;gap:8px;padding:0 16px 14px"><div class="sb" style="flex:1;margin:0">'+this.ic('search')+'<input id="dsInput" placeholder="Enter Xbox Gamertag..." value="'+dsq+'"></div><button id="dsBtn" class="bsy" style="width:auto;padding:10px 18px;border-radius:14px">\u{1F50E}</button></div>'+results},
 rU:function(){var um=this.st.upMode,sp=this.st.syncProg,ai=this.st.aiSet,ls=["Detect multi-kills","Detect clutch rounds","Detect high-action","Detect trick shots","Auto-post 85+ clips"];return'<div class="pt">Upload</div><div class="mt"><button class="mb'+(um==='auto'?' on':'')+'" data-m="auto">\u{1F916} Auto</button><button class="mb'+(um==='manual'?' on':'')+'" data-m="manual">\u{1F4E4} Manual</button></div>'+(um==='auto'?'<div class="syc"><div class="syh"><div class="syi">\u{1F3AE}</div><div><div class="syt">Xbox Game DVR</div><div class="syd">Import captures from Xbox</div></div></div>'+(sp>=0?'<div class="pbr"><div class="pfl" style="width:'+Math.min(sp,100)+'%"></div></div><div style="font-size:12px;color:var(--d)">'+(sp>=100?'\u2705 Synced 8 clips!':'Syncing... '+~~(Math.min(sp,99))+'%')+'</div>':'<button class="bsy" data-a="sy">Sync Now</button>')+'</div><div class="aic"><div class="ait">\u{26A1} AI Settings</div>'+ls.map(function(l,i){return'<div class="air"><span class="ail">'+l+'</span><button class="tg '+(ai[i]?'on':'off')+'" data-a="ta" data-i="'+i+'"><div class="tgk"></div></button></div>'}).join('')+'</div>':'<div style="background:var(--c);border-radius:18px;padding:44px 24px;margin:0 16px;border:2px dashed #ffffff15;text-align:center"><div style="font-size:48px;margin-bottom:12px">\u{1F4E4}</div><div style="font-size:16px;font-weight:700">Upload a clip</div><div style="font-size:13px;color:var(--d);margin-top:4px;margin-bottom:20px">Choose from your captures</div><button class="bsy" style="width:auto;padding:10px 28px;display:inline-block">Choose File</button></div>')},
 rFr:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';if(!isDemo)return'<div class="pt">Friends</div><div class="sb">'+this.ic('search')+'<input placeholder="Search gamertags..."></div><div class="em" style="margin-top:10px"><div class="emi">\u{1F465}</div><div class="emt">No Friends Yet</div><div class="emd">Share Glitch with your Xbox friends so they can join, follow you, and see your clips!</div><button class="bsy" style="width:auto;padding:12px 28px;display:inline-block;margin-top:16px" data-a="invite">\u{1F4E8} Invite Friends</button></div>';var ft=this.st.fTab,fs=this.st.fSearch,fl=this.st.following,us=this.USERS.filter(function(u){return u.un.toLowerCase().indexOf(fs.toLowerCase())!==-1});if(ft==='friends')us=us.filter(function(u){return fl.has(u.id)});return'<div class="pt">Friends</div><div class="sb">'+this.ic('search')+'<input placeholder="Search gamertags..." id="fs" value="'+fs+'"></div><div class="tabs" style="padding-top:0">'+['friends','discover','requests'].map(function(t){return'<button class="tab'+(ft===t?' on':'')+'" data-ft="'+t+'">'+(t==='friends'?'Following':t[0].toUpperCase()+t.slice(1))+'</button>'}).join('')+'</div>'+(us.length===0?'<div class="em"><div class="emi">\u{1F465}</div><div class="emt">No results</div></div>':us.map(function(u){var f=fl.has(u.id);return'<div class="uc fu"><div class="uav'+(f?' fl':'')+'">'+u.av+'</div><div class="ui"><div class="unr"><span class="un">'+u.un+'</span><span class="xb">XBOX</span></div><div class="ut">'+u.gt+'</div><div class="us">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div><button class="fb'+(f?' fl':' nf')+'" data-a="fw" data-id="'+u.id+'">'+(f?s.ic('chk',14)+' Following':'Follow')+'</button></div>'}).join(''))},
 rP:function(){var u=this.st.user,pt=this.st.pTab,s=this,cl=this.st.clips.filter(function(c){return c.user.id===u.id}),av=u.avUrl?'<img src="'+u.avUrl+'">':u.av;return'<div class="ph"><div class="pav">'+av+'</div><div class="pnm">'+u.un+'</div><div class="ptg"><span class="xb">XBOX</span> '+u.gt+(u.gs?' \u00b7 \u{1F3C6} '+u.gs:'')+'</div><div class="pss"><div style="text-align:center"><div class="pv">'+u.cl+'</div><div class="pl">Clips</div></div><div style="text-align:center"><div class="pv">'+u.frs.toLocaleString()+'</div><div class="pl">Followers</div></div><div style="text-align:center"><div class="pv">'+u.fg+'</div><div class="pl">Following</div></div></div><div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button style="padding:8px 20px;border-radius:10px;background:var(--a);color:var(--bg);font-size:13px;font-weight:700" data-a="invite">\u{1F4E8} Invite Friends</button><button style="padding:8px 16px;border-radius:10px;background:var(--sf);color:var(--r);border:1px solid #ffffff11;font-size:13px;font-weight:700" data-a="lo">'+this.ic('out',14)+' Logout</button></div></div><div class="ptabs">'+['clips','highlights','stats'].map(function(t){return'<button class="ptb'+(pt===t?' on':'')+'" data-pt="'+t+'">'+t.toUpperCase()+'</button>'}).join('')+'</div>'+(pt==='clips'?(cl.length>0?cl.map(function(c){var bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+s.tg(c.sd);return'<div class="cli" data-a="oc" data-id="'+c.id+'"><div class="clt" style="'+bg+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.dur+'</span></div><div class="clif"><div class="cltt">'+c.title+'</div><div class="clm">'+c.game+' \u00b7 '+c.vw.toLocaleString()+' views</div><div style="margin-top:6px">'+s.aib(c.ai)+'</div></div></div>'}).join(''):'<div class="em"><div class="emi">\u{1F3AE}</div><div class="emt">No clips yet</div><div class="emd">Sync your Xbox captures</div></div>'):pt==='stats'?'<div class="sg">'+[{i:'\u{1F441}',v:cl.reduce(function(a,c){return a+c.vw},0).toLocaleString(),l:'Views'},{i:'\u{2764}',v:cl.reduce(function(a,c){return a+c.lk},0).toString(),l:'Likes'},{i:'\u{26A1}',v:cl.length>0?(cl.reduce(function(a,c){return a+c.ai},0)/cl.length).toFixed(1):'--',l:'Avg AI'},{i:'\u{1F3C6}',v:cl.length>0?Math.max.apply(null,cl.map(function(c){return c.ai})).toString():'--',l:'Best'},{i:'\u{1F3AE}',v:u.cl.toString(),l:'Clips'},{i:'\u{1F3AF}',v:u.gs||'--',l:'Gamerscore'}].map(function(x){return'<div class="sc"><div class="sci">'+x.i+'</div><div class="scv">'+x.v+'</div><div class="scl">'+x.l+'</div></div>'}).join('')+'</div>':'<div class="em"><div class="emi">\u{1F916}</div><div class="emt">AI Highlights Reel</div><div class="emd">Processing your gameplay...</div><div style="margin:20px auto 0;max-width:260px"><div class="pbr"><div class="pfl" style="width:67%"></div></div></div></div>')},
@@ -407,22 +498,48 @@ bindAll:function(){
   document.querySelectorAll('[data-a="sh"]').forEach(function(b){b.onclick=function(e){e.stopPropagation();var c=s.st.clips.find(function(x){return x.id===parseInt(b.dataset.id)});if(c)s.shareClip(c)}});
   document.querySelectorAll('[data-a="invite"]').forEach(function(b){b.onclick=function(){s.shareApp()}});
   var lo=document.querySelector('[data-a="lo"]');if(lo)lo.onclick=function(){s.logout()};
+  var vpc=document.querySelector('[data-a="vpc"]');if(vpc)vpc.onclick=function(){if(s.st.dsResults)s.viewPlayerClips(s.st.dsResults.clips)};
+  document.querySelectorAll('[data-a="oc2"]').forEach(function(b){b.onclick=function(){if(s.st.dsResults){var c=s.st.dsResults.clips[parseInt(b.dataset.idx)];if(c){s.st.selClip=c;s.render()}}}});
 
-  // Autoplay videos when they scroll into view
-  if(s._observer)s._observer.disconnect();
-  var vids=document.querySelectorAll('.feed-vid');
-  if(vids.length>0){
-    s._observer=new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        var vid=e.target,play=vid.parentElement.querySelector('.feed-play');
-        if(e.isIntersecting&&e.intersectionRatio>=0.6){
-          vid.play().then(function(){vid.classList.add('playing');if(play)play.classList.add('hidden')}).catch(function(){});
-        }else{
-          vid.pause();vid.classList.remove('playing');if(play)play.classList.remove('hidden');
-        }
+  // Snap scroll: play only the visible video
+  var feed=document.getElementById('snapFeed');
+  if(feed){
+    var playIdx=function(){
+      var items=feed.querySelectorAll('.snap-item');
+      var best=-1,bestR=0;
+      items.forEach(function(it,i){
+        var r=it.getBoundingClientRect(),vh=window.innerHeight;
+        var vis=Math.max(0,Math.min(r.bottom,vh)-Math.max(r.top,0))/vh;
+        if(vis>bestR){bestR=vis;best=i}
       });
-    },{threshold:[0,0.6]});
-    vids.forEach(function(v){s._observer.observe(v)});
+      // Pause all, play best
+      feed.querySelectorAll('.snap-vid').forEach(function(v){v.pause();v.classList.remove('playing')});
+      if(best>=0){
+        var vid=items[best].querySelector('.snap-vid');
+        if(vid&&!s._paused){vid.play().then(function(){vid.classList.add('playing')}).catch(function(){})}
+        s._curIdx=best;
+      }
+    };
+    feed.addEventListener('scroll',function(){clearTimeout(s._scrollT);s._scrollT=setTimeout(playIdx,150)});
+    s._paused=false;
+    setTimeout(playIdx,300);
+  }
+
+  // Tap to pause/play
+  document.querySelectorAll('.snap-pause').forEach(function(b){b.onclick=function(e){
+    e.stopPropagation();
+    var idx=parseInt(b.dataset.idx),vid=b.parentElement.querySelector('.snap-vid');
+    if(!vid)return;
+    if(vid.paused){s._paused=false;vid.play().catch(function(){});b.innerHTML=''}
+    else{s._paused=true;vid.pause();b.innerHTML='<div class="snap-pause-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>'}
+  }});
+
+  // Gamertag search
+  var dsInput=document.getElementById('dsInput'),dsBtn=document.getElementById('dsBtn');
+  if(dsBtn&&dsInput){
+    var doSearch=function(){var q=dsInput.value.trim();if(q.length>0)s.searchGamertag(q)};
+    dsBtn.onclick=doSearch;
+    dsInput.addEventListener('keydown',function(e){if(e.key==='Enter')doSearch()});
   }
 }
 };
