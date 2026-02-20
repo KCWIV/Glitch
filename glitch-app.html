@@ -109,7 +109,7 @@ input,button,textarea{font-family:inherit}button{cursor:pointer;border:none;back
 .tab{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;border:1px solid #ffffff0a;background:var(--sf);color:var(--d)}.tab.on{background:var(--a);color:var(--bg);border-color:var(--a)}
 .feed{display:flex;flex-direction:column;gap:0;padding:0;scroll-snap-type:y mandatory;overflow-y:auto;height:100dvh;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .snap-item{position:relative;width:100%;height:100dvh;flex-shrink:0;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center}
-.snap-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.snap-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
 .snap-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(180deg,#0006 0%,transparent 20%,transparent 50%,#000a 100%);padding:16px;padding-bottom:calc(72px + var(--sb));pointer-events:none}
 .snap-overlay *{pointer-events:auto}
 .snap-top{position:absolute;top:calc(14px + var(--st) + 44px);left:16px}
@@ -192,6 +192,21 @@ input,button,textarea{font-family:inherit}button{cursor:pointer;border:none;back
 .clif{padding:10px 12px 10px 0;flex:1;min-width:0}
 .cltt{font-size:14px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .clm{font-size:11px;color:var(--d)}
+
+/* Pull to refresh */
+.ptr{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:102;text-align:center;padding:16px 0 12px;opacity:0;transform:translateX(-50%) translateY(-100%);transition:transform .3s ease,opacity .3s ease;pointer-events:none}
+.ptr.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ptr-inner{display:inline-flex;align-items:center;gap:8px;background:var(--c);border:1px solid #ffffff15;border-radius:20px;padding:8px 18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.ptr-spin{display:inline-block;width:18px;height:18px;border:2px solid #ffffff22;border-top-color:var(--a);border-radius:50%;animation:spin .8s linear infinite}
+.ptr-txt{font-size:12px;font-weight:700;color:var(--d)}
+
+/* Double-tap heart */
+@keyframes dtHeart{0%{opacity:1;transform:translate(-50%,-50%) scale(0)}15%{transform:translate(-50%,-50%) scale(1.3)}30%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+.dt-heart{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:5;animation:dtHeart .9s ease forwards;filter:drop-shadow(0 4px 12px #0008)}
+
+/* Mute toggle in modal */
+.mute-btn{position:absolute;bottom:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#000a;color:#fff;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background .2s}
+.mute-btn:active{background:#fff3}
 </style>
 </head>
 <body>
@@ -239,6 +254,9 @@ HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,16
 st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:''},
 sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
 ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
+svLikes:function(){this.sv('glitch_likes',Array.from(this.st.liked))},
+svFollows:function(){this.sv('glitch_follows',Array.from(this.st.following))},
+restoreSocial:function(){var l=this.ld('glitch_likes'),f=this.ld('glitch_follows');if(l)this.st.liked=new Set(l);if(f)this.st.following=new Set(f)},
 tg:function(s){var h=this.HUES[s%10];return'linear-gradient(135deg,hsl('+h[0]+',70%,20%),hsl('+h[1]+',80%,15%))'},
 aib:function(s){return'<span class="ai '+(s>=90?'s3':s>=75?'s2':'s1')+'">'+this.ic('zap',14)+' '+s+' \u00b7 '+(s>=90?'INSANE':s>=75?'FIRE':'NICE')+'</span>'},
 genClips:function(){var c=[];for(var i=0;i<20;i++){var u=this.USERS[~~(Math.random()*6)],g=this.GAMES[~~(Math.random()*10)],t=this.TYPES[~~(Math.random()*10)],sc=~~(Math.random()*40)+60,m=~~(Math.random()*1440);c.push({id:i+1,user:u,game:g,type:t,title:t+' on '+g,ai:sc,lk:~~(Math.random()*500)+10,cm:~~(Math.random()*80),sh:~~(Math.random()*40),vw:~~(Math.random()*5000)+100,dur:'0:'+String(~~(Math.random()*45)+5).padStart(2,'0'),ago:m<60?m+'m':m<1440?~~(m/60)+'h':~~(m/1440)+'d',auto:Math.random()>.3,sd:i})}this.st.clips=c.sort(function(a,b){return b.ai-a.ai})},
@@ -345,8 +363,8 @@ demoFB:function(){this.st.user={id:0,un:'DemoPlayer',gt:'Demo Mode',av:'\u{1F3AE
 setSt:function(m,t){var el=document.getElementById('ls');if(el){if(this.st.screen==='loading'){el.textContent=m}else{el.className='ls on '+t;el.textContent=m}}},
 loginDemo:function(){this.demoFB()},
 logout:function(){localStorage.removeItem('glitch_sess');localStorage.removeItem('glitch_xauth');this.st.screen='login';this.st.user=null;this.render()},
-toggleLike:function(id){var s=this.st.liked;s.has(id)?s.delete(id):s.add(id);this.render()},
-toggleFollow:function(id){var s=this.st.following;s.has(id)?s.delete(id):s.add(id);this.render()},
+toggleLike:function(id){var s=this.st.liked;s.has(id)?s.delete(id):s.add(id);this.svLikes();this.render()},
+toggleFollow:function(id){var s=this.st.following;s.has(id)?s.delete(id):s.add(id);this.svFollows();this.render()},
 toggleAI:function(i){this.st.aiSet[i]=this.st.aiSet[i]?0:1;this.render()},
 startSync:function(){var self=this;this.st.syncProg=0;this.render();var iv=setInterval(function(){self.st.syncProg+=Math.random()*12+5;if(self.st.syncProg>=100){self.st.syncProg=100;clearInterval(iv)}self.render()},350)},
 addCmt:function(){if(!this.st.newCmt.trim())return;var id=this.st.selClip.id;if(!this.st.comments[id])this.st.comments[id]=[];this.st.comments[id].unshift({u:{av:this.st.user.av,n:this.st.user.un},t:this.st.newCmt.trim(),tm:'now'});this.st.newCmt='';this.render()},
@@ -355,6 +373,29 @@ shareClip:function(c){
   var url=this.REDIR,text='Check out this '+c.game+' clip on Glitch! "'+c.title+'" \u2014 AI Score: '+c.ai;
   if(navigator.share){navigator.share({title:'Glitch \u2014 '+c.title,text:text,url:url}).catch(function(){})}
   else{navigator.clipboard.writeText(text+' '+url).then(function(){alert('Link copied!')}).catch(function(){prompt('Copy this link:',url)})}
+},
+
+refreshFeed:function(){
+  var self=this;
+  self._refreshing=true;self.render();
+  setTimeout(function(){
+    var isDemo=self.st.user&&self.st.user.un==='DemoPlayer';
+    if(isDemo){self.genClips()}
+    else{
+      var auth=self.ld('glitch_xauth');
+      if(auth){
+        self.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r){
+          if(r.ok&&r.data&&r.data.gameClips){
+            var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:self.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
+            self.st.clips=rc;self.st.user.cl=rc.length;
+          }
+          self._refreshing=false;self.render();self.toast('Feed refreshed','ok',1500);
+        }).catch(function(){self._refreshing=false;self.render()});
+        return;
+      }
+    }
+    self._refreshing=false;self.render();self.toast('Feed refreshed','ok',1500);
+  },800);
 },
 
 shareApp:function(){
@@ -391,6 +432,25 @@ searchGamertag:function(gt){
     self.st.dsLoading=false;self.st.dsError=e.message==='not_found'?'Gamertag "'+gt+'" not found. Check the spelling and try again.':'Search failed: '+e.message;
     self.render();
   });
+},
+
+// Friends page gamertag search (reuses same Xbox API as Discover)
+searchFriend:function(gt){
+  var self=this,auth=this.ld('glitch_xauth');
+  if(!auth){self.toast('Sign in with Xbox first','err');return}
+  self.st.frLoading=true;self.st.frResult=null;self.st.frError=null;self.st.frQuery=gt;self.render();
+  self.px('https://profile.xboxlive.com/users/gt('+encodeURIComponent(gt)+')/profile/settings?settings=Gamertag,GameDisplayPicRaw,Gamerscore',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'2','Content-Type':'application/json'}})
+  .then(function(r){
+    if(!r.ok)throw new Error('not_found');
+    var pu=r.data.profileUsers[0],sets={};pu.settings.forEach(function(x){sets[x.id]=x.value});
+    var xuid=pu.id,user={id:'f_'+xuid,un:sets.Gamertag||gt,gt:sets.Gamertag||gt,av:'\u{1F3AE}',avUrl:sets.GameDisplayPicRaw||null,gs:sets.Gamerscore||'0'};
+    return self.px('https://gameclipsmetadata.xboxlive.com/users/xuid('+xuid+')/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r2){
+      var clips=[];
+      if(r2.ok&&r2.data&&r2.data.gameClips){clips=r2.data.gameClips.map(function(c,i){return{id:7000+i,user:user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}})}
+      self.st.frLoading=false;self.st.frResult={user:user,clips:clips};self.render();
+    });
+  })
+  .catch(function(e){self.st.frLoading=false;self.st.frError=e.message==='not_found'?'Gamertag "'+gt+'" not found.':'Search failed: '+e.message;self.render()});
 },
 
 // View a searched player's clip in feed
@@ -432,7 +492,8 @@ rBN:function(){var s=this,p=this.st.page,ns=[['feed','home','Feed'],['discover',
 rF:function(){var s=this,f=this.st.filter,cl=this.st.clips,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';if(f==='auto-clips')cl=cl.filter(function(c){return c.auto});if(f==='top rated')cl=cl.slice().sort(function(a,b){return b.ai-a.ai});var tabs=isDemo?['trending','friends','auto-clips','top rated']:['all clips','top rated'];
   if(this.st.clipsLoading)return this.rTB()+'<div class="pg"><div class="tabs">'+tabs.map(function(t){return'<button class="tab'+(f===t?' on':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div>'+this.rSkel()+'</div>'+this.rBN();
   if(cl.length===0)return this.rTB()+'<div class="pg"><div class="tabs">'+tabs.map(function(t){return'<button class="tab'+(f===t?' on':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="em"><div class="emi">\u{1F3AE}</div><div class="emt">No clips yet</div><div class="emd">Your Xbox clips will appear here after syncing</div></div></div>'+this.rBN();
-  return'<div class="feed" id="snapFeed">'+cl.map(function(c,i){return s.rSnapCard(c,i)}).join('')+'</div><div class="feed-tabs" style="position:fixed;top:calc(var(--st));left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101;padding:10px 14px;display:flex;gap:6px">'+tabs.map(function(t){return'<button class="tab" style="background:#0008;border-color:#fff3;color:#fffc;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);'+(f===t?'background:var(--a);border-color:var(--a);color:var(--bg)':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="feed-bnav" style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101">'+this.rBN2()+'</div>'+(this.st.selClip?this.rMo(this.st.selClip):'')},
+  var ptrEl='<div class="ptr'+(this._refreshing?' show':'')+'" id="ptrEl"><div class="ptr-inner">'+(this._refreshing?'<div class="ptr-spin"></div><span class="ptr-txt">Refreshing...</span>':'<span class="ptr-txt">\u2193 Pull to refresh</span>')+'</div></div>';
+  return ptrEl+'<div class="feed" id="snapFeed">'+cl.map(function(c,i){return s.rSnapCard(c,i)}).join('')+'</div><div class="feed-tabs" style="position:fixed;top:calc(var(--st));left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101;padding:10px 14px;display:flex;gap:6px">'+tabs.map(function(t){return'<button class="tab" style="background:#0008;border-color:#fff3;color:#fffc;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);'+(f===t?'background:var(--a);border-color:var(--a);color:var(--bg)':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="feed-bnav" style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101">'+this.rBN2()+'</div>'+(this.st.selClip?this.rMo(this.st.selClip):'')},
 
 rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=u.avUrl?'<img src="'+u.avUrl+'">':u.av;
   var vidEl=c.vidUrl?'<video class="snap-vid" data-idx="'+i+'" src="'+c.vidUrl+'" poster="'+(c.thUrl||'')+'" playsinline muted loop preload="'+(i<2?'auto':'none')+'" style="width:100%;height:100%;object-fit:cover"></video>':'';
@@ -446,7 +507,7 @@ rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=
   // Right actions
   +'<div class="snap-acts">'
   +'<button class="snap-act" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+'<span>'+(c.lk+(lk?1:0))+'</span></button>'
-  +'<button class="snap-act" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+'<span>'+c.cm+'</span></button>'
+  +'<button class="snap-act" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+'<span>'+(c.cm+(s.st.comments[c.id]||[]).length)+'</span></button>'
   +'<button class="snap-act" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+'<span>Share</span></button>'
   +'</div>'
   +'</div>'
@@ -456,8 +517,9 @@ rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=
 
 // Alternate bottom nav for feed (transparent)
 rBN2:function(){var s=this,p=this.st.page,ns=[['feed','home','Feed'],['discover','search','Discover'],['upload','upload','Upload'],['friends','friends','Friends'],['profile','profile','Profile']];return'<div style="display:flex;align-items:flex-start;justify-content:space-around;padding:6px 0;padding-bottom:calc(8px + var(--sb));background:#0008;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)">'+ns.map(function(n){if(n[0]==='upload')return'<button class="ni" data-nav="'+n[0]+'" style="color:#fffc"><div class="ni-u'+(p===n[0]?' on':'')+'">'+s.ic(n[1])+'</div><span class="ni-l">'+n[2]+'</span></button>';return'<button class="ni'+(p===n[0]?' on':'')+'" data-nav="'+n[0]+'" style="'+(p===n[0]?'':'color:#fff9')+'">'+s.ic(n[1])+'<span class="ni-l">'+n[2]+'</span></button>'}).join('')+'</div>'},
-rC:function(c,i){var lk=this.st.liked.has(c.id),bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+this.tg(c.sd);var thContent=c.vidUrl?'<video class="feed-vid" data-clipid="'+c.id+'" src="'+c.vidUrl+'" poster="'+(c.thUrl||'')+'" playsinline muted loop preload="none" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video>':'';return'<div class="clip fu d'+(Math.min(i+1,5))+'"><div class="cth" style="'+bg+'" data-a="oc" data-id="'+c.id+'">'+thContent+'<div class="cpl feed-play" data-clipid="'+c.id+'">'+this.ic('play',32)+'</div><span class="cdur">'+c.dur+'</span>'+(c.auto?'<span class="cac">'+this.ic('zap',12)+' AUTO</span>':'')+'<span class="cvw">'+this.ic('eye',12)+' '+c.vw.toLocaleString()+'</span></div><div class="cbd"><div class="chd"><div style="flex:1;min-width:0"><div class="cur"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div><div class="ctt">'+c.title+'</div><span class="cgm">'+c.game+'</span></div>'+this.aib(c.ai)+'</div><div class="cas"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+' '+c.cm+'</button><button class="ca" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+' Share</button></div></div></div>'},
-rMo:function(c){var lk=this.st.liked.has(c.id),isDemo=this.st.user&&this.st.user.un==='DemoPlayer',cm=[].concat(this.st.comments[c.id]||[],isDemo?this.DCMTS:[]),bg=c.thUrl?'background-image:url('+c.thUrl+');background-size:cover;background-position:center':'background:'+this.tg(c.sd);var vidHtml=c.vidUrl?'<video id="clipVid" style="width:100%;aspect-ratio:16/9;background:#000;object-fit:contain" poster="'+(c.thUrl||'')+'" playsinline controls><source src="'+c.vidUrl+'" type="video/mp4"></video>':'<div class="cth" style="'+bg+'"><div class="cpl" data-a="noVid">'+this.ic('play',32)+'</div></div>';return'<div class="mo" data-a="cbg"><div class="mc" onclick="event.stopPropagation()"><div style="position:relative">'+vidHtml+'<button class="mx" data-a="cm">'+this.ic('x')+'</button></div><div style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1"><div class="ctt" style="font-size:18px">'+c.title+'</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div></div>'+this.aib(c.ai)+'</div><div class="cas" style="margin-top:16px;padding-top:14px"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca">'+this.ic('cmt')+' '+(c.cm+(this.st.comments[c.id]||[]).length)+'</button><button class="ca" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+' Share</button></div></div><div class="cs"><div style="font-size:15px;font-weight:700;margin-bottom:10px">Comments</div>'+(cm.length===0?'<div style="text-align:center;padding:20px 0;color:var(--d);font-size:13px">No comments yet \u2014 be the first!</div>':cm.map(function(m){return'<div class="cmi"><div class="cmav">'+m.u.av+'</div><div><div class="cmn">'+m.u.n+'</div><div class="cmt2">'+m.t+'</div><div class="cmtm">'+m.tm+'</div></div></div>'}).join(''))+'<div class="cr"><input class="ci2" id="ci" placeholder="Add a comment..." value="'+this.st.newCmt+'"><button class="csb" data-a="sc">Post</button></div></div></div></div>'},
+rC:function(c,i){var lk=this.st.liked.has(c.id),bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+this.tg(c.sd);var thContent=c.vidUrl?'<video class="feed-vid" data-clipid="'+c.id+'" src="'+c.vidUrl+'" poster="'+(c.thUrl||'')+'" playsinline muted loop preload="none" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video>':'';return'<div class="clip fu d'+(Math.min(i+1,5))+'"><div class="cth" style="'+bg+'" data-a="oc" data-id="'+c.id+'">'+thContent+'<div class="cpl feed-play" data-clipid="'+c.id+'">'+this.ic('play',32)+'</div><span class="cdur">'+c.dur+'</span>'+(c.auto?'<span class="cac">'+this.ic('zap',12)+' AUTO</span>':'')+'<span class="cvw">'+this.ic('eye',12)+' '+c.vw.toLocaleString()+'</span></div><div class="cbd"><div class="chd"><div style="flex:1;min-width:0"><div class="cur"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div><div class="ctt">'+c.title+'</div><span class="cgm">'+c.game+'</span></div>'+this.aib(c.ai)+'</div><div class="cas"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+' '+(c.cm+(this.st.comments[c.id]||[]).length)+'</button><button class="ca" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+' Share</button></div></div></div>'},
+rMo:function(c){var lk=this.st.liked.has(c.id),isDemo=this.st.user&&this.st.user.un==='DemoPlayer',cm=[].concat(this.st.comments[c.id]||[],isDemo?this.DCMTS:[]),bg=c.thUrl?'background-image:url('+c.thUrl+');background-size:cover;background-position:center':'background:'+this.tg(c.sd);var muteIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',mutedIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+var vidHtml=c.vidUrl?'<video id="clipVid" style="width:100%;aspect-ratio:16/9;background:#000;object-fit:contain" poster="'+(c.thUrl||'')+'" playsinline controls><source src="'+c.vidUrl+'" type="video/mp4"></video>':'<div class="cth" style="'+bg+'"><div class="cpl" data-a="noVid">'+this.ic('play',32)+'</div></div>';var muteBtn=c.vidUrl?'<button class="mute-btn" data-a="mute" title="Toggle mute">'+mutedIc+'</button>':'';return'<div class="mo" data-a="cbg"><div class="mc" onclick="event.stopPropagation()"><div style="position:relative">'+vidHtml+muteBtn+'<button class="mx" data-a="cm">'+this.ic('x')+'</button></div><div style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1"><div class="ctt" style="font-size:18px">'+c.title+'</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div></div>'+this.aib(c.ai)+'</div><div class="cas" style="margin-top:16px;padding-top:14px"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca">'+this.ic('cmt')+' '+(c.cm+(this.st.comments[c.id]||[]).length)+'</button><button class="ca" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+' Share</button></div></div><div class="cs"><div style="font-size:15px;font-weight:700;margin-bottom:10px">Comments</div>'+(cm.length===0?'<div style="text-align:center;padding:20px 0;color:var(--d);font-size:13px">No comments yet \u2014 be the first!</div>':cm.map(function(m){return'<div class="cmi"><div class="cmav">'+m.u.av+'</div><div><div class="cmn">'+m.u.n+'</div><div class="cmt2">'+m.t+'</div><div class="cmtm">'+m.tm+'</div></div></div>'}).join(''))+'<div class="cr"><input class="ci2" id="ci" placeholder="Add a comment..." value="'+this.st.newCmt+'"><button class="csb" data-a="sc">Post</button></div></div></div></div>'},
 rD:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer',dsl=this.st.dsLoading,dsr=this.st.dsResults,dse=this.st.dsError,dsq=this.st.dsQuery||'';
   if(isDemo)return'<div class="pt">Discover</div><div class="sb">'+this.ic('search')+'<input placeholder="Search clips, games, players..."></div><div class="stt">\u{1F525} TRENDING GAMES</div><div class="gt">'+this.GAMES.map(function(g){return'<button class="gti">'+g+'</button>'}).join('')+'</div><div class="stt">\u{26A1} TOP CLIPPERS</div>'+this.USERS.slice(0,5).map(function(u,i){return'<div class="lr"><span class="lrk">#'+(i+1)+'</span><div class="lra">'+u.av+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">'+u.un+'</div><div style="font-size:11px;color:var(--d)">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div>'+s.aib(~~(Math.random()*15)+85)+'</div>'}).join('');
   // Real user — gamertag search
@@ -469,11 +531,19 @@ rD:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer',dsl
     results='<div class="uc fu" style="margin-top:6px"><div class="uav" style="border-color:#ff6b2b33">'+(u.avUrl?'<img src="'+u.avUrl+'" style="width:100%;height:100%;object-fit:cover">':u.av)+'</div><div class="ui"><div class="unr"><span class="un">'+u.un+'</span><span class="xb">XBOX</span></div><div class="ut">\u{1F3C6} '+u.gs+' Gamerscore</div><div class="us">'+cl.length+' public clips</div></div>'+(cl.length>0?'<button class="fb nf" data-a="vpc">View Clips</button>':'')+'</div>'
     +(cl.length>0?'<div class="stt" style="margin-top:16px">\u{1F3AC} PUBLIC CLIPS</div>'+cl.slice(0,6).map(function(c){var bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+s.tg(c.sd);return'<div class="cli" data-a="oc2" data-idx="'+cl.indexOf(c)+'"><div class="clt" style="'+bg+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.dur+'</span></div><div class="clif"><div class="cltt">'+c.title+'</div><div class="clm">'+c.game+' \u00b7 '+c.ago+'</div><div style="margin-top:6px">'+s.aib(c.ai)+'</div></div></div>'}).join(''):'<div style="padding:16px;text-align:center;color:var(--d);font-size:13px">This player has no public clips</div>');
   } else {
-    results='<div class="em" style="margin-top:20px"><div class="emi">\u{1F50D}</div><div class="emt">Search Any Xbox Player</div><div class="emd">Enter a gamertag to view their public clips, gamerscore, and profile. Works with any Xbox account!</div></div>';
+    results='';
   }
-  return'<div class="pt">Discover</div><div style="display:flex;gap:8px;padding:0 16px 14px"><div class="sb" style="flex:1;margin:0">'+this.ic('search')+'<input id="dsInput" placeholder="Enter Xbox Gamertag..." value="'+dsq+'"></div><button id="dsBtn" class="bsy" style="width:auto;padding:10px 18px;border-radius:14px">\u{1F50E}</button></div>'+results},
+  // Trending games & top clippers for all users
+  var trendSec='<div class="stt">\u{1F525} TRENDING GAMES</div><div class="gt">'+this.GAMES.map(function(g){return'<button class="gti">'+g+'</button>'}).join('')+'</div><div class="stt">\u{26A1} TOP CLIPPERS</div>'+this.USERS.slice(0,5).map(function(u,i){return'<div class="lr"><span class="lrk">#'+(i+1)+'</span><div class="lra">'+u.av+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">'+u.un+'</div><div style="font-size:11px;color:var(--d)">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div>'+s.aib(~~(Math.random()*15)+85)+'</div>'}).join('');
+  return'<div class="pt">Discover</div><div style="display:flex;gap:8px;padding:0 16px 14px"><div class="sb" style="flex:1;margin:0">'+this.ic('search')+'<input id="dsInput" placeholder="Enter Xbox Gamertag..." value="'+dsq+'"></div><button id="dsBtn" class="bsy" style="width:auto;padding:10px 18px;border-radius:14px">\u{1F50E}</button></div>'+results+trendSec},
 rU:function(){var um=this.st.upMode,sp=this.st.syncProg,ai=this.st.aiSet,ls=["Detect multi-kills","Detect clutch rounds","Detect high-action","Detect trick shots","Auto-post 85+ clips"];return'<div class="pt">Upload</div><div class="mt"><button class="mb'+(um==='auto'?' on':'')+'" data-m="auto">\u{1F916} Auto</button><button class="mb'+(um==='manual'?' on':'')+'" data-m="manual">\u{1F4E4} Manual</button></div>'+(um==='auto'?'<div class="syc"><div class="syh"><div class="syi">\u{1F3AE}</div><div><div class="syt">Xbox Game DVR</div><div class="syd">Import captures from Xbox</div></div></div>'+(sp>=0?'<div class="pbr"><div class="pfl" style="width:'+Math.min(sp,100)+'%"></div></div><div style="font-size:12px;color:var(--d)">'+(sp>=100?'\u2705 Synced 8 clips!':'Syncing... '+~~(Math.min(sp,99))+'%')+'</div>':'<button class="bsy" data-a="sy">Sync Now</button>')+'</div><div class="aic"><div class="ait">\u{26A1} AI Settings</div>'+ls.map(function(l,i){return'<div class="air"><span class="ail">'+l+'</span><button class="tg '+(ai[i]?'on':'off')+'" data-a="ta" data-i="'+i+'"><div class="tgk"></div></button></div>'}).join('')+'</div>':'<div style="background:var(--c);border-radius:18px;padding:44px 24px;margin:0 16px;border:2px dashed #ffffff15;text-align:center"><div style="font-size:48px;margin-bottom:12px">\u{1F4E4}</div><div style="font-size:16px;font-weight:700">Upload a clip</div><div style="font-size:13px;color:var(--d);margin-top:4px;margin-bottom:20px">Choose from your captures</div><button class="bsy" style="width:auto;padding:10px 28px;display:inline-block">Choose File</button></div>')},
-rFr:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';if(!isDemo)return'<div class="pt">Friends</div><div class="sb">'+this.ic('search')+'<input placeholder="Search gamertags..."></div><div class="em" style="margin-top:10px"><div class="emi">\u{1F465}</div><div class="emt">No Friends Yet</div><div class="emd">Share Glitch with your Xbox friends so they can join, follow you, and see your clips!</div><button class="bsy" style="width:auto;padding:12px 28px;display:inline-block;margin-top:16px" data-a="invite">\u{1F4E8} Invite Friends</button></div>';var ft=this.st.fTab,fs=this.st.fSearch,fl=this.st.following,us=this.USERS.filter(function(u){return u.un.toLowerCase().indexOf(fs.toLowerCase())!==-1});if(ft==='friends')us=us.filter(function(u){return fl.has(u.id)});return'<div class="pt">Friends</div><div class="sb">'+this.ic('search')+'<input placeholder="Search gamertags..." id="fs" value="'+fs+'"></div><div class="tabs" style="padding-top:0">'+['friends','discover','requests'].map(function(t){return'<button class="tab'+(ft===t?' on':'')+'" data-ft="'+t+'">'+(t==='friends'?'Following':t[0].toUpperCase()+t.slice(1))+'</button>'}).join('')+'</div>'+(us.length===0?'<div class="em"><div class="emi">\u{1F465}</div><div class="emt">No results</div></div>':us.map(function(u){var f=fl.has(u.id);return'<div class="uc fu"><div class="uav'+(f?' fl':'')+'">'+u.av+'</div><div class="ui"><div class="unr"><span class="un">'+u.un+'</span><span class="xb">XBOX</span></div><div class="ut">'+u.gt+'</div><div class="us">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div><button class="fb'+(f?' fl':' nf')+'" data-a="fw" data-id="'+u.id+'">'+(f?s.ic('chk',14)+' Following':'Follow')+'</button></div>'}).join(''))},
+rFr:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';if(!isDemo){var frq=this.st.frQuery||'',frl=this.st.frLoading,frr=this.st.frResult,fre=this.st.frError;
+  var frContent='';
+  if(frl){frContent='<div style="text-align:center;padding:30px 0"><div class="load-spin" style="margin:0 auto 12px"></div><div style="color:var(--d);font-size:13px">Searching...</div></div>'}
+  else if(fre){frContent='<div class="em" style="margin-top:10px"><div class="emi">\u{1F615}</div><div class="emt">Not Found</div><div class="emd">'+fre+'</div></div>'}
+  else if(frr){var u=frr.user;frContent='<div class="uc fu" style="margin-top:6px"><div class="uav" style="border-color:#ff6b2b33">'+(u.avUrl?'<img src="'+u.avUrl+'" style="width:100%;height:100%;object-fit:cover">':u.av)+'</div><div class="ui"><div class="unr"><span class="un">'+u.un+'</span><span class="xb">XBOX</span></div><div class="ut">\u{1F3C6} '+u.gs+' Gamerscore</div><div class="us">'+frr.clips.length+' public clips</div></div>'+(frr.clips.length>0?'<button class="fb nf" data-a="frvpc">View Clips</button>':'')+'</div>'}
+  else{frContent='<div class="em" style="margin-top:10px"><div class="emi">\u{1F465}</div><div class="emt">Find Xbox Friends</div><div class="emd">Search for any Xbox gamertag to view their profile and clips, or invite friends to join Glitch!</div><button class="bsy" style="width:auto;padding:12px 28px;display:inline-block;margin-top:16px" data-a="invite">\u{1F4E8} Invite Friends</button><button class="bsy" style="width:auto;padding:12px 28px;display:inline-block;margin-top:8px;background:var(--sf);color:var(--t);border:1px solid #ffffff11" data-nav="discover">\u{1F50D} Go to Discover</button></div>'}
+  return'<div class="pt">Friends</div><div style="display:flex;gap:8px;padding:0 16px 14px"><div class="sb" style="flex:1;margin:0">'+this.ic('search')+'<input id="frInput" placeholder="Search Xbox gamertag..." value="'+frq+'"></div><button id="frBtn" class="bsy" style="width:auto;padding:10px 18px;border-radius:14px">\u{1F50E}</button></div>'+frContent;}var ft=this.st.fTab,fs=this.st.fSearch,fl=this.st.following,us=this.USERS.filter(function(u){return u.un.toLowerCase().indexOf(fs.toLowerCase())!==-1});if(ft==='friends')us=us.filter(function(u){return fl.has(u.id)});return'<div class="pt">Friends</div><div class="sb">'+this.ic('search')+'<input placeholder="Search gamertags..." id="fs" value="'+fs+'"></div><div class="tabs" style="padding-top:0">'+['friends','discover','requests'].map(function(t){return'<button class="tab'+(ft===t?' on':'')+'" data-ft="'+t+'">'+(t==='friends'?'Following':t[0].toUpperCase()+t.slice(1))+'</button>'}).join('')+'</div>'+(us.length===0?'<div class="em"><div class="emi">\u{1F465}</div><div class="emt">No results</div></div>':us.map(function(u){var f=fl.has(u.id);return'<div class="uc fu"><div class="uav'+(f?' fl':'')+'">'+u.av+'</div><div class="ui"><div class="unr"><span class="un">'+u.un+'</span><span class="xb">XBOX</span></div><div class="ut">'+u.gt+'</div><div class="us">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div><button class="fb'+(f?' fl':' nf')+'" data-a="fw" data-id="'+u.id+'">'+(f?s.ic('chk',14)+' Following':'Follow')+'</button></div>'}).join(''))},
 rP:function(){var u=this.st.user,pt=this.st.pTab,s=this,cl=this.st.clips.filter(function(c){return c.user.id===u.id}),av=u.avUrl?'<img src="'+u.avUrl+'">':u.av;return'<div class="ph"><div class="pav">'+av+'</div><div class="pnm">'+u.un+'</div><div class="ptg"><span class="xb">XBOX</span> '+u.gt+(u.gs?' \u00b7 \u{1F3C6} '+u.gs:'')+'</div><div class="pss"><div style="text-align:center"><div class="pv">'+u.cl+'</div><div class="pl">Clips</div></div><div style="text-align:center"><div class="pv">'+u.frs.toLocaleString()+'</div><div class="pl">Followers</div></div><div style="text-align:center"><div class="pv">'+u.fg+'</div><div class="pl">Following</div></div></div><div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button style="padding:8px 20px;border-radius:10px;background:var(--a);color:var(--bg);font-size:13px;font-weight:700" data-a="invite">\u{1F4E8} Invite Friends</button><button style="padding:8px 16px;border-radius:10px;background:var(--sf);color:var(--r);border:1px solid #ffffff11;font-size:13px;font-weight:700" data-a="lo">'+this.ic('out',14)+' Logout</button></div></div><div class="ptabs">'+['clips','highlights','stats'].map(function(t){return'<button class="ptb'+(pt===t?' on':'')+'" data-pt="'+t+'">'+t.toUpperCase()+'</button>'}).join('')+'</div>'+(pt==='clips'?(cl.length>0?cl.map(function(c){var bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+s.tg(c.sd);return'<div class="cli" data-a="oc" data-id="'+c.id+'"><div class="clt" style="'+bg+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.dur+'</span></div><div class="clif"><div class="cltt">'+c.title+'</div><div class="clm">'+c.game+' \u00b7 '+c.vw.toLocaleString()+' views</div><div style="margin-top:6px">'+s.aib(c.ai)+'</div></div></div>'}).join(''):'<div class="em"><div class="emi">\u{1F3AE}</div><div class="emt">No clips yet</div><div class="emd">Sync your Xbox captures</div></div>'):pt==='stats'?'<div class="sg">'+[{i:'\u{1F441}',v:cl.reduce(function(a,c){return a+c.vw},0).toLocaleString(),l:'Views'},{i:'\u{2764}',v:cl.reduce(function(a,c){return a+c.lk},0).toString(),l:'Likes'},{i:'\u{26A1}',v:cl.length>0?(cl.reduce(function(a,c){return a+c.ai},0)/cl.length).toFixed(1):'--',l:'Avg AI'},{i:'\u{1F3C6}',v:cl.length>0?Math.max.apply(null,cl.map(function(c){return c.ai})).toString():'--',l:'Best'},{i:'\u{1F3AE}',v:u.cl.toString(),l:'Clips'},{i:'\u{1F3AF}',v:u.gs||'--',l:'Gamerscore'}].map(function(x){return'<div class="sc"><div class="sci">'+x.i+'</div><div class="scv">'+x.v+'</div><div class="scl">'+x.l+'</div></div>'}).join('')+'</div>':'<div class="em"><div class="emi">\u{1F916}</div><div class="emt">AI Highlights Reel</div><div class="emd">Processing your gameplay...</div><div style="margin:20px auto 0;max-width:260px"><div class="pbr"><div class="pfl" style="width:67%"></div></div></div></div>')},
 // === EVENTS ===
 bindAll:function(){
@@ -488,6 +558,15 @@ bindAll:function(){
   var cbg=document.querySelector('[data-a="cbg"]');if(cbg)cbg.onclick=function(e){if(e.target===e.currentTarget){s.st.selClip=null;s.render()}};
   var sc=document.querySelector('[data-a="sc"]');if(sc)sc.onclick=function(){s.addCmt()};
   var cin=document.getElementById('ci');if(cin){cin.addEventListener('input',function(e){s.st.newCmt=e.target.value});cin.addEventListener('keydown',function(e){if(e.key==='Enter')s.addCmt()})}
+  // Mute/unmute toggle in modal
+  var muteBtn=document.querySelector('[data-a="mute"]');
+  if(muteBtn){var vid=document.getElementById('clipVid');if(vid){
+    vid.muted=true;
+    muteBtn.onclick=function(){
+      vid.muted=!vid.muted;
+      muteBtn.innerHTML=vid.muted?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+    };
+  }}
   document.querySelectorAll('[data-a="fw"]').forEach(function(b){b.onclick=function(){s.toggleFollow(parseInt(b.dataset.id))}});
   document.querySelectorAll('[data-ft]').forEach(function(b){b.onclick=function(){s.st.fTab=b.dataset.ft;s.render()}});
   var fs=document.getElementById('fs');if(fs)fs.addEventListener('input',function(e){s.st.fSearch=e.target.value;s.render();setTimeout(function(){var el=document.getElementById('fs');if(el){el.focus();el.selectionStart=el.selectionEnd=el.value.length}},0)});
@@ -518,21 +597,69 @@ bindAll:function(){
         var vid=items[best].querySelector('.snap-vid');
         if(vid&&!s._paused){vid.play().then(function(){vid.classList.add('playing')}).catch(function(){})}
         s._curIdx=best;
+        // Preload adjacent videos
+        [best-1,best+1,best+2].forEach(function(pi){
+          if(pi>=0&&pi<items.length&&pi!==best){
+            var pv=items[pi].querySelector('.snap-vid');
+            if(pv&&pv.preload==='none')pv.preload='metadata';
+          }
+        });
       }
     };
     feed.addEventListener('scroll',function(){clearTimeout(s._scrollT);s._scrollT=setTimeout(playIdx,150)});
     s._paused=false;
     setTimeout(playIdx,300);
+
+    // Pull to refresh
+    var ptrStartY=0,ptrActive=false;
+    feed.addEventListener('touchstart',function(e){
+      if(feed.scrollTop<=0){ptrStartY=e.touches[0].clientY;ptrActive=true}else{ptrActive=false}
+    },{passive:true});
+    feed.addEventListener('touchmove',function(e){
+      if(!ptrActive||s._refreshing)return;
+      var dy=e.touches[0].clientY-ptrStartY,el=document.getElementById('ptrEl');
+      if(dy>60&&el){el.classList.add('show');el.querySelector('.ptr-txt').textContent='\u2191 Release to refresh'}
+      else if(el){el.classList.remove('show')}
+    },{passive:true});
+    feed.addEventListener('touchend',function(){
+      if(!ptrActive||s._refreshing)return;
+      var el=document.getElementById('ptrEl');
+      if(el&&el.classList.contains('show')){s.refreshFeed()}
+      else if(el){el.classList.remove('show')}
+      ptrActive=false;
+    });
   }
 
-  // Tap to pause/play
-  document.querySelectorAll('.snap-pause').forEach(function(b){b.onclick=function(e){
-    e.stopPropagation();
-    var idx=parseInt(b.dataset.idx),vid=b.parentElement.querySelector('.snap-vid');
-    if(!vid)return;
-    if(vid.paused){s._paused=false;vid.play().catch(function(){});b.innerHTML=''}
-    else{s._paused=true;vid.pause();b.innerHTML='<div class="snap-pause-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>'}
-  }});
+  // Tap to pause/play + double-tap to like
+  document.querySelectorAll('.snap-pause').forEach(function(b){
+    b._tapCount=0;
+    b.onclick=function(e){
+      e.stopPropagation();
+      var idx=parseInt(b.dataset.idx),vid=b.parentElement.querySelector('.snap-vid');
+      b._tapCount++;
+      if(b._tapCount===1){
+        b._tapTimer=setTimeout(function(){
+          b._tapCount=0;
+          // Single tap: pause/play
+          if(!vid)return;
+          if(vid.paused){s._paused=false;vid.play().catch(function(){});b.innerHTML=''}
+          else{s._paused=true;vid.pause();b.innerHTML='<div class="snap-pause-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>'}
+        },280);
+      } else if(b._tapCount===2){
+        clearTimeout(b._tapTimer);b._tapCount=0;
+        // Double tap: like + heart animation
+        var clip=s.st.clips[idx];
+        if(clip){
+          if(!s.st.liked.has(clip.id))s.toggleLike(clip.id);
+          // Show heart animation
+          var heart=document.createElement('div');heart.className='dt-heart';
+          heart.innerHTML='<svg width="80" height="80" viewBox="0 0 24 24" fill="#ff4757" stroke="#ff4757" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+          b.parentElement.appendChild(heart);
+          setTimeout(function(){heart.remove()},950);
+        }
+      }
+    };
+  });
 
   // Gamertag search
   var dsInput=document.getElementById('dsInput'),dsBtn=document.getElementById('dsBtn');
@@ -541,6 +668,16 @@ bindAll:function(){
     dsBtn.onclick=doSearch;
     dsInput.addEventListener('keydown',function(e){if(e.key==='Enter')doSearch()});
   }
+
+  // Friends page search
+  var frInput=document.getElementById('frInput'),frBtn=document.getElementById('frBtn');
+  if(frBtn&&frInput){
+    var doFrSearch=function(){var q=frInput.value.trim();if(q.length>0)s.searchFriend(q)};
+    frBtn.onclick=doFrSearch;
+    frInput.addEventListener('keydown',function(e){if(e.key==='Enter')doFrSearch()});
+  }
+  var frvpc=document.querySelector('[data-a="frvpc"]');
+  if(frvpc)frvpc.onclick=function(){if(s.st.frResult)s.viewPlayerClips(s.st.frResult.clips)};
 }
 };
 
@@ -567,6 +704,8 @@ document.addEventListener('DOMContentLoaded',function(){
     G.setSt('Error: '+(ep.get('error_description')||ep.get('error')),'err');
     return;
   }
+  // Restore persisted likes/follows
+  G.restoreSocial();
   // Check saved session
   var sess=G.ld('glitch_sess');
   if(sess&&sess.user){G.st.user=sess.user;G.st.screen='main';G.genClips();G.render()}
