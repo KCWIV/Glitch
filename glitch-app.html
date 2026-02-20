@@ -217,7 +217,7 @@ handleAuth:function(token){
   .then(function(auth){
     self.setSt('Loading profile...','info');
     // Step 3: Profile (PROXY)
-    return self.px('https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag,GameDisplayPicRaw,Gamerscore',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt}}).then(function(r){
+    return self.px('https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag,GameDisplayPicRaw,Gamerscore',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'2','Content-Type':'application/json'}}).then(function(r){
       if(!r.ok)throw new Error('Profile: '+JSON.stringify(r.data));
       console.log('Step 3: Got profile');return{p:r.data,a:auth};
     });
