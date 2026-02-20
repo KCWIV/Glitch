@@ -2,320 +2,752 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Glitch</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Glitch">
+<meta name="theme-color" content="#0c0a12">
+<title>Glitch — AI Game Clips</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, sans-serif; background: #0c0a12; color: #eae8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.card { width: 100%; max-width: 400px; text-align: center; }
-.logo { font-size: 48px; font-weight: 900; background: linear-gradient(135deg, #ff6b2b, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
-.sub { font-size: 13px; color: #7b6f94; letter-spacing: 3px; margin-bottom: 40px; }
-.box { background: #13111d; border-radius: 16px; padding: 28px; border: 1px solid #ffffff0a; }
-.box h2 { font-size: 18px; margin-bottom: 6px; }
-.box p { font-size: 13px; color: #7b6f94; margin-bottom: 20px; line-height: 1.5; }
-input { width: 100%; padding: 14px; background: #1c1928; border: 1px solid #ffffff15; border-radius: 12px; color: #eae8f0; font-size: 14px; outline: none; margin-bottom: 12px; font-family: monospace; }
-input:focus { border-color: #ff6b2b; }
-input::placeholder { color: #7b6f94; font-family: -apple-system, sans-serif; }
-.btn { display: block; width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 10px; transition: all 0.2s; text-decoration: none; text-align: center; }
-.btn:active { transform: scale(0.97); }
-.btn-xbox { background: linear-gradient(135deg, #ff6b2b22, #a855f722); border: 1px solid #ff6b2b55; color: #eae8f0; }
-.btn-xbox.disabled { opacity: 0.3; pointer-events: none; }
-.btn-demo { background: #1c1928; color: #7b6f94; border: 1px solid #ffffff10; }
-.status { margin-top: 16px; padding: 12px; border-radius: 10px; font-size: 13px; display: none; word-break: break-all; line-height: 1.5; }
-.status.error { display: block; background: #ff475715; border: 1px solid #ff475533; color: #ff6b6b; }
-.status.success { display: block; background: #a855f715; border: 1px solid #a855f733; color: #a855f7; }
-.status.info { display: block; background: #ff6b2b15; border: 1px solid #ff6b2b33; color: #ff6b2b; }
-.profile { display: none; margin-top: 20px; padding: 20px; background: #13111d; border-radius: 16px; border: 1px solid #a855f733; }
-.profile img { width: 64px; height: 64px; border-radius: 50%; border: 2px solid #a855f7; margin-bottom: 10px; }
-.profile .gt { font-size: 22px; font-weight: 700; }
-.profile .gs { font-size: 13px; color: #a855f7; margin-top: 4px; }
-.debug { margin-top: 12px; text-align: left; font-size: 11px; color: #7b6f94; background: #1c1928; padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto; word-break: break-all; font-family: monospace; line-height: 1.6; }
-.redirect-info { margin-top: 12px; font-size: 11px; color: #7b6f94; background: #1c1928; padding: 10px; border-radius: 8px; word-break: break-all; font-family: monospace; text-align: left; }
+:root {
+  --accent: #ff6b2b;
+  --accent2: #a855f7;
+  --bg: #0c0a12;
+  --card: #13111d;
+  --surface: #1c1928;
+  --hover: #252233;
+  --text: #eae8f0;
+  --dim: #7b6f94;
+  --red: #ff4757;
+  --st: env(safe-area-inset-top,0px);
+  --sb: env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+input,button,textarea{font-family:inherit}
+button{cursor:pointer;border:none;background:none}
+::-webkit-scrollbar{width:0;height:0}
+.app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;position:relative}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes pop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.fu{animation:fadeUp .4s ease both}.fi{animation:fadeIn .3s ease both}
+.d1{animation-delay:.05s;opacity:0}.d2{animation-delay:.1s;opacity:0}.d3{animation-delay:.15s;opacity:0}.d4{animation-delay:.2s;opacity:0}.d5{animation-delay:.25s;opacity:0}
+
+/* LOGIN */
+.login{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,#a855f70a 0%,transparent 50%),var(--bg);position:relative;overflow:hidden}
+.login::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:repeating-conic-gradient(#ffffff02 0deg 1deg,transparent 1deg 6deg);animation:rot 120s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.logo{font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;background:linear-gradient(135deg,#ff6b2b,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative;z-index:1}
+.login-sub{font-size:13px;color:var(--dim);letter-spacing:4px;text-transform:uppercase;font-weight:600;margin-bottom:40px;position:relative;z-index:1}
+.login-card{width:100%;max-width:380px;background:var(--card);border-radius:20px;border:1px solid #ffffff0a;padding:28px 24px;position:relative;z-index:1;backdrop-filter:blur(24px)}
+.login-card h2{font-size:20px;font-weight:700;text-align:center;margin-bottom:6px}
+.login-card p{font-size:13px;color:var(--dim);text-align:center;margin-bottom:24px;line-height:1.4}
+.login-input{width:100%;padding:13px 14px;background:var(--surface);border:1px solid #ffffff11;border-radius:12px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px;font-family:monospace}
+.login-input:focus{border-color:var(--accent)}
+.login-input::placeholder{color:var(--dim);font-family:'Rajdhani',sans-serif}
+.lbtn{display:block;width:100%;padding:15px 20px;border-radius:14px;font-size:15px;font-weight:700;letter-spacing:.5px;text-align:center;text-decoration:none;transition:all .3s;position:relative;overflow:hidden}
+.lbtn:active{transform:scale(.97)}
+.lbtn-xbox{background:linear-gradient(135deg,#ff6b2b18,#a855f718);border:1px solid #ff6b2b44;color:var(--text);display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px}
+.lbtn-xbox.disabled{opacity:.3;pointer-events:none}
+.lbtn-xbox .ico{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#ff6b2b33,#ff6b2b11);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.lbtn-xbox .tag{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;opacity:.5;margin-left:auto}
+.lbtn-demo{background:#ffffff06;border:1px solid #ffffff10;color:var(--dim);font-size:13px;font-weight:600;margin-top:0}
+.login-div{display:flex;align-items:center;gap:14px;margin:14px 0;color:var(--dim);font-size:11px;font-weight:600;letter-spacing:1px}
+.login-div::before,.login-div::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,#ffffff15,transparent)}
+.login-feat{display:flex;gap:28px;justify-content:center;margin-top:36px;position:relative;z-index:1}
+.login-feat-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+.login-feat-icon{width:44px;height:44px;border-radius:14px;background:#ff6b2b22;display:flex;align-items:center;justify-content:center;font-size:20px}
+.login-feat-label{font-size:10px;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;padding-top:calc(10px + var(--st));position:sticky;top:0;background:#0c0a12ee;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:100;border-bottom:1px solid #ffffff06}
+.topbar-logo{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#ff6b2b,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-r{display:flex;align-items:center;gap:14px}
+.notif{position:relative;color:var(--dim)}
+.notif-dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff}
+.av-sm{width:30px;height:30px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:15px;border:1.5px solid #ff6b2b33}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;align-items:flex-start;justify-content:space-around;padding:6px 0;padding-bottom:calc(8px + var(--sb));background:#0c0a12f8;border-top:1px solid #ffffff06;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);z-index:100}
+.nv{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 14px;color:var(--dim);transition:color .2s}
+.nv.on{color:var(--accent)}
+.nv-lb{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.nv-up{width:46px;height:46px;border-radius:15px;background:var(--surface);border:1px solid #ffffff11;display:flex;align-items:center;justify-content:center;margin-top:-12px;color:var(--dim);transition:all .2s}
+.nv-up.on{background:var(--accent);color:var(--bg);border:none;box-shadow:0 4px 24px #ff6b2b33}
+
+/* PAGE */
+.page{padding-bottom:calc(76px + var(--sb))}
+.ptitle{font-size:22px;font-weight:800;padding:16px 16px 12px}
+
+/* FILTER TABS */
+.tabs{display:flex;gap:6px;padding:14px 16px 8px;overflow-x:auto;scrollbar-width:none}
+.tab{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;transition:all .2s;border:1px solid #ffffff0a;background:var(--surface);color:var(--dim)}
+.tab.on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+
+/* CLIP CARDS */
+.feed{display:flex;flex-direction:column;gap:14px;padding:10px 14px}
+.clip{background:var(--card);border-radius:18px;overflow:hidden;border:1px solid #ffffff08;transition:all .3s}
+.clip:active{transform:scale(.985)}
+.clip-th{position:relative;width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.clip-play{position:absolute;width:56px;height:56px;border-radius:50%;background:#00000077;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding-left:3px;opacity:.8}
+.clip-dur{position:absolute;bottom:8px;right:8px;background:#000000bb;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;color:#fff}
+.clip-auto{position:absolute;top:8px;left:8px;background:#a855f722;border:1px solid #a855f744;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--accent2);display:flex;align-items:center;gap:4px;backdrop-filter:blur(6px)}
+.clip-views{position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:4px;font-size:11px;color:#ffffffcc;background:#00000066;border-radius:6px;padding:2px 8px}
+.clip-body{padding:12px 14px 14px}
+.clip-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.clip-ur{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.clip-av{width:28px;height:28px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid #ffffff11;flex-shrink:0}
+.clip-un{font-size:13px;font-weight:700}
+.clip-tm{font-size:11px;color:var(--dim)}
+.clip-tt{font-size:15px;font-weight:700;margin-bottom:5px;line-height:1.2}
+.clip-gm{font-size:11px;color:var(--dim);font-weight:600;background:var(--surface);border-radius:6px;padding:2px 8px;display:inline-block}
+.ai{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px 3px 6px;font-size:11px;font-weight:700;letter-spacing:.5px;white-space:nowrap;flex-shrink:0;animation:pop .4s ease both}
+.ai.s3{background:#ff475722;border:1px solid #ff475755;color:var(--red)}.ai.s2{background:#a855f722;border:1px solid #a855f755;color:var(--accent2)}.ai.s1{background:#ff6b2b22;border:1px solid #ff6b2b55;color:var(--accent)}
+.clip-acts{display:flex;align-items:center;gap:18px;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff08}
+.clip-act{display:flex;align-items:center;gap:5px;color:var(--dim);font-size:13px;font-weight:600;padding:0;transition:color .2s}
+.clip-act.liked{color:var(--red)}
+
+/* SEARCH BAR */
+.sbar{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:14px;padding:11px 14px;margin:0 16px 14px;border:1px solid #ffffff08}
+.sbar input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px}
+.sbar input::placeholder{color:var(--dim)}
+
+/* USER CARD */
+.ucard{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:12px 14px;margin:0 16px 8px;border:1px solid #ffffff08}
+.uav{width:46px;height:46px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid #ffffff11;flex-shrink:0}
+.uav.fol{border-color:#a855f733}
+.uinfo{flex:1;min-width:0}
+.unr{display:flex;align-items:center;gap:6px}
+.uname{font-size:15px;font-weight:700}
+.pbadge{font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;letter-spacing:.5px}
+.pbadge.xb{color:#107c10;background:#107c1022}.pbadge.ps{color:#003087;background:#00308722}
+.utag{font-size:12px;color:var(--dim)}.ustats{font-size:11px;color:var(--dim);margin-top:2px}
+.fbtn{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;transition:all .2s;flex-shrink:0}
+.fbtn.fol{background:transparent;border:1px solid #a855f733;color:var(--accent2)}
+.fbtn.nf{background:var(--accent);color:var(--bg)}
+
+/* PROFILE */
+.prof-hdr{background:linear-gradient(180deg,#a855f711 0%,transparent 100%);padding:28px 16px 16px;text-align:center}
+.prof-av{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:42px;border:3px solid #ff6b2b33;box-shadow:0 0 40px #ff6b2b22}
+.prof-name{font-size:26px;font-weight:800}
+.prof-tag{font-size:13px;color:var(--dim);display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}
+.prof-stats{display:flex;justify-content:center;gap:36px;margin-top:20px}
+.ps-val{font-size:22px;font-weight:800}.ps-lbl{font-size:11px;color:var(--dim);font-weight:600}
+.prof-tabs{display:flex;border-bottom:1px solid #ffffff0a;padding:0 16px}
+.ptab{flex:1;padding:12px 0;text-align:center;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);border-bottom:2px solid transparent;transition:all .2s}
+.ptab.on{color:var(--text);border-bottom-color:var(--accent)}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px}
+.scard{background:var(--card);border-radius:14px;padding:16px 14px;border:1px solid #ffffff08}
+.scard-i{font-size:22px;margin-bottom:6px}.scard-v{font-size:20px;font-weight:800}.scard-l{font-size:11px;color:var(--dim);font-weight:600}
+
+/* UPLOAD */
+.mtog{display:flex;background:var(--surface);border-radius:14px;padding:4px;margin:0 16px 20px}
+.mbtn{flex:1;padding:10px 0;border-radius:11px;font-size:14px;font-weight:700;transition:all .2s;color:var(--dim)}
+.mbtn.on{background:var(--accent);color:var(--bg)}
+.sync-card{background:var(--card);border-radius:18px;padding:22px;margin:0 16px 14px;border:1px solid #ff6b2b33}
+.sync-hdr{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sync-ico{width:44px;height:44px;border-radius:12px;background:#a855f722;display:flex;align-items:center;justify-content:center;font-size:20px}
+.sync-tt{font-size:16px;font-weight:700}.sync-ds{font-size:12px;color:var(--dim)}
+.btn-sync{width:100%;padding:12px;border-radius:12px;background:var(--accent);color:var(--bg);font-size:14px;font-weight:700;transition:all .2s}
+.btn-sync:active{transform:scale(.97)}
+.pbar{height:8px;border-radius:4px;background:var(--surface);overflow:hidden;margin-bottom:8px}
+.pfill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s}
+.ai-card{background:var(--card);border-radius:18px;padding:20px;margin:0 16px;border:1px solid #ffffff08}
+.ai-tt{font-size:16px;font-weight:700;margin-bottom:14px}
+.ai-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #ffffff06}
+.ai-row:last-child{border-bottom:none}
+.ai-lbl{font-size:13px;font-weight:500;flex:1;padding-right:12px}
+.tog{width:44px;height:24px;border-radius:12px;position:relative;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--accent)}.tog.off{background:var(--surface);border:1px solid #ffffff11}
+.tog-k{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tog.on .tog-k{left:23px}.tog.off .tog-k{left:3px}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:#000000dd;z-index:200;display:flex;flex-direction:column;animation:fadeIn .2s ease}
+.modal-c{flex:1;max-width:480px;width:100%;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;animation:slideUp .3s ease;overflow-y:auto}
+.modal-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#000000aa;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:10;backdrop-filter:blur(6px)}
+.cmt-sec{padding:16px}
+.cmt-row{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid #ffffff08}
+.cmt-inp{flex:1;padding:10px 14px;background:var(--surface);border:1px solid #ffffff08;border-radius:20px;color:var(--text);font-size:13px;outline:none}
+.cmt-inp:focus{border-color:#ff6b2b33}
+.cmt-send{padding:10px 18px;background:var(--accent);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700}
+.cmt-item{display:flex;gap:10px;padding:10px 0}
+.cmt-av{width:32px;height:32px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.cmt-name{font-size:13px;font-weight:700}.cmt-text{font-size:13px;color:var(--dim);line-height:1.4;margin-top:2px}.cmt-time{font-size:10px;color:var(--dim);margin-top:3px}
+
+.empty{text-align:center;padding:40px 24px;color:var(--dim)}
+.empty-i{font-size:44px;margin-bottom:12px}.empty-t{font-size:16px;font-weight:700;color:var(--text)}.empty-d{font-size:13px;margin-top:4px;line-height:1.4}
+
+/* Clip list */
+.cl-item{display:flex;gap:12px;background:var(--card);border-radius:12px;overflow:hidden;margin:0 16px 8px;border:1px solid #ffffff08}
+.cl-th{width:130px;min-height:74px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative}
+.cl-info{padding:10px 12px 10px 0;flex:1;min-width:0}
+.cl-tt{font-size:14px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cl-meta{font-size:11px;color:var(--dim)}
+
+/* Game tags */
+.gtags{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px}
+.gtag{background:var(--card);border-radius:10px;padding:8px 14px;border:1px solid #ffffff08;font-size:13px;font-weight:600;color:var(--text)}
+.gtag:active{background:var(--hover)}
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #ffffff05}
+.lb-rank{font-size:16px;font-weight:800;color:var(--accent2);width:26px;text-align:center}
+.lb-av{width:38px;height:38px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:18px}
+.sec-tt{font-size:13px;font-weight:700;color:var(--dim);letter-spacing:1px;padding:0 16px;margin-bottom:10px;margin-top:20px}
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="logo">GLITCH</div>
-  <div class="sub">XBOX LOGIN TEST</div>
-
-  <div class="box" id="loginBox">
-    <h2>Connect Xbox Account</h2>
-    <p>Enter your Azure App Client ID, then tap the sign-in link below.</p>
-    <input type="text" id="clientId" placeholder="Paste Client ID here...">
-    <a id="xboxLink" href="#" class="btn btn-xbox disabled">Sign in with Xbox →</a>
-    <button class="btn btn-demo" onclick="enterDemo()">Try Demo Mode</button>
-    <div id="redirectInfo" class="redirect-info" style="display:none">
-      <strong>Your redirect URI for Azure:</strong><br>
-      <span id="redirectUri"></span>
-    </div>
-    <div id="status" class="status"></div>
-  </div>
-
-  <div class="profile" id="profile">
-    <img id="profilePic" src="" alt="">
-    <div class="gt" id="gamertag"></div>
-    <div class="gs" id="gamerscore"></div>
-    <div style="margin-top:16px;font-size:13px;color:#7b6f94">&#10003; Xbox connected successfully! The full Glitch app will work with your account.</div>
-  </div>
-
-  <div class="debug" id="debug" style="display:none"></div>
-</div>
-
+<div id="app" class="app"></div>
 <script>
-var REDIRECT_URI = window.location.origin + window.location.pathname;
+// ===========================================================
+// GLITCH — Full App
+// ===========================================================
+var G = {
+  // PKCE
+  genVerifier: function() {
+    var a = new Uint8Array(32); crypto.getRandomValues(a);
+    return btoa(String.fromCharCode.apply(null,a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  },
+  sha256: function(s) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); },
+  b64url: function(buf) { var s='',b=new Uint8Array(buf); for(var i=0;i<b.byteLength;i++) s+=String.fromCharCode(b[i]); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''); },
 
-// Show redirect URI so user can verify it matches Azure
-document.getElementById('redirectUri').textContent = REDIRECT_URI;
-document.getElementById('redirectInfo').style.display = 'block';
+  REDIR: window.location.origin + window.location.pathname,
+  SCOPES: 'Xboxlive.signin Xboxlive.offline_access',
 
-function log(msg) {
-  var d = document.getElementById('debug');
-  d.style.display = 'block';
-  d.innerHTML += new Date().toLocaleTimeString() + ': ' + msg + '<br>';
-  d.scrollTop = d.scrollHeight;
-}
+  s: {
+    screen:'login', page:'feed', user:null, demoMode:false,
+    clips:[], liked:new Set(), following:new Set([2,3,5]),
+    comments:{}, feedFilter:'trending', uploadMode:'auto',
+    profileTab:'clips', friendsTab:'friends', friendSearch:'',
+    syncProgress:-1, selectedClip:null, newComment:'',
+    aiSettings:[true,true,true,false,false],
+  },
 
-function setStatus(msg, type) {
-  var s = document.getElementById('status');
-  s.className = 'status ' + type;
-  s.textContent = msg;
-}
+  USERS: [
+    {id:1,username:"xNightHawk",gamertag:"xNightHawk#2847",avatar:"\u{1F985}",platform:"xbox",followers:1243,following:89,clips:47},
+    {id:2,username:"FragMaster99",gamertag:"FragMaster99",avatar:"\u{1F480}",platform:"xbox",followers:892,following:134,clips:31},
+    {id:3,username:"SilentScope",gamertag:"SilentScope_X",avatar:"\u{1F3AF}",platform:"xbox",followers:2301,following:201,clips:63},
+    {id:4,username:"VelocityKing",gamertag:"VelocityKing",avatar:"\u{26A1}",platform:"xbox",followers:567,following:78,clips:22},
+    {id:5,username:"LunarWraith",gamertag:"LunarWraith#1001",avatar:"\u{1F319}",platform:"xbox",followers:3102,following:156,clips:89},
+    {id:6,username:"BlazeRunner",gamertag:"BlazeRunner_TV",avatar:"\u{1F525}",platform:"xbox",followers:445,following:62,clips:18},
+  ],
+  GAMES:["Call of Duty: MW3","Fortnite","Apex Legends","Halo Infinite","Rocket League","FIFA 25","GTA Online","Destiny 2","Overwatch 2","Diablo IV"],
+  TYPES:["Squad Wipe","Clutch Round","Insane Snipe","Ace","Trickshot","Collateral","1v4 Clutch","No-Scope","Team Play","Buzzer Beater"],
+  CMTS:[
+    {user:{avatar:"\u{1F480}",name:"FragMaster99"},text:"That was absolutely filthy \u{1F525}",time:"2m ago"},
+    {user:{avatar:"\u{1F3AF}",name:"SilentScope"},text:"How do you even hit those shots lol",time:"8m ago"},
+    {user:{avatar:"\u{26A1}",name:"VelocityKing"},text:"Bro I was in this lobby \u{1F480}",time:"14m ago"},
+  ],
+  HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,160],[220,280],[40,100]],
 
-// Load saved client ID
-var savedId = localStorage.getItem('glitch_cid');
-if (savedId) {
-  document.getElementById('clientId').value = savedId;
-}
-
-// PKCE helpers
-function generateCodeVerifier() {
-  var array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return btoa(String.fromCharCode.apply(null, array))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-function sha256(plain) {
-  var encoder = new TextEncoder();
-  var data = encoder.encode(plain);
-  return crypto.subtle.digest('SHA-256', data);
-}
-
-function base64urlencode(buf) {
-  var str = '';
-  var bytes = new Uint8Array(buf);
-  for (var i = 0; i < bytes.byteLength; i++) {
-    str += String.fromCharCode(bytes[i]);
-  }
-  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-function updateLink() {
-  var id = document.getElementById('clientId').value.trim();
-  var link = document.getElementById('xboxLink');
-  if (id && id.length > 10) {
-    localStorage.setItem('glitch_cid', id);
-    link.className = 'btn btn-xbox';
-    // We'll build the URL on click, not here
-    link.href = '#';
-    link.onclick = function(e) {
-      e.preventDefault();
-      // Generate fresh PKCE verifier at click time
-      var verifier = generateCodeVerifier();
-      localStorage.setItem('glitch_pkce_verifier', verifier);
-      sha256(verifier).then(function(hashed) {
-        var challenge = base64urlencode(hashed);
-        var url = 'https://login.live.com/oauth20_authorize.srf'
-          + '?client_id=' + encodeURIComponent(id)
-          + '&response_type=code'
-          + '&redirect_uri=' + encodeURIComponent(REDIRECT_URI)
-          + '&scope=' + encodeURIComponent('Xboxlive.signin Xboxlive.offline_access')
-          + '&code_challenge=' + encodeURIComponent(challenge)
-          + '&code_challenge_method=S256';
-        window.location.href = url;
-      });
+  // Icons
+  ic: function(n,sz){
+    sz=sz||20;
+    var m={
+      home:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+      search:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+      upload:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+      friends:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+      profile:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+      heart:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      heartF:'<svg width="18" height="18" viewBox="0 0 24 24" fill="#ff4757" stroke="#ff4757" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      comment:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      share:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+      play:'<svg width="32" height="32" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+      zap:'<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+      bell:'<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+      close:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      eye:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+      check:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+      logout:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+      settings:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
     };
-  } else {
-    link.href = '#';
-    link.onclick = null;
-    link.className = 'btn btn-xbox disabled';
-  }
-}
+    return m[n]||'';
+  },
 
-document.getElementById('clientId').addEventListener('input', updateLink);
-document.getElementById('clientId').addEventListener('change', updateLink);
-updateLink();
+  tg: function(seed) { var h=this.HUES[seed%this.HUES.length]; return 'linear-gradient(135deg,hsl('+h[0]+',70%,20%) 0%,hsl('+h[1]+',80%,15%) 100%)'; },
+  aib: function(sc) { var c=sc>=90?'s3':sc>=75?'s2':'s1',l=sc>=90?'INSANE':sc>=75?'FIRE':'NICE'; return '<span class="ai '+c+'">'+this.ic('zap',14)+' '+sc+' \u00b7 '+l+'</span>'; },
 
-// Check for OAuth callback on page load
-var hash = window.location.hash;
-var urlParams = new URLSearchParams(window.location.search);
-var authCode = urlParams.get('code');
+  init: function() {
+    var sess = this.ld('glitch_sess');
+    if(sess) { this.s.screen='main'; this.s.user=sess.user; this.s.demoMode=sess.demo||false; }
+    this.genClips();
+    this.render();
+  },
 
-if (authCode) {
-  // Authorization code flow
-  history.replaceState(null, '', window.location.pathname);
-  log('Got authorization code');
-  setStatus('Got code! Exchanging for token...', 'info');
-  
-  var savedClientId = localStorage.getItem('glitch_cid');
-  if (!savedClientId) {
-    setStatus('Error: Client ID not found. Please paste it again and retry.', 'error');
-  } else {
-    exchangeCodeForToken(authCode, savedClientId);
-  }
-} else if (hash && hash.indexOf('access_token') !== -1) {
-  var params = new URLSearchParams(hash.substring(1));
-  var token = params.get('access_token');
-  history.replaceState(null, '', window.location.pathname);
+  sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
 
-  if (token) {
-    log('Got Microsoft access token');
-    setStatus('Got token! Connecting to Xbox Live...', 'info');
-    authenticateXbox(token);
-  }
-} else if (hash && hash.indexOf('error') !== -1) {
-  var errParams = new URLSearchParams(hash.substring(1));
-  var error = errParams.get('error');
-  var desc = errParams.get('error_description');
-  history.replaceState(null, '', window.location.pathname);
-  log('OAuth error: ' + error + ' - ' + desc);
-  setStatus('Error: ' + (desc || error), 'error');
-} else if (urlParams.get('error')) {
-  var error = urlParams.get('error');
-  var desc = urlParams.get('error_description');
-  history.replaceState(null, '', window.location.pathname);
-  log('OAuth error: ' + error + ' - ' + desc);
-  setStatus('Error: ' + (desc || error), 'error');
-}
+  doXboxLogin: function() {
+    var cid = localStorage.getItem('glitch_cid');
+    if(!cid) { this.s.screen='config'; this.render(); return; }
+    var self=this, v=this.genVerifier();
+    localStorage.setItem('glitch_pkce',v);
+    this.sha256(v).then(function(h){
+      var ch=self.b64url(h);
+      window.location.href='https://login.live.com/oauth20_authorize.srf'
+        +'?client_id='+encodeURIComponent(cid)
+        +'&response_type=code'
+        +'&redirect_uri='+encodeURIComponent(self.REDIR)
+        +'&scope='+encodeURIComponent(self.SCOPES)
+        +'&code_challenge='+encodeURIComponent(ch)
+        +'&code_challenge_method=S256';
+    });
+  },
 
-function exchangeCodeForToken(code, clientId) {
-  log('Exchanging code for token...');
-  
-  var verifier = localStorage.getItem('glitch_pkce_verifier');
-  if (!verifier) {
-    setStatus('Error: PKCE verifier not found. Please try signing in again.', 'error');
-    return;
-  }
-  
-  var body = new URLSearchParams({
-    client_id: clientId,
-    code: code,
-    redirect_uri: REDIRECT_URI,
-    grant_type: 'authorization_code',
-    scope: 'Xboxlive.signin Xboxlive.offline_access',
-    code_verifier: verifier
-  });
+  PROXY: '', // Set after deploying Vercel proxy
 
-  fetch('https://login.live.com/oauth20_token.srf', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString()
-  })
-  .then(function(res) {
-    if (!res.ok) return res.text().then(function(t) { throw new Error('Token exchange failed (' + res.status + '): ' + t); });
-    return res.json();
-  })
-  .then(function(data) {
-    if (data.access_token) {
-      log('Got access token from code exchange');
-      setStatus('Token received! Connecting to Xbox Live...', 'info');
-      authenticateXbox(data.access_token);
-    } else {
-      throw new Error('No access_token in response: ' + JSON.stringify(data));
-    }
-  })
-  .catch(function(err) {
-    log('Token exchange error: ' + err.message);
-    setStatus(err.message, 'error');
-  });
-}
-
-function authenticateXbox(msToken) {
-  log('Step 1: Getting Xbox Live token...');
-
-  fetch('https://user.auth.xboxlive.com/user/authenticate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      RelyingParty: 'http://auth.xboxlive.com',
-      TokenType: 'JWT',
-      Properties: {
-        AuthMethod: 'RPS',
-        SiteName: 'user.auth.xboxlive.com',
-        RpsTicket: 'd=' + msToken
+  handleCallback: function() {
+    var p=new URLSearchParams(window.location.search), code=p.get('code'), err=p.get('error');
+    if(code) {
+      history.replaceState(null,'',window.location.pathname);
+      var cid=localStorage.getItem('glitch_cid');
+      var verifier=localStorage.getItem('glitch_pkce');
+      if(cid && verifier) {
+        this.exchangeAndAuth(code, cid, verifier);
+      } else {
+        this.loginDemo();
       }
-    })
-  })
-  .then(function(res) {
-    if (!res.ok) return res.text().then(function(t) { throw new Error('XBL failed (' + res.status + '): ' + t); });
-    return res.json();
-  })
-  .then(function(xblData) {
-    var xblToken = xblData.Token;
-    var userHash = xblData.DisplayClaims.xui[0].uhs;
-    log('Step 1 done. User hash: ' + userHash);
-    log('Step 2: Getting XSTS token...');
+      return true;
+    }
+    if(err) {
+      history.replaceState(null,'',window.location.pathname);
+      alert('Login error: '+(p.get('error_description')||err));
+      return true;
+    }
+    return false;
+  },
 
-    return fetch('https://xsts.auth.xboxlive.com/xsts/authorize', {
+  proxyFetch: function(url, opts) {
+    var proxy = this.PROXY || localStorage.getItem('glitch_proxy');
+    if (!proxy) {
+      return fetch(url, opts); // Try direct if no proxy
+    }
+    return fetch(proxy + '/api/xbox', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        RelyingParty: 'http://xboxlive.com',
-        TokenType: 'JWT',
-        Properties: { SandboxId: 'RETAIL', UserTokens: [xblToken] }
+        url: url,
+        method: opts.method || 'POST',
+        headers: opts.headers || {},
+        body: opts.body ? (typeof opts.body === 'string' ? JSON.parse(opts.body) : opts.body) : undefined,
+      })
+    }).then(function(res) { return res.json(); }).then(function(wrapper) {
+      if (wrapper.error) throw new Error(wrapper.error);
+      return { ok: wrapper.status >= 200 && wrapper.status < 300, status: wrapper.status, data: wrapper.data };
+    });
+  },
+
+  exchangeAndAuth: function(code, clientId, verifier) {
+    var self = this;
+    self.s.screen = 'main';
+    self.s.user = { id:0, username:'Connecting...', gamertag:'Authenticating with Xbox...', avatar:'\u{1F3AE}', platform:'xbox', followers:0, following:0, clips:0 };
+    self.s.demoMode = false;
+    self.genClips();
+    self.render();
+
+    // Step 1: Exchange code for MS token
+    var tokenBody = new URLSearchParams({
+      client_id: clientId,
+      code: code,
+      redirect_uri: self.REDIR,
+      grant_type: 'authorization_code',
+      scope: 'Xboxlive.signin Xboxlive.offline_access',
+      code_verifier: verifier
+    });
+
+    var proxy = self.PROXY || localStorage.getItem('glitch_proxy');
+    
+    fetch(proxy + '/api/xbox', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: 'https://login.live.com/oauth20_token.srf',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: tokenBody.toString(),
       })
     })
-    .then(function(res) {
-      if (!res.ok) return res.text().then(function(t) { throw new Error('XSTS failed (' + res.status + '): ' + t); });
-      return res.json();
+    .then(function(r) { return r.json(); })
+    .then(function(w) {
+      if (w.error) throw new Error(w.error);
+      var msToken = w.data.access_token;
+      if (!msToken) throw new Error('No access_token: ' + JSON.stringify(w.data));
+      console.log('Got MS token');
+
+      // Step 2: Xbox Live token
+      return self.proxyFetch('https://user.auth.xboxlive.com/user/authenticate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          RelyingParty: 'http://auth.xboxlive.com',
+          TokenType: 'JWT',
+          Properties: { AuthMethod: 'RPS', SiteName: 'user.auth.xboxlive.com', RpsTicket: 'd=' + msToken }
+        })
+      });
     })
-    .then(function(xstsData) {
-      return { userHash: userHash, xstsToken: xstsData.Token };
-    });
-  })
-  .then(function(auth) {
-    log('Step 2 done. Getting profile...');
+    .then(function(r) {
+      if (!r.ok) throw new Error('XBL auth failed: ' + JSON.stringify(r.data));
+      var xblToken = r.data.Token;
+      var userHash = r.data.DisplayClaims.xui[0].uhs;
+      console.log('Got XBL token, hash:', userHash);
 
-    return fetch(
-      'https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag,GameDisplayPicRaw,Gamerscore',
-      { headers: { 'Authorization': 'XBL3.0 x=' + auth.userHash + ';' + auth.xstsToken } }
-    )
-    .then(function(res) {
-      if (!res.ok) return res.text().then(function(t) { throw new Error('Profile failed (' + res.status + '): ' + t); });
-      return res.json();
-    });
-  })
-  .then(function(profileData) {
-    var settings = {};
-    profileData.profileUsers[0].settings.forEach(function(s) { settings[s.id] = s.value; });
-    log('Done! Gamertag: ' + settings.Gamertag);
+      // Step 3: XSTS token
+      return self.proxyFetch('https://xsts.auth.xboxlive.com/xsts/authorize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          RelyingParty: 'http://xboxlive.com',
+          TokenType: 'JWT',
+          Properties: { SandboxId: 'RETAIL', UserTokens: [xblToken] }
+        })
+      }).then(function(r2) {
+        if (!r2.ok) throw new Error('XSTS failed: ' + JSON.stringify(r2.data));
+        return { userHash: userHash, xstsToken: r2.data.Token };
+      });
+    })
+    .then(function(auth) {
+      console.log('Got XSTS token');
 
-    document.getElementById('loginBox').style.display = 'none';
-    document.getElementById('profile').style.display = 'block';
-    document.getElementById('gamertag').textContent = settings.Gamertag;
-    document.getElementById('gamerscore').textContent = settings.Gamerscore + ' Gamerscore';
-    if (settings.GameDisplayPicRaw) {
-      document.getElementById('profilePic').src = settings.GameDisplayPicRaw;
+      // Step 4: Profile
+      return self.proxyFetch('https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag,GameDisplayPicRaw,Gamerscore', {
+        method: 'GET',
+        headers: { 'Authorization': 'XBL3.0 x=' + auth.userHash + ';' + auth.xstsToken }
+      }).then(function(r) {
+        if (!r.ok) throw new Error('Profile failed: ' + JSON.stringify(r.data));
+        return { profile: r.data, auth: auth };
+      });
+    })
+    .then(function(result) {
+      var settings = {};
+      result.profile.profileUsers[0].settings.forEach(function(s) { settings[s.id] = s.value; });
+
+      self.s.user = {
+        id: 0,
+        username: settings.Gamertag || 'Xbox Player',
+        gamertag: settings.Gamertag || 'Player',
+        avatar: '\u{1F3AE}',
+        avatarUrl: settings.GameDisplayPicRaw || null,
+        platform: 'xbox',
+        followers: Math.floor(Math.random() * 500),
+        following: Math.floor(Math.random() * 100),
+        clips: 0,
+        gamerscore: settings.Gamerscore || '0',
+      };
+      self.s.demoMode = false;
+      self.sv('glitch_sess', { user: self.s.user, demo: false });
+      self.sv('glitch_auth', { userHash: result.auth.userHash, xstsToken: result.auth.xstsToken });
+      console.log('Logged in as', settings.Gamertag);
+      self.render();
+
+      // Step 5: Fetch clips
+      self.proxyFetch('https://gameclipsmetadata.xboxlive.com/users/me/clips', {
+        method: 'GET',
+        headers: {
+          'Authorization': 'XBL3.0 x=' + result.auth.userHash + ';' + result.auth.xstsToken,
+          'x-xbl-contract-version': '1'
+        }
+      }).then(function(r) {
+        if (r.ok && r.data.gameClips) {
+          var real = r.data.gameClips.map(function(clip, i) {
+            return {
+              id: 2000 + i, user: self.s.user, game: clip.titleName || 'Unknown',
+              clipType: clip.clipName || 'Clip', title: (clip.clipName || clip.titleName || 'Gameplay') + ' Clip',
+              aiScore: Math.min(60 + Math.floor(Math.random() * 35) + (clip.durationInSeconds < 30 ? 10 : 0), 99),
+              likes: Math.floor(Math.random() * 50), comments: Math.floor(Math.random() * 10),
+              shares: Math.floor(Math.random() * 5), views: clip.views || Math.floor(Math.random() * 200),
+              duration: self.fmtDur(clip.durationInSeconds),
+              timeAgo: self.fmtAgo(new Date(clip.dateRecorded)),
+              isAutoClip: true, seed: i,
+              thumbnailUrl: clip.thumbnails && clip.thumbnails[0] ? clip.thumbnails[0].uri : null,
+              videoUrl: clip.gameClipUris && clip.gameClipUris[0] ? clip.gameClipUris[0].uri : null,
+            };
+          });
+          self.s.clips = real.concat(self.s.clips);
+          self.s.user.clips = real.length;
+          self.render();
+        }
+      }).catch(function() {}); // Clips are optional
+    })
+    .catch(function(err) {
+      console.error('Auth chain failed:', err);
+      // Fall back to demo with message
+      self.s.user = { id:0, username:'Xbox Player', gamertag:'Connected (limited)', avatar:'\u{1F3AE}', platform:'xbox', followers:0, following:0, clips:0 };
+      self.s.demoMode = true;
+      self.sv('glitch_sess', { user: self.s.user, demo: true });
+      self.render();
+    });
+  },
+
+  fmtDur: function(sec) { if(!sec) return '0:30'; return Math.floor(sec/60)+':'+String(Math.floor(sec%60)).padStart(2,'0'); },
+  fmtAgo: function(d) { var m=Math.floor((Date.now()-d.getTime())/60000); return m<60?m+'m ago':m<1440?Math.floor(m/60)+'h ago':Math.floor(m/1440)+'d ago'; },
+
+  loginDemo: function() {
+    this.s.demoMode=true;
+    this.s.user=Object.assign({},this.USERS[0]);
+    this.s.screen='main';
+    this.sv('glitch_sess',{user:this.s.user,demo:true});
+    this.render();
+  },
+
+  logout: function() {
+    localStorage.removeItem('glitch_sess');
+    this.s.screen='login'; this.s.user=null;
+    this.render();
+  },
+
+  genClips: function() {
+    var clips=[];
+    for(var i=0;i<20;i++){
+      var u=this.USERS[Math.floor(Math.random()*this.USERS.length)],
+          g=this.GAMES[Math.floor(Math.random()*this.GAMES.length)],
+          t=this.TYPES[Math.floor(Math.random()*this.TYPES.length)],
+          sc=Math.floor(Math.random()*40)+60,
+          m=Math.floor(Math.random()*1440);
+      clips.push({id:i+1,user:u,game:g,clipType:t,title:t+' on '+g,aiScore:sc,
+        likes:Math.floor(Math.random()*500)+10,comments:Math.floor(Math.random()*80),
+        shares:Math.floor(Math.random()*40),views:Math.floor(Math.random()*5000)+100,
+        duration:'0:'+String(Math.floor(Math.random()*45)+5).padStart(2,'0'),
+        timeAgo:m<60?m+'m ago':m<1440?Math.floor(m/60)+'h ago':Math.floor(m/1440)+'d ago',
+        isAutoClip:Math.random()>.3,seed:i});
     }
-    setStatus('Connected!', 'success');
-  })
-  .catch(function(err) {
-    log('ERROR: ' + err.message);
-    setStatus(err.message, 'error');
-  });
-}
+    this.s.clips=clips.sort(function(a,b){return b.aiScore-a.aiScore});
+  },
 
-function enterDemo() {
-  document.getElementById('loginBox').style.display = 'none';
-  document.getElementById('profile').style.display = 'block';
-  document.getElementById('gamertag').textContent = 'DemoPlayer';
-  document.getElementById('gamerscore').textContent = '12,450 Gamerscore';
-  document.getElementById('profilePic').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231c1928' width='100' height='100'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-size='40'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E";
-}
+  toggleLike:function(id){if(this.s.liked.has(id))this.s.liked.delete(id);else this.s.liked.add(id);this.render()},
+  toggleFollow:function(id){if(this.s.following.has(id))this.s.following.delete(id);else this.s.following.add(id);this.render()},
+  toggleAI:function(i){this.s.aiSettings[i]=!this.s.aiSettings[i];this.render()},
 
-log('Page loaded');
-log('Redirect URI: ' + REDIRECT_URI);
+  startSync:function(){
+    var self=this; this.s.syncProgress=0; this.render();
+    var iv=setInterval(function(){self.s.syncProgress+=Math.random()*12+5;if(self.s.syncProgress>=100){self.s.syncProgress=100;clearInterval(iv)}self.render()},350);
+  },
+
+  addComment:function(){
+    if(!this.s.newComment.trim())return;
+    var id=this.s.selectedClip.id;
+    if(!this.s.comments[id])this.s.comments[id]=[];
+    this.s.comments[id].unshift({user:{avatar:this.s.user.avatar,name:this.s.user.username},text:this.s.newComment.trim(),time:'just now'});
+    this.s.newComment='';this.render();
+  },
+
+  // ===== RENDER =====
+  render:function(){
+    var el=document.getElementById('app');
+    if(this.s.screen==='login') el.innerHTML=this.rLogin();
+    else if(this.s.screen==='config') el.innerHTML=this.rConfig();
+    else el.innerHTML=this.rMain();
+    this.bind();
+  },
+
+  rLogin:function(){
+    var cid=localStorage.getItem('glitch_cid')||'';
+    var proxy=localStorage.getItem('glitch_proxy')||'';
+    return '<div class="login"><div class="logo fu">GLITCH</div><div class="login-sub fu d1">AI-Powered Game Clips</div>'
+    +'<div class="login-card fu d2"><h2>Sign in to get started</h2><p>Connect your Xbox account or explore with demo data</p>'
+    +'<input class="login-input" id="cid" type="text" placeholder="Azure Client ID..." value="'+cid+'">'
+    +'<input class="login-input" id="proxyUrl" type="text" placeholder="Proxy URL (e.g. https://glitch-proxy.vercel.app)" value="'+proxy+'" style="font-family:Rajdhani,sans-serif;font-size:13px">'
+    +'<a id="xboxBtn" href="#" class="lbtn lbtn-xbox'+(cid.length>10&&proxy.length>5?'':' disabled')+'"><span class="ico">\u2715</span> Sign in with Xbox <span class="tag">XBOX LIVE</span></a>'
+    +'<div class="login-div">OR</div>'
+    +'<button class="lbtn lbtn-demo" data-a="demo">Explore Demo Mode \u2192</button>'
+    +'<div style="margin-top:16px;text-align:center;font-size:11px;color:var(--dim)">By signing in, you agree to Glitch\'s Terms of Service</div></div>'
+    +'<div class="login-feat fu d3">'
+    +'<div class="login-feat-item"><div class="login-feat-icon">\u{1F916}</div><div class="login-feat-label">Auto-Clip AI</div></div>'
+    +'<div class="login-feat-item"><div class="login-feat-icon">\u{1F465}</div><div class="login-feat-label">Social Feed</div></div>'
+    +'<div class="login-feat-item"><div class="login-feat-icon">\u{1F3AE}</div><div class="login-feat-label">Xbox & PS5</div></div>'
+    +'</div></div>';
+  },
+
+  rConfig:function(){
+    return '<div class="login"><div class="logo fu">GLITCH</div><div class="login-sub fu d1">SETUP</div>'
+    +'<div class="login-card fu d2"><h2>\u{1F527} Xbox API Setup</h2>'
+    +'<p>You need a free Microsoft Azure App Client ID. Go to <strong>entra.microsoft.com</strong> \u2192 App registrations \u2192 New registration. Set redirect URI (SPA) to:<br><code style="font-size:11px;color:var(--accent);word-break:break-all">'+this.REDIR+'</code></p>'
+    +'<input class="login-input" id="cidInput" type="text" placeholder="Paste Client ID here...">'
+    +'<button class="lbtn lbtn-xbox" data-a="saveConfig" style="justify-content:center">\u{1F3AE} Connect Xbox Account</button>'
+    +'<button class="lbtn lbtn-demo" data-a="demo">Skip \u2014 use Demo Mode</button></div></div>';
+  },
+
+  rMain:function(){
+    var pg='';
+    switch(this.s.page){
+      case 'feed':pg=this.rFeed();break;
+      case 'discover':pg=this.rDiscover();break;
+      case 'upload':pg=this.rUpload();break;
+      case 'friends':pg=this.rFriends();break;
+      case 'profile':pg=this.rProfile();break;
+    }
+    return this.rTopBar()+'\n<div class="page">'+pg+'</div>'+this.rBNav()+(this.s.selectedClip?this.rModal(this.s.selectedClip):'');
+  },
+
+  rTopBar:function(){
+    var u=this.s.user;
+    return '<div class="topbar"><div class="topbar-logo">GLITCH</div><div class="topbar-r">'
+    +(this.s.demoMode?'<span style="font-size:10px;color:var(--accent);font-weight:700;background:#ff6b2b22;padding:2px 8px;border-radius:6px">DEMO</span>':'')
+    +'<button class="notif" style="color:var(--dim)">'+this.ic('bell')+'<span class="notif-dot">3</span></button>'
+    +'<div class="av-sm">'+u.avatar+'</div></div></div>';
+  },
+
+  rBNav:function(){
+    var self=this,its=[{id:'feed',ic:'home',l:'Feed'},{id:'discover',ic:'search',l:'Discover'},{id:'upload',ic:'upload',l:'Upload'},{id:'friends',ic:'friends',l:'Friends'},{id:'profile',ic:'profile',l:'Profile'}];
+    return '<div class="bnav">'+its.map(function(it){
+      if(it.id==='upload') return '<button class="nv" data-nav="'+it.id+'"><div class="nv-up'+(self.s.page===it.id?' on':'')+'">'+self.ic(it.ic)+'</div><span class="nv-lb">'+it.l+'</span></button>';
+      return '<button class="nv'+(self.s.page===it.id?' on':'')+'" data-nav="'+it.id+'">'+self.ic(it.ic)+'<span class="nv-lb">'+it.l+'</span></button>';
+    }).join('')+'</div>';
+  },
+
+  rFeed:function(){
+    var self=this,f=this.s.feedFilter,clips=this.s.clips;
+    if(f==='auto-clips') clips=clips.filter(function(c){return c.isAutoClip});
+    if(f==='top rated') clips=clips.slice().sort(function(a,b){return b.aiScore-a.aiScore});
+    return '<div class="tabs">'+['trending','friends','auto-clips','top rated'].map(function(t){
+      return '<button class="tab'+(f===t?' on':'')+'" data-filter="'+t+'">'+t.charAt(0).toUpperCase()+t.slice(1)+'</button>';
+    }).join('')+'</div><div class="feed">'+clips.map(function(c,i){return self.rClip(c,i)}).join('')+'</div>';
+  },
+
+  rClip:function(c,i){
+    var lk=this.s.liked.has(c.id);
+    return '<div class="clip fu d'+(Math.min(i+1,5))+'">'
+    +'<div class="clip-th" style="background:'+this.tg(c.seed)+'" data-a="openClip" data-id="'+c.id+'">'
+    +'<div class="clip-play">'+this.ic('play',32)+'</div>'
+    +'<span class="clip-dur">'+c.duration+'</span>'
+    +(c.isAutoClip?'<span class="clip-auto">'+this.ic('zap',12)+' AUTO-CLIP</span>':'')
+    +'<span class="clip-views">'+this.ic('eye',12)+' '+c.views.toLocaleString()+'</span></div>'
+    +'<div class="clip-body"><div class="clip-hdr"><div style="flex:1;min-width:0">'
+    +'<div class="clip-ur"><div class="clip-av">'+c.user.avatar+'</div><span class="clip-un">'+c.user.username+'</span><span class="clip-tm">'+c.timeAgo+'</span></div>'
+    +'<div class="clip-tt">'+c.title+'</div><span class="clip-gm">'+c.game+'</span></div>'+this.aib(c.aiScore)+'</div>'
+    +'<div class="clip-acts">'
+    +'<button class="clip-act'+(lk?' liked':'')+'" data-a="like" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.likes+(lk?1:0))+'</button>'
+    +'<button class="clip-act" data-a="openClip" data-id="'+c.id+'">'+this.ic('comment')+' '+c.comments+'</button>'
+    +'<button class="clip-act">'+this.ic('share')+' '+c.shares+'</button></div></div></div>';
+  },
+
+  rModal:function(c){
+    var lk=this.s.liked.has(c.id),cmts=[].concat(this.s.comments[c.id]||[],this.CMTS);
+    return '<div class="modal-bg" data-a="closeBg"><div class="modal-c" onclick="event.stopPropagation()">'
+    +'<div style="position:relative"><div class="clip-th" style="background:'+this.tg(c.seed)+';aspect-ratio:16/9"><div class="clip-play">'+this.ic('play',32)+'</div></div>'
+    +'<button class="modal-x" data-a="closeModal">'+this.ic('close')+'</button></div>'
+    +'<div style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1">'
+    +'<div class="clip-tt" style="font-size:18px">'+c.title+'</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div class="clip-av">'+c.user.avatar+'</div><span class="clip-un">'+c.user.username+'</span><span class="clip-tm">'+c.timeAgo+'</span></div>'
+    +'</div>'+this.aib(c.aiScore)+'</div>'
+    +'<div class="clip-acts" style="margin-top:16px;padding-top:14px">'
+    +'<button class="clip-act'+(lk?' liked':'')+'" data-a="like" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.likes+(lk?1:0))+'</button>'
+    +'<button class="clip-act">'+this.ic('comment')+' '+(c.comments+(this.s.comments[c.id]||[]).length)+'</button>'
+    +'<button class="clip-act">'+this.ic('share')+' '+c.shares+'</button></div></div>'
+    +'<div class="cmt-sec"><div style="font-size:15px;font-weight:700;margin-bottom:10px">Comments</div>'
+    +cmts.map(function(cm){return '<div class="cmt-item"><div class="cmt-av">'+cm.user.avatar+'</div><div><div class="cmt-name">'+cm.user.name+'</div><div class="cmt-text">'+cm.text+'</div><div class="cmt-time">'+cm.time+'</div></div></div>'}).join('')
+    +'<div class="cmt-row"><input class="cmt-inp" id="cmtInput" placeholder="Add a comment..." value="'+this.s.newComment+'"><button class="cmt-send" data-a="sendCmt">Post</button></div></div></div></div>';
+  },
+
+  rDiscover:function(){
+    var self=this;
+    return '<div class="ptitle">Discover</div><div class="sbar">'+this.ic('search')+'<input placeholder="Search clips, games, players..."></div>'
+    +'<div class="sec-tt">\u{1F525} TRENDING GAMES</div><div class="gtags">'+this.GAMES.map(function(g){return '<button class="gtag">'+g+'</button>'}).join('')+'</div>'
+    +'<div class="sec-tt">\u{26A1} TOP CLIPPERS TODAY</div>'
+    +this.USERS.slice(0,5).map(function(u,i){return '<div class="lb-row"><span class="lb-rank">#'+(i+1)+'</span><div class="lb-av">'+u.avatar+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">'+u.username+'</div><div style="font-size:11px;color:var(--dim)">'+u.clips+' clips \u00b7 '+u.followers.toLocaleString()+' followers</div></div>'+self.aib(Math.floor(Math.random()*15)+85)+'</div>'}).join('');
+  },
+
+  rUpload:function(){
+    var self=this,um=this.s.uploadMode,sp=this.s.syncProgress,ai=this.s.aiSettings;
+    var labels=["Detect multi-kills & squad wipes","Detect clutch rounds (1vX)","Detect high-action moments","Detect trick shots","Auto-post clips scoring 85+"];
+    return '<div class="ptitle">Upload & Auto-Clip</div><div class="mtog"><button class="mbtn'+(um==='auto'?' on':'')+'" data-mode="auto">\u{1F916} Auto-Clip</button><button class="mbtn'+(um==='manual'?' on':'')+'" data-mode="manual">\u{1F4E4} Manual</button></div>'
+    +(um==='auto'?
+      '<div class="sync-card"><div class="sync-hdr"><div class="sync-ico">\u{1F3AE}</div><div><div class="sync-tt">Xbox Game DVR Sync</div><div class="sync-ds">Auto-import captures from your Xbox account</div></div></div>'
+      +(sp>=0?'<div class="pbar"><div class="pfill" style="width:'+Math.min(sp,100)+'%"></div></div><div style="font-size:12px;color:var(--dim)">'+(sp>=100?'\u2705 Synced 8 new clips! AI is analyzing...':'Syncing clips... '+Math.min(Math.floor(sp),99)+'%')+'</div>'
+        :'<button class="btn-sync" data-a="sync">Sync Now</button>')
+      +'</div><div class="ai-card"><div class="ai-tt">\u{26A1} AI Auto-Clip Settings</div>'
+      +labels.map(function(l,i){return '<div class="ai-row"><span class="ai-lbl">'+l+'</span><button class="tog '+(ai[i]?'on':'off')+'" data-a="togAI" data-idx="'+i+'"><div class="tog-k"></div></button></div>'}).join('')+'</div>'
+    : '<div style="background:var(--card);border-radius:18px;padding:44px 24px;margin:0 16px;border:2px dashed #ffffff15;text-align:center"><div style="font-size:48px;margin-bottom:12px">\u{1F4E4}</div><div style="font-size:16px;font-weight:700;margin-bottom:4px">Upload a clip manually</div><div style="font-size:13px;color:var(--dim);margin-bottom:20px">Drag & drop or choose from your Xbox captures</div><button class="btn-sync" style="width:auto;padding:10px 28px;display:inline-block">Choose File</button></div>');
+  },
+
+  rFriends:function(){
+    var self=this,ft=this.s.friendsTab,fs=this.s.friendSearch,fol=this.s.following;
+    var users=this.USERS.filter(function(u){return u.id!==(self.s.user?self.s.user.id:-1)&&u.username.toLowerCase().indexOf(fs.toLowerCase())!==-1});
+    if(ft==='friends') users=users.filter(function(u){return fol.has(u.id)});
+    return '<div class="ptitle">Friends</div><div class="sbar">'+this.ic('search')+'<input placeholder="Search gamertags..." id="fsInput" value="'+fs+'"></div>'
+    +'<div class="tabs" style="padding-top:0">'+['friends','discover','requests'].map(function(t){return '<button class="tab'+(ft===t?' on':'')+'" data-ftab="'+t+'">'+(t==='friends'?'Following':t.charAt(0).toUpperCase()+t.slice(1))+'</button>'}).join('')+'</div>'
+    +(users.length===0?'<div class="empty"><div class="empty-i">\u{1F465}</div><div class="empty-t">'+(ft==='friends'?'Not following anyone yet':'No results')+'</div><div class="empty-d">Discover players and follow them</div></div>'
+    :users.map(function(u){var f=fol.has(u.id);return '<div class="ucard fu"><div class="uav'+(f?' fol':'')+'">'+u.avatar+'</div><div class="uinfo"><div class="unr"><span class="uname">'+u.username+'</span><span class="pbadge xb">XBOX</span></div><div class="utag">'+u.gamertag+'</div><div class="ustats">'+u.clips+' clips \u00b7 '+u.followers.toLocaleString()+' followers</div></div><button class="fbtn'+(f?' fol':' nf')+'" data-a="follow" data-id="'+u.id+'">'+(f?self.ic('check',14)+' Following':'Follow')+'</button></div>'}).join(''));
+  },
+
+  rProfile:function(){
+    var u=this.s.user,pt=this.s.profileTab,clips=this.s.clips.filter(function(c){return c.user.id===u.id}),self=this;
+    return '<div class="prof-hdr"><div class="prof-av">'+u.avatar+'</div><div class="prof-name">'+u.username+'</div>'
+    +'<div class="prof-tag"><span class="pbadge xb">XBOX</span> '+u.gamertag+'</div>'
+    +'<div class="prof-stats"><div style="text-align:center"><div class="ps-val">'+u.clips+'</div><div class="ps-lbl">Clips</div></div><div style="text-align:center"><div class="ps-val">'+u.followers.toLocaleString()+'</div><div class="ps-lbl">Followers</div></div><div style="text-align:center"><div class="ps-val">'+u.following+'</div><div class="ps-lbl">Following</div></div></div>'
+    +'<div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button style="padding:8px 24px;border-radius:10px;background:var(--surface);color:var(--text);border:1px solid #ffffff11;font-size:13px;font-weight:700">'+this.ic('settings',14)+' Edit Profile</button>'
+    +'<button style="padding:8px 16px;border-radius:10px;background:var(--surface);color:var(--red);border:1px solid #ffffff11;font-size:13px;font-weight:700" data-a="logout">'+this.ic('logout',14)+' Logout</button></div></div>'
+    +'<div class="prof-tabs">'+['clips','highlights','stats'].map(function(t){return '<button class="ptab'+(pt===t?' on':'')+'" data-ptab="'+t+'">'+t.toUpperCase()+'</button>'}).join('')+'</div>'
+    +(pt==='clips'?(clips.length>0?clips.map(function(c){return '<div class="cl-item" data-a="openClip" data-id="'+c.id+'"><div class="cl-th" style="background:'+self.tg(c.seed)+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.duration+'</span></div><div class="cl-info"><div class="cl-tt">'+c.title+'</div><div class="cl-meta">'+c.game+' \u00b7 '+c.views.toLocaleString()+' views</div><div style="margin-top:6px">'+self.aib(c.aiScore)+'</div></div></div>'}).join(''):'<div class="empty"><div class="empty-i">\u{1F3AE}</div><div class="empty-t">No clips yet</div><div class="empty-d">Sync your Xbox captures or upload clips</div></div>')
+    :pt==='highlights'?'<div class="empty"><div class="empty-i">\u{1F916}</div><div class="empty-t" style="color:var(--text)">AI Highlights Reel</div><div class="empty-d">Analyzing your gameplay for best-of montage</div><div style="margin:20px auto 0;max-width:260px"><div class="pbar"><div class="pfill" style="width:67%"></div></div><div style="font-size:11px;color:var(--dim);margin-top:6px">Processing 12 of 18 clips...</div></div></div>'
+    :'<div class="sgrid">'+[{i:'\u{1F441}',v:'24.3K',l:'Total Views'},{i:'\u{2764}',v:'1,892',l:'Total Likes'},{i:'\u{26A1}',v:'82.4',l:'Avg AI Score'},{i:'\u{1F3C6}',v:'96 pts',l:'Best Clip'},{i:'\u{1F3AE}',v:'Apex',l:'Top Game'},{i:'\u{1F525}',v:'7 days',l:'Clip Streak'}].map(function(s){return '<div class="scard"><div class="scard-i">'+s.i+'</div><div class="scard-v">'+s.v+'</div><div class="scard-l">'+s.l+'</div></div>'}).join('')+'</div>');
+  },
+
+  // ===== EVENTS =====
+  bind:function(){
+    var self=this;
+    // Nav
+    document.querySelectorAll('[data-nav]').forEach(function(b){b.onclick=function(){self.s.page=b.dataset.nav;self.render()}});
+    // Xbox login link
+    var xb=document.getElementById('xboxBtn');
+    if(xb){
+      xb.onclick=function(e){e.preventDefault();self.doXboxLogin()};
+    }
+    var ci=document.getElementById('cid');
+    var pu=document.getElementById('proxyUrl');
+    function updateBtn(){
+      var c=(ci?ci.value.trim():''), p=(pu?pu.value.trim():'');
+      if(ci) localStorage.setItem('glitch_cid',c);
+      if(pu) localStorage.setItem('glitch_proxy',p.replace(/\/$/,''));
+      var b=document.getElementById('xboxBtn');
+      if(b) b.className='lbtn lbtn-xbox'+(c.length>10&&p.length>5?'':' disabled');
+    }
+    if(ci) ci.addEventListener('input',updateBtn);
+    if(pu) pu.addEventListener('input',updateBtn);
+    // Demo
+    document.querySelectorAll('[data-a="demo"]').forEach(function(b){b.onclick=function(){self.loginDemo()}});
+    // Config save
+    var sc=document.querySelector('[data-a="saveConfig"]');
+    if(sc) sc.onclick=function(){var v=document.getElementById('cidInput');if(v&&v.value.trim()){localStorage.setItem('glitch_cid',v.value.trim());self.doXboxLogin()}};
+    // Filters
+    document.querySelectorAll('[data-filter]').forEach(function(b){b.onclick=function(){self.s.feedFilter=b.dataset.filter;self.render()}});
+    // Likes
+    document.querySelectorAll('[data-a="like"]').forEach(function(b){b.onclick=function(e){e.stopPropagation();self.toggleLike(parseInt(b.dataset.id))}});
+    // Open clip
+    document.querySelectorAll('[data-a="openClip"]').forEach(function(b){b.onclick=function(){var c=self.s.clips.find(function(x){return x.id===parseInt(b.dataset.id)});if(c){self.s.selectedClip=c;self.render()}}});
+    // Close modal
+    var cm=document.querySelector('[data-a="closeModal"]');if(cm)cm.onclick=function(){self.s.selectedClip=null;self.render()};
+    var cb=document.querySelector('[data-a="closeBg"]');if(cb)cb.onclick=function(e){if(e.target===e.currentTarget){self.s.selectedClip=null;self.render()}};
+    // Comments
+    var cs=document.querySelector('[data-a="sendCmt"]');if(cs)cs.onclick=function(){self.addComment()};
+    var cinp=document.getElementById('cmtInput');if(cinp){cinp.addEventListener('input',function(e){self.s.newComment=e.target.value});cinp.addEventListener('keydown',function(e){if(e.key==='Enter')self.addComment()})}
+    // Follow
+    document.querySelectorAll('[data-a="follow"]').forEach(function(b){b.onclick=function(){self.toggleFollow(parseInt(b.dataset.id))}});
+    // Friends tabs
+    document.querySelectorAll('[data-ftab]').forEach(function(b){b.onclick=function(){self.s.friendsTab=b.dataset.ftab;self.render()}});
+    // Friends search
+    var fsi=document.getElementById('fsInput');if(fsi){fsi.addEventListener('input',function(e){self.s.friendSearch=e.target.value;self.render();setTimeout(function(){var el=document.getElementById('fsInput');if(el){el.focus();el.selectionStart=el.selectionEnd=el.value.length}},0)})}
+    // Profile tabs
+    document.querySelectorAll('[data-ptab]').forEach(function(b){b.onclick=function(){self.s.profileTab=b.dataset.ptab;self.render()}});
+    // Upload mode
+    document.querySelectorAll('[data-mode]').forEach(function(b){b.onclick=function(){self.s.uploadMode=b.dataset.mode;self.render()}});
+    // Sync
+    var sy=document.querySelector('[data-a="sync"]');if(sy)sy.onclick=function(){self.startSync()};
+    // AI toggles
+    document.querySelectorAll('[data-a="togAI"]').forEach(function(b){b.onclick=function(){self.toggleAI(parseInt(b.dataset.idx))}});
+    // Logout
+    var lo=document.querySelector('[data-a="logout"]');if(lo)lo.onclick=function(){self.logout()};
+  },
+};
+
+// Boot
+document.addEventListener('DOMContentLoaded',function(){
+  if(!G.handleCallback()) G.init();
+  else { G.genClips(); G.render(); }
+});
 </script>
 </body>
 </html>
