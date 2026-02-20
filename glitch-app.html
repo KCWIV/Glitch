@@ -207,6 +207,9 @@ input,button,textarea{font-family:inherit}button{cursor:pointer;border:none;back
 /* Mute toggle in modal */
 .mute-btn{position:absolute;bottom:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#000a;color:#fff;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background .2s}
 .mute-btn:active{background:#fff3}
+/* Volume toggle on snap feed */
+.snap-vol{display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 3px #0008}
+.snap-vol svg{filter:drop-shadow(0 1px 3px #0008)}
 </style>
 </head>
 <body>
@@ -510,6 +513,7 @@ rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=
   +'<button class="snap-act" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+'<span>'+(c.lk+(lk?1:0))+'</span></button>'
   +'<button class="snap-act" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+'<span>'+(c.cm+(s.st.comments[c.id]||[]).length)+'</span></button>'
   +'<button class="snap-act" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+'<span>Share</span></button>'
+  +(c.vidUrl?'<button class="snap-vol" data-a="svol" data-idx="'+i+'"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg><span>Sound</span></button>':'')
   +'</div>'
   +'</div>'
   // Tap to pause/play indicator
@@ -659,6 +663,23 @@ bindAll:function(){
           setTimeout(function(){heart.remove()},950);
         }
       }
+    };
+  });
+
+  // Volume/mute toggle on snap feed
+  if(!s._snapMuted)s._snapMuted=true;
+  document.querySelectorAll('[data-a="svol"]').forEach(function(b){
+    b.onclick=function(e){
+      e.stopPropagation();
+      s._snapMuted=!s._snapMuted;
+      var mutedIc='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+      var unmutedIc='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+      // Update all volume buttons in feed
+      document.querySelectorAll('[data-a="svol"]').forEach(function(vb){
+        vb.innerHTML=(s._snapMuted?mutedIc:unmutedIc)+'<span>'+(s._snapMuted?'Sound':'Mute')+'</span>';
+      });
+      // Mute/unmute all snap videos
+      document.querySelectorAll('.snap-vid').forEach(function(v){v.muted=s._snapMuted});
     };
   });
 
