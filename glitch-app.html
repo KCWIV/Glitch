@@ -309,12 +309,21 @@ handleAuth:function(token){
   .then(function(r){
     if(!r.ok)throw new Error('XBL: '+JSON.stringify(r.data));
     var tk=r.data.Token,uh=r.data.DisplayClaims.xui[0].uhs;
+    self._xblToken=tk; // Save XBL token for getting additional XSTS tokens later
     console.log('Step 1: Got XBL token');self.st.loadMsg='Authorizing...';self.render();
 
-    // Step 2: XBL -> XSTS (PROXY)
-    return self.px('https://xsts.auth.xboxlive.com/xsts/authorize',{method:'POST',headers:{'Content-Type':'application/json'},body:{RelyingParty:'http://xboxlive.com',TokenType:'JWT',Properties:{SandboxId:'RETAIL',UserTokens:[tk]}}}).then(function(r2){
+    // Step 2: XBL -> XSTS (PROXY) — get tokens for both xboxlive.com and social
+    var xstsBase={method:'POST',headers:{'Content-Type':'application/json'}};
+    var mainXsts=self.px('https://xsts.auth.xboxlive.com/xsts/authorize',Object.assign({},xstsBase,{body:{RelyingParty:'http://xboxlive.com',TokenType:'JWT',Properties:{SandboxId:'RETAIL',UserTokens:[tk]}}}));
+    var socialXsts=self.px('https://xsts.auth.xboxlive.com/xsts/authorize',Object.assign({},xstsBase,{body:{RelyingParty:'http://social.xboxlive.com',TokenType:'JWT',Properties:{SandboxId:'RETAIL',UserTokens:[tk]}}})).catch(function(e){console.log('Social XSTS optional:',e);return null});
+    return Promise.all([mainXsts,socialXsts]).then(function(results){
+      var r2=results[0],r3=results[1];
       if(!r2.ok)throw new Error('XSTS: '+JSON.stringify(r2.data));
-      console.log('Step 2: Got XSTS token');return{uh:uh,xt:r2.data.Token};
+      console.log('Step 2: Got XSTS token (main)');
+      var auth={uh:uh,xt:r2.data.Token};
+      if(r3&&r3.ok){auth.sxt=r3.data.Token;console.log('Step 2: Got XSTS token (social) too')}
+      else{console.log('Step 2: Social XSTS not available, will use main token for social')}
+      return auth;
     });
   })
   .then(function(auth){
@@ -330,8 +339,8 @@ handleAuth:function(token){
     self.st.user={id:0,un:s.Gamertag||'Player',gt:s.Gamertag||'Player',av:'\u{1F3AE}',avUrl:s.GameDisplayPicRaw||null,frs:0,fg:0,cl:0,gs:s.Gamerscore||'0',xuid:xuid};
     self.st.screen='main';
     self.sv('glitch_sess',{user:self.st.user});
-    self.sv('glitch_xauth',{uh:res.a.uh,xt:res.a.xt,xid:xuid});
-    console.log('SUCCESS: Logged in as',s.Gamertag);
+    self.sv('glitch_xauth',{uh:res.a.uh,xt:res.a.xt,sxt:res.a.sxt||null,xid:xuid});
+    console.log('SUCCESS: Logged in as',s.Gamertag,'socialXsts:',!!res.a.sxt);
     self.st.clips=[];self.st.clipsLoading=true;self.render();
     self.toast('Welcome, '+(s.Gamertag||'Player')+'! \u{1F3AE}','ok',3000);
 
@@ -479,7 +488,6 @@ loadSuggestedFriends:function(){
   var self=this,auth=this.ld('glitch_xauth');
   if(!auth){self.st.sugFriends=[];self.st.sugFrError='Sign in with Xbox to see friends';self.render();return}
   self.st.sugFrLoading=true;self.st.sugFrError=null;self.render();
-  var authHdr='XBL3.0 x='+auth.uh+';'+auth.xt;
 
   // Generic parser that handles various Xbox API response shapes
   var parsePeople=function(r){
@@ -505,52 +513,80 @@ loadSuggestedFriends:function(){
     self.render();
   };
 
-  // Attempt 1: PeopleHub with full decoration (richest data)
-  console.log('[Friends] Trying PeopleHub v5 with decoration...');
-  self.px('https://peoplehub.xboxlive.com/users/me/people/social/decoration/detail,presenceDetail',{
-    method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'5','Accept-Language':'en-US','Accept':'application/json'}
-  }).then(function(r){
-    console.log('[Friends] PeopleHub v5 decorated:',r);
-    var all=parsePeople(r);
-    if(all){finishFriends(all);return}
-    // Attempt 2: PeopleHub without decoration
-    console.log('[Friends] v5 decorated returned no people, trying v4 basic...');
-    return self.px('https://peoplehub.xboxlive.com/users/me/people/social',{
-      method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'4','Accept-Language':'en-US','Accept':'application/json'}
+  // Try a set of social endpoints with a given auth header
+  var tryEndpoints=function(aHdr,label){
+    var endpoints=[
+      {url:'https://peoplehub.xboxlive.com/users/me/people/social/decoration/detail,presenceDetail',v:'5',name:'PeopleHub v5 decorated'},
+      {url:'https://peoplehub.xboxlive.com/users/me/people/social',v:'4',name:'PeopleHub v4 basic'},
+      {url:'https://social.xboxlive.com/users/me/people',v:'2',name:'social.xboxlive.com'},
+      {url:'https://social.xboxlive.com/users/xuid('+(auth.xid||'')+')/people',v:'1',name:'social.xboxlive.com (xuid)'}
+    ];
+    // Run all endpoints in parallel, take the first success
+    return new Promise(function(resolve){
+      var settled=false,pending=endpoints.length;
+      endpoints.forEach(function(ep){
+        console.log('[Friends] ('+label+') Trying',ep.name+'...');
+        self.px(ep.url,{method:'GET',headers:{'Authorization':aHdr,'x-xbl-contract-version':ep.v,'Accept-Language':'en-US','Accept':'application/json'}})
+        .then(function(r){
+          console.log('[Friends] ('+label+')',ep.name,'→',r&&r.ok?'OK':'FAIL',r&&r.data?JSON.stringify(r.data).substring(0,200):'no data');
+          if(!settled){var all=parsePeople(r);if(all){settled=true;resolve(all);return}}
+          pending--;if(!settled&&pending<=0)resolve(null);
+        }).catch(function(e){
+          console.log('[Friends] ('+label+')',ep.name,'error:',e.message);
+          pending--;if(!settled&&pending<=0)resolve(null);
+        });
+      });
     });
-  }).then(function(r){
-    if(!r||self.st.sugFriends)return;
-    console.log('[Friends] PeopleHub v4 basic:',r);
-    var all=parsePeople(r);
+  };
+
+  // Phase 1: Try with main XSTS token
+  var mainHdr='XBL3.0 x='+auth.uh+';'+auth.xt;
+  tryEndpoints(mainHdr,'main').then(function(all){
     if(all){finishFriends(all);return}
-    // Attempt 3: PeopleHub v3 with detail only
-    console.log('[Friends] v4 basic returned no people, trying v3 with detail...');
-    return self.px('https://peoplehub.xboxlive.com/users/me/people/social/decoration/detail',{
-      method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'3','Accept-Language':'en-US','Accept':'application/json'}
-    });
-  }).then(function(r){
-    if(!r||self.st.sugFriends)return;
-    console.log('[Friends] PeopleHub v3 detail:',r);
-    var all=parsePeople(r);
+
+    // Phase 2: Try with stored social XSTS token if available
+    if(auth.sxt){
+      console.log('[Friends] Main XSTS failed, trying stored social XSTS...');
+      var socialHdr='XBL3.0 x='+auth.uh+';'+auth.sxt;
+      return tryEndpoints(socialHdr,'social');
+    }
+    return null;
+  }).then(function(all){
+    if(!all&&self.st.sugFriends&&self.st.sugFriends.length>0)return; // Already resolved
     if(all){finishFriends(all);return}
-    // Attempt 4: social.xboxlive.com (older, simpler API)
-    console.log('[Friends] PeopleHub failed, trying social.xboxlive.com...');
-    return self.px('https://social.xboxlive.com/users/me/people',{
-      method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'2','Accept':'application/json'}
-    });
-  }).then(function(r){
-    if(!r||self.st.sugFriends)return;
-    console.log('[Friends] social.xboxlive.com:',r);
-    var all=parsePeople(r);
+
+    // Phase 3: Try getting fresh XSTS tokens for different relying parties
+    if(self._xblToken){
+      console.log('[Friends] Trying fresh XSTS tokens with social relying parties...');
+      var rps=['http://social.xboxlive.com','http://peoplehub.xboxlive.com'];
+      var rpAttempts=rps.map(function(rp){
+        return self.px('https://xsts.auth.xboxlive.com/xsts/authorize',{method:'POST',headers:{'Content-Type':'application/json'},body:{RelyingParty:rp,TokenType:'JWT',Properties:{SandboxId:'RETAIL',UserTokens:[self._xblToken]}}})
+        .then(function(r){
+          if(r&&r.ok&&r.data&&r.data.Token){
+            console.log('[Friends] Got fresh XSTS for',rp);
+            return tryEndpoints('XBL3.0 x='+auth.uh+';'+r.data.Token,'fresh-'+rp.split('//')[1]);
+          }
+          console.log('[Friends] Fresh XSTS for',rp,'failed:',r&&r.data?JSON.stringify(r.data).substring(0,200):'no data');
+          return null;
+        }).catch(function(e){console.log('[Friends] XSTS',rp,'error:',e.message);return null});
+      });
+      return Promise.all(rpAttempts).then(function(results){
+        for(var i=0;i<results.length;i++){if(results[i])return results[i]}
+        return null;
+      });
+    }
+    return null;
+  }).then(function(all){
+    if(self.st.sugFriends&&self.st.sugFriends.length>0)return;
     if(all){finishFriends(all);return}
-    // All attempts failed
-    console.log('[Friends] All endpoints returned no friends data');
-    self.st.sugFriends=[];self.st.sugFrError='Could not load friends list. Xbox API may be temporarily unavailable.';
+    // All phases failed
+    console.log('[Friends] All attempts exhausted');
+    self.st.sugFriends=[];self.st.sugFrError='Could not load friends list. Your Xbox privacy settings may block friend visibility, or the session may have expired. Try signing out and back in.';
     self.st.sugFrLoading=false;self.render();
     self.toast('Could not load friends list','err');
   }).catch(function(e){
     if(self.st.sugFriends&&self.st.sugFriends.length>0)return;
-    console.log('[Friends] Error:',e);
+    console.log('[Friends] Fatal error:',e);
     self.st.sugFriends=[];self.st.sugFrError='Friends list error: '+(e.message||'Unknown error');
     self.st.sugFrLoading=false;self.render();
     self.toast('Friends list error','err');
