@@ -257,6 +257,17 @@ ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}cat
 svLikes:function(){this.sv('glitch_likes',Array.from(this.st.liked))},
 svFollows:function(){this.sv('glitch_follows',Array.from(this.st.following))},
 svClips:function(){try{this.sv('glitch_clips',this.st.clips.slice(0,30))}catch(e){}},
+// Build titleMap from raw Xbox API gameClips array
+_buildTitleMap:function(gameClips){
+  var self=this;
+  if(!gameClips||!Array.isArray(gameClips))return;
+  gameClips.forEach(function(c){
+    var tid=c.titleId||c.TitleId;
+    var tn=c.titleName||c.TitleName;
+    if(tid&&tn)self.st.titleMap[tn.toLowerCase()]=tid;
+  });
+  console.log('[TitleMap] Built from',gameClips.length,'clips:',JSON.parse(JSON.stringify(self.st.titleMap)));
+},
 restoreSocial:function(){var l=this.ld('glitch_likes'),f=this.ld('glitch_follows');if(l)this.st.liked=new Set(l);if(f)this.st.following=new Set(f)},
 tg:function(s){var h=this.HUES[s%10];return'linear-gradient(135deg,hsl('+h[0]+',70%,20%),hsl('+h[1]+',80%,15%))'},
 aib:function(s){return'<span class="ai '+(s>=90?'s3':s>=75?'s2':'s1')+'">'+this.ic('zap',14)+' '+s+' \u00b7 '+(s>=90?'INSANE':s>=75?'FIRE':'NICE')+'</span>'},
@@ -265,7 +276,8 @@ genClips:function(){var c=[];for(var i=0;i<20;i++){var u=this.USERS[~~(Math.rand
 // === AUTH: Implicit flow — token comes back in URL hash, no exchange needed ===
 px:function(url,opts){
   var proxy=localStorage.getItem('glitch_proxy');
-  return fetch(proxy+'/api/xbox',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,method:opts.method||'GET',headers:opts.headers||{},body:opts.body||undefined})}).then(function(r){return r.json()});
+  var shortUrl=url.replace('https://','').split('?')[0];
+  return fetch(proxy+'/api/xbox',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,method:opts.method||'GET',headers:opts.headers||{},body:opts.body||undefined})}).then(function(r){return r.json().then(function(j){console.log('[PROXY]',shortUrl,'→',j.ok?'OK':'FAIL',j);return j})});
 },
 
 startLogin:function(){
@@ -321,9 +333,7 @@ handleAuth:function(token){
     // Step 4: Clips (PROXY, optional)
     self.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+res.a.uh+';'+res.a.xt,'x-xbl-contract-version':'1'}}).then(function(r){
       if(r.ok&&r.data&&r.data.gameClips){
-        // Build titleId map from user's clips
-        r.data.gameClips.forEach(function(c){if(c.titleId&&c.titleName){self.st.titleMap[c.titleName.toLowerCase()]=c.titleId}});
-        console.log('Title map from clips:',JSON.parse(JSON.stringify(self.st.titleMap)));
+        self._buildTitleMap(r.data.gameClips);
         var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:self.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
         self.st.clips=rc;self.st.user.cl=rc.length;self.st.clipsLoading=false;self.svClips();self.sv('glitch_sess',{user:self.st.user});console.log('Loaded',rc.length,'real clips');self.render();
       } else { self.st.clipsLoading=false;self.render(); }
@@ -390,7 +400,7 @@ refreshFeed:function(){
       if(auth){
         self.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r){
           if(r.ok&&r.data&&r.data.gameClips){
-            r.data.gameClips.forEach(function(c){if(c.titleId&&c.titleName){self.st.titleMap[c.titleName.toLowerCase()]=c.titleId}});
+            self._buildTitleMap(r.data.gameClips);
             var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:self.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
             self.st.clips=rc;self.st.user.cl=rc.length;self.svClips();
           }
@@ -559,8 +569,9 @@ openGamePage:function(gameName){
 
   // Step 2: Fetch user's title history to find the titleId
   console.log('No cached titleId for',gameName,'- fetching title history...');
-  var xuid=auth.xid||'';
-  self.px('https://titlehub.xboxlive.com/users/xuid('+xuid+')/titles/titlehistory/decoration/image',{
+  var xuid=auth.xid||(self.st.user&&self.st.user.xuid)||'';
+  var thUrl=xuid?'https://titlehub.xboxlive.com/users/xuid('+xuid+')/titles/titlehistory/decoration/image':'https://titlehub.xboxlive.com/users/me/titles/titlehistory/decoration/image';
+  self.px(thUrl,{
     method:'GET',headers:Object.assign({},hdrs,{'x-xbl-contract-version':'2'})
   }).then(function(r){
     console.log('Title history response:',r);
@@ -925,6 +936,7 @@ document.addEventListener('DOMContentLoaded',function(){
         if(auth){
           G.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r){
             if(r.ok&&r.data&&r.data.gameClips){
+              G._buildTitleMap(r.data.gameClips);
               var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:G.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:G.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:G.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
               G.st.clips=rc;G.st.user.cl=rc.length;G.svClips();G.sv('glitch_sess',{user:G.st.user});G.render();
             }
@@ -937,6 +949,7 @@ document.addEventListener('DOMContentLoaded',function(){
           G.st.clipsLoading=true;G.render();
           G.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r){
             if(r.ok&&r.data&&r.data.gameClips){
+              G._buildTitleMap(r.data.gameClips);
               var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:G.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:G.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:G.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
               G.st.clips=rc;G.st.user.cl=rc.length;G.svClips();G.sv('glitch_sess',{user:G.st.user});
             }
