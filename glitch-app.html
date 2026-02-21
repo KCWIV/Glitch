@@ -250,6 +250,8 @@ out:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="current
 
 USERS:[{id:1,un:"xNightHawk",gt:"xNightHawk#2847",av:"\u{1F985}",frs:1243,fg:89,cl:47},{id:2,un:"FragMaster99",gt:"FragMaster99",av:"\u{1F480}",frs:892,fg:134,cl:31},{id:3,un:"SilentScope",gt:"SilentScope_X",av:"\u{1F3AF}",frs:2301,fg:201,cl:63},{id:4,un:"VelocityKing",gt:"VelocityKing",av:"\u{26A1}",frs:567,fg:78,cl:22},{id:5,un:"LunarWraith",gt:"LunarWraith#1001",av:"\u{1F319}",frs:3102,fg:156,cl:89},{id:6,un:"BlazeRunner",gt:"BlazeRunner_TV",av:"\u{1F525}",frs:445,fg:62,cl:18}],
 GAMES:["Fortnite","Call of Duty","ARC Raiders","Minecraft","Roblox","GTA Online","Apex Legends","Rocket League","Overwatch 2","Halo Infinite"],
+// Known Xbox titleIds for trending games (fallback when not in user's clip history)
+KNOWN_TITLES:{"fortnite":1820250788,"minecraft":1828326430,"roblox":2021110805,"apex legends":1628516715,"rocket league":2140933132,"halo infinite":2043073184,"overwatch 2":1635723607,"overwatch":1635723607},
 TYPES:["Squad Wipe","Clutch Round","Insane Snipe","Ace","Trickshot","Collateral","1v4 Clutch","No-Scope","Team Play","Buzzer Beater"],
 DCMTS:[{u:{av:"\u{1F480}",n:"FragMaster99"},t:"Absolutely filthy \u{1F525}",tm:"2m"},{u:{av:"\u{1F3AF}",n:"SilentScope"},t:"How do you hit those lol",tm:"8m"},{u:{av:"\u{26A1}",n:"VelocityKing"},t:"Bro I was in this lobby",tm:"14m"}],
 HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,160],[220,280],[40,100]],
@@ -476,8 +478,8 @@ loadSuggestedFriends:function(){
   var self=this,auth=this.ld('glitch_xauth');
   if(!auth){self.st.sugFriends=[];return}
   self.st.sugFrLoading=true;self.render();
-  // Fetch full friends list from Xbox Social API
-  self.px('https://social.xboxlive.com/users/me/people',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'2'}})
+  // Fetch full friends list from Xbox PeopleHub (richer data than social.xboxlive.com)
+  self.px('https://peoplehub.xboxlive.com/users/me/people/social/decoration/detail,presenceDetail',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'5','Accept-Language':'en-US'}})
   .then(function(r){
     console.log('Friends API response:',r);
     if(r.ok&&r.data){
@@ -557,15 +559,17 @@ openGamePage:function(gameName){
   };
 
   // Step 1: Check titleMap (built from user's own clips) for an exact or partial match
-  var titleId=null;
+  var titleId=null,titleSrc='';
   var mapKeys=Object.keys(self.st.titleMap);
   // Try exact match first
-  if(self.st.titleMap[gn])titleId=self.st.titleMap[gn];
+  if(self.st.titleMap[gn]){titleId=self.st.titleMap[gn];titleSrc='clip titleMap (exact)'}
   // Try partial match (game name contained in a title, or title contained in game name)
-  if(!titleId){for(var i=0;i<mapKeys.length;i++){if(mapKeys[i].indexOf(gn)!==-1||gn.indexOf(mapKeys[i])!==-1){titleId=self.st.titleMap[mapKeys[i]];break}}}
+  if(!titleId){for(var i=0;i<mapKeys.length;i++){if(mapKeys[i].indexOf(gn)!==-1||gn.indexOf(mapKeys[i])!==-1){titleId=self.st.titleMap[mapKeys[i]];titleSrc='clip titleMap (partial: '+mapKeys[i]+')';break}}}
+  // Check hardcoded KNOWN_TITLES for popular games
+  if(!titleId&&self.KNOWN_TITLES[gn]){titleId=self.KNOWN_TITLES[gn];titleSrc='KNOWN_TITLES'}
 
   if(titleId){
-    console.log('Found titleId',titleId,'for',gameName,'from clip titleMap');
+    console.log('Found titleId',titleId,'for',gameName,'from',titleSrc);
     fetchClipsForTitle(titleId);
     return;
   }
