@@ -109,7 +109,7 @@ input,button,textarea{font-family:inherit}button{cursor:pointer;border:none;back
 .tab{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;border:1px solid #ffffff0a;background:var(--sf);color:var(--d)}.tab.on{background:var(--a);color:var(--bg);border-color:var(--a)}
 .feed{display:flex;flex-direction:column;gap:0;padding:0;scroll-snap-type:y mandatory;overflow-y:auto;height:100dvh;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .snap-item{position:relative;width:100%;height:100dvh;flex-shrink:0;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center}
-.snap-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.snap-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;transform:scale(1.15);transform-origin:center center}
 .snap-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(180deg,#0006 0%,transparent 20%,transparent 50%,#000a 100%);padding:16px;padding-bottom:calc(72px + var(--sb));pointer-events:none}
 .snap-overlay *{pointer-events:auto}
 .snap-top{position:absolute;top:calc(14px + var(--st) + 44px);left:16px}
@@ -454,19 +454,21 @@ searchFriend:function(gt){
   .catch(function(e){self.st.frLoading=false;self.st.frError=e.message==='not_found'?'Gamertag "'+gt+'" not found.':'Search failed: '+e.message;self.render()});
 },
 
-// Load Xbox favorites as suggested friends
+// Load Xbox friends list — favorites shown first, then all friends
 loadSuggestedFriends:function(){
   var self=this,auth=this.ld('glitch_xauth');
   if(!auth){self.st.sugFriends=[];return}
   self.st.sugFrLoading=true;self.render();
-  self.px('https://social.xboxlive.com/users/me/people',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'2','Content-Type':'application/json'}})
+  self.px('https://social.xboxlive.com/users/me/people?decoration=preferredcolor,detail',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'2','Content-Type':'application/json'}})
   .then(function(r){
     if(r.ok&&r.data&&r.data.people){
-      var favs=r.data.people.filter(function(p){return p.isFavorite});
-      self.st.sugFriends=favs.map(function(p){return{xuid:p.xuid,un:p.gamertag||p.displayName||'Player',avUrl:p.displayPicRaw||null,gs:p.gamerScore||'0'}});
+      var all=r.data.people.map(function(p){return{xuid:p.xuid,un:p.gamertag||p.displayName||'Player',avUrl:p.displayPicRaw||null,gs:p.gamerScore||'0',isFav:!!p.isFavorite}});
+      // Sort favorites to top
+      all.sort(function(a,b){return(b.isFav?1:0)-(a.isFav?1:0)});
+      self.st.sugFriends=all;
     } else {self.st.sugFriends=[]}
     self.st.sugFrLoading=false;self.render();
-  }).catch(function(e){console.log('Suggested friends:',e);self.st.sugFriends=[];self.st.sugFrLoading=false;self.render()});
+  }).catch(function(e){console.log('Friends list error:',e);self.st.sugFriends=[];self.st.sugFrLoading=false;self.render()});
 },
 
 // Game page: search title, then fetch community clips
@@ -489,13 +491,21 @@ openGamePage:function(gameName){
       method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}
     });
   }).then(function(r2){
+    var community=[];
     if(r2&&r2.ok&&r2.data&&r2.data.gameClips){
-      self.st.gpClips=r2.data.gameClips.map(function(c,i){
+      community=r2.data.gameClips.map(function(c,i){
         var user={id:'gp_'+(c.xuid||i),un:c.gamertag||'Xbox Player',gt:c.gamertag||'Xbox Player',av:'\u{1F3AE}',avUrl:null,gs:'0'};
         return{id:8000+i,user:user,game:c.titleName||gameName,type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:c.likeCount||0,cm:c.commentCount||0,sh:c.shareCount||0,vw:c.views||0,dur:~~((c.durationInSeconds||0)/60)+':'+String(~~((c.durationInSeconds||0)%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null};
       });
-    } else {self.st.gpClips=[]}
-    self.st.gpLoading=false;self.render();
+    }
+    // Merge user's own clips for this game
+    var gn=gameName.toLowerCase();
+    var own=self.st.clips.filter(function(c){return c.game.toLowerCase().indexOf(gn)!==-1});
+    // Combine: user's clips first (labeled), then community clips
+    self.st.gpClips=own.concat(community);
+    self.st.gpLoading=false;
+    if(self.st.gpClips.length===0)self.st.gpError='No clips found for '+gameName+'. Try searching for gamertags who play this game!';
+    self.render();
   }).catch(function(e){
     console.log('Game page error:',e);
     // Fallback: show user's own clips for this game
@@ -551,8 +561,8 @@ rF:function(){var s=this,f=this.st.filter,cl=this.st.clips,isDemo=this.st.user&&
   return ptrEl+'<div class="feed" id="snapFeed">'+cl.map(function(c,i){return s.rSnapCard(c,i)}).join('')+'</div><div class="feed-tabs" style="position:fixed;top:calc(var(--st));left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101;padding:10px 14px;display:flex;gap:6px">'+tabs.map(function(t){return'<button class="tab" style="background:#0008;border-color:#fff3;color:#fffc;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);'+(f===t?'background:var(--a);border-color:var(--a);color:var(--bg)':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="feed-bnav" style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101">'+this.rBN2()+'</div>'+(this.st.selClip?this.rMo(this.st.selClip):'')},
 
 rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=u.avUrl?'<img src="'+u.avUrl+'">':u.av;
-  var vidEl=c.vidUrl?'<video class="snap-vid" data-idx="'+i+'" src="'+c.vidUrl+'" poster="'+(c.thUrl||'')+'" playsinline muted loop preload="'+(i<2?'auto':'none')+'" style="width:100%;height:100%;object-fit:cover"></video>':'';
-  var bg=!c.vidUrl?(c.thUrl?'background-image:url('+c.thUrl+');background-size:cover;background-position:center':'background:'+this.tg(c.sd)):'background:#000';
+  var vidEl=c.vidUrl?'<video class="snap-vid" data-idx="'+i+'" src="'+c.vidUrl+'" poster="'+(c.thUrl||'')+'" playsinline muted loop preload="'+(i<2?'auto':'none')+'"></video>':'';
+  var bg=c.thUrl?'background-image:url('+c.thUrl+');background-size:cover;background-position:center':'background:'+(c.vidUrl?'#000':this.tg(c.sd));
   return'<div class="snap-item" data-idx="'+i+'" style="'+bg+'">'+vidEl
   +'<div class="snap-overlay">'
   // Top info
@@ -580,7 +590,14 @@ rGP:function(){
   var s=this,g=this.st.gpGame,cl=this.st.gpClips,ld=this.st.gpLoading,err=this.st.gpError;
   var content='';
   if(ld){content='<div style="text-align:center;padding:40px 0"><div class="load-spin" style="margin:0 auto 12px"></div><div style="color:var(--d);font-size:13px">Loading '+g+' clips...</div></div>'}
-  else if(cl&&cl.length>0){content='<div class="stt" style="margin-top:4px">\u{1F3AC} COMMUNITY CLIPS</div>'+cl.map(function(c,i){var bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+s.tg(c.sd);return'<div class="cli" data-a="gpoc" data-idx="'+i+'"><div class="clt" style="'+bg+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.dur+'</span></div><div class="clif"><div class="cltt">'+c.title+'</div><div class="clm">'+c.user.un+' \u00b7 '+c.ago+'</div><div style="margin-top:6px">'+s.aib(c.ai)+'</div></div></div>'}).join('')}
+  else if(cl&&cl.length>0){
+    // Separate user's own clips (id < 8000) from community clips (id >= 8000)
+    var own=cl.filter(function(c){return c.id<8000}),comm=cl.filter(function(c){return c.id>=8000});
+    var ownSec='',commSec='';
+    if(own.length>0){ownSec='<div class="stt" style="margin-top:4px">\u{1F3AE} YOUR CLIPS</div>'+own.map(function(c){var idx=cl.indexOf(c);var bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+s.tg(c.sd);return'<div class="cli" data-a="gpoc" data-idx="'+idx+'"><div class="clt" style="'+bg+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.dur+'</span></div><div class="clif"><div class="cltt">'+c.title+'</div><div class="clm">'+c.user.un+' \u00b7 '+c.ago+'</div><div style="margin-top:6px">'+s.aib(c.ai)+'</div></div></div>'}).join('')}
+    if(comm.length>0){commSec='<div class="stt" style="margin-top:12px">\u{1F30D} COMMUNITY CLIPS</div>'+comm.map(function(c){var idx=cl.indexOf(c);var bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+s.tg(c.sd);return'<div class="cli" data-a="gpoc" data-idx="'+idx+'"><div class="clt" style="'+bg+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.dur+'</span></div><div class="clif"><div class="cltt">'+c.title+'</div><div class="clm">'+c.user.un+' \u00b7 '+c.ago+'</div><div style="margin-top:6px">'+s.aib(c.ai)+'</div></div></div>'}).join('')}
+    content=ownSec+commSec;
+  }
   else if(err){content='<div class="em" style="margin-top:10px"><div class="emi">\u{1F3AE}</div><div class="emt">No Clips Found</div><div class="emd">'+err+'</div></div>'}
   else{content='<div class="em" style="margin-top:10px"><div class="emi">\u{1F3AE}</div><div class="emt">No Clips</div><div class="emd">No public clips found for '+g+'</div></div>'}
   return'<div style="display:flex;align-items:center;gap:12px;padding:16px 16px 4px"><button style="padding:6px 14px;border-radius:10px;background:var(--sf);color:var(--t);font-size:13px;font-weight:700;border:1px solid #ffffff11;cursor:pointer" data-a="gpback">\u{2190} Back</button><div class="pt" style="padding:0;margin:0">'+g+'</div></div>'+content},
@@ -609,8 +626,15 @@ rFr:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';if
   else{
     if(s.st.sugFriends===null&&!s.st.sugFrLoading){setTimeout(function(){s.loadSuggestedFriends()},0)}
     var sugSec='';
-    if(s.st.sugFrLoading){sugSec='<div style="text-align:center;padding:20px 0"><div class="load-spin" style="margin:0 auto 12px"></div><div style="color:var(--d);font-size:13px">Loading suggested friends...</div></div>'}
-    else if(s.st.sugFriends&&s.st.sugFriends.length>0){sugSec='<div class="stt">\u{2B50} SUGGESTED FRIENDS</div>'+s.st.sugFriends.map(function(f){return'<div class="uc fu"><div class="uav" style="border-color:#ff6b2b33">'+(f.avUrl?'<img src="'+f.avUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'\u{1F3AE}')+'</div><div class="ui"><div class="unr"><span class="un">'+f.un+'</span><span class="xb">XBOX</span></div><div class="ut">\u{1F3C6} '+f.gs+' Gamerscore</div></div></div>'}).join('')}
+    if(s.st.sugFrLoading){sugSec='<div style="text-align:center;padding:20px 0"><div class="load-spin" style="margin:0 auto 12px"></div><div style="color:var(--d);font-size:13px">Loading friends list...</div></div>'}
+    else if(s.st.sugFriends&&s.st.sugFriends.length>0){
+      var favFriends=s.st.sugFriends.filter(function(f){return f.isFav});
+      var otherFriends=s.st.sugFriends.filter(function(f){return!f.isFav});
+      var favSec='',otherSec='';
+      if(favFriends.length>0){favSec='<div class="stt">\u{2B50} FAVORITES</div>'+favFriends.map(function(f){return'<div class="uc fu"><div class="uav" style="border-color:#a855f744">'+(f.avUrl?'<img src="'+f.avUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'\u{1F3AE}')+'</div><div class="ui"><div class="unr"><span class="un">'+f.un+'</span><span style="font-size:10px;padding:1px 6px;border-radius:6px;background:#a855f722;color:#a855f7;font-weight:700;margin-left:4px">\u{2B50} FAV</span></div><div class="ut">\u{1F3C6} '+f.gs+' Gamerscore</div></div></div>'}).join('')}
+      if(otherFriends.length>0){otherSec='<div class="stt" style="margin-top:8px">\u{1F465} ALL FRIENDS</div>'+otherFriends.slice(0,20).map(function(f){return'<div class="uc fu"><div class="uav" style="border-color:#ff6b2b33">'+(f.avUrl?'<img src="'+f.avUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'\u{1F3AE}')+'</div><div class="ui"><div class="unr"><span class="un">'+f.un+'</span><span class="xb">XBOX</span></div><div class="ut">\u{1F3C6} '+f.gs+' Gamerscore</div></div></div>'}).join('')+(otherFriends.length>20?'<div style="text-align:center;padding:8px;color:var(--d);font-size:12px">+ '+(otherFriends.length-20)+' more friends</div>':'')}
+      sugSec=favSec+otherSec;
+    }
     frContent=sugSec+'<div class="em" style="margin-top:10px"><div class="emi">\u{1F465}</div><div class="emt">Find Xbox Friends</div><div class="emd">Search for any Xbox gamertag to view their profile and clips, or invite friends to join Glitch!</div><button class="bsy" style="width:auto;padding:12px 28px;display:inline-block;margin-top:16px" data-a="invite">\u{1F4E8} Invite Friends</button><button class="bsy" style="width:auto;padding:12px 28px;display:inline-block;margin-top:8px;background:var(--sf);color:var(--t);border:1px solid #ffffff11" data-nav="discover">\u{1F50D} Go to Discover</button></div>';
   }
   return'<div class="pt">Friends</div><div style="display:flex;gap:8px;padding:0 16px 14px"><div class="sb" style="flex:1;margin:0">'+this.ic('search')+'<input id="frInput" placeholder="Search Xbox gamertag..." value="'+frq+'"></div><button id="frBtn" class="bsy" style="width:auto;padding:10px 18px;border-radius:14px">\u{1F50E}</button></div>'+frContent;}var ft=this.st.fTab,fs=this.st.fSearch,fl=this.st.following,us=this.USERS.filter(function(u){return u.un.toLowerCase().indexOf(fs.toLowerCase())!==-1});if(ft==='friends')us=us.filter(function(u){return fl.has(u.id)});return'<div class="pt">Friends</div><div class="sb">'+this.ic('search')+'<input placeholder="Search gamertags..." id="fs" value="'+fs+'"></div><div class="tabs" style="padding-top:0">'+['friends','discover','requests'].map(function(t){return'<button class="tab'+(ft===t?' on':'')+'" data-ft="'+t+'">'+(t==='friends'?'Following':t[0].toUpperCase()+t.slice(1))+'</button>'}).join('')+'</div>'+(us.length===0?'<div class="em"><div class="emi">\u{1F465}</div><div class="emt">No results</div></div>':us.map(function(u){var f=fl.has(u.id);return'<div class="uc fu"><div class="uav'+(f?' fl':'')+'">'+u.av+'</div><div class="ui"><div class="unr"><span class="un">'+u.un+'</span><span class="xb">XBOX</span></div><div class="ut">'+u.gt+'</div><div class="us">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div><button class="fb'+(f?' fl':' nf')+'" data-a="fw" data-id="'+u.id+'">'+(f?s.ic('chk',14)+' Following':'Follow')+'</button></div>'}).join(''))},
