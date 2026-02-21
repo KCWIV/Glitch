@@ -251,7 +251,7 @@ TYPES:["Squad Wipe","Clutch Round","Insane Snipe","Ace","Trickshot","Collateral"
 DCMTS:[{u:{av:"\u{1F480}",n:"FragMaster99"},t:"Absolutely filthy \u{1F525}",tm:"2m"},{u:{av:"\u{1F3AF}",n:"SilentScope"},t:"How do you hit those lol",tm:"8m"},{u:{av:"\u{26A1}",n:"VelocityKing"},t:"Bro I was in this lobby",tm:"14m"}],
 HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,160],[220,280],[40,100]],
 
-st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:'',sugFriends:null,sugFrLoading:false,gpGame:null,gpLoading:false,gpClips:null,gpError:null},
+st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:'',sugFriends:null,sugFrLoading:false,gpGame:null,gpLoading:false,gpClips:null,gpError:null,titleMap:{}},
 sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
 ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
 svLikes:function(){this.sv('glitch_likes',Array.from(this.st.liked))},
@@ -309,11 +309,11 @@ handleAuth:function(token){
     });
   })
   .then(function(res){
-    var s={};res.p.profileUsers[0].settings.forEach(function(x){s[x.id]=x.value});
-    self.st.user={id:0,un:s.Gamertag||'Player',gt:s.Gamertag||'Player',av:'\u{1F3AE}',avUrl:s.GameDisplayPicRaw||null,frs:0,fg:0,cl:0,gs:s.Gamerscore||'0'};
+    var s={},xuid=res.p.profileUsers[0].id||'';res.p.profileUsers[0].settings.forEach(function(x){s[x.id]=x.value});
+    self.st.user={id:0,un:s.Gamertag||'Player',gt:s.Gamertag||'Player',av:'\u{1F3AE}',avUrl:s.GameDisplayPicRaw||null,frs:0,fg:0,cl:0,gs:s.Gamerscore||'0',xuid:xuid};
     self.st.screen='main';
     self.sv('glitch_sess',{user:self.st.user});
-    self.sv('glitch_xauth',{uh:res.a.uh,xt:res.a.xt});
+    self.sv('glitch_xauth',{uh:res.a.uh,xt:res.a.xt,xid:xuid});
     console.log('SUCCESS: Logged in as',s.Gamertag);
     self.st.clips=[];self.st.clipsLoading=true;self.render();
     self.toast('Welcome, '+(s.Gamertag||'Player')+'! \u{1F3AE}','ok',3000);
@@ -321,6 +321,9 @@ handleAuth:function(token){
     // Step 4: Clips (PROXY, optional)
     self.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+res.a.uh+';'+res.a.xt,'x-xbl-contract-version':'1'}}).then(function(r){
       if(r.ok&&r.data&&r.data.gameClips){
+        // Build titleId map from user's clips
+        r.data.gameClips.forEach(function(c){if(c.titleId&&c.titleName){self.st.titleMap[c.titleName.toLowerCase()]=c.titleId}});
+        console.log('Title map from clips:',JSON.parse(JSON.stringify(self.st.titleMap)));
         var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:self.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
         self.st.clips=rc;self.st.user.cl=rc.length;self.st.clipsLoading=false;self.svClips();self.sv('glitch_sess',{user:self.st.user});console.log('Loaded',rc.length,'real clips');self.render();
       } else { self.st.clipsLoading=false;self.render(); }
@@ -387,6 +390,7 @@ refreshFeed:function(){
       if(auth){
         self.px('https://gameclipsmetadata.xboxlive.com/users/me/clips',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}}).then(function(r){
           if(r.ok&&r.data&&r.data.gameClips){
+            r.data.gameClips.forEach(function(c){if(c.titleId&&c.titleName){self.st.titleMap[c.titleName.toLowerCase()]=c.titleId}});
             var rc=r.data.gameClips.map(function(c,i){return{id:2000+i,user:self.st.user,game:c.titleName||'Unknown',type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:0,cm:0,sh:0,vw:c.views||0,dur:~~(c.durationInSeconds/60)+':'+String(~~(c.durationInSeconds%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null}});
             self.st.clips=rc;self.st.user.cl=rc.length;self.svClips();
           }
@@ -495,17 +499,17 @@ _parseGameClips:function(data,gameName){
   });
 },
 
-// Game page: search title, then fetch community clips
+// Game page: resolve titleId then fetch community clips
 openGamePage:function(gameName){
   var self=this,auth=this.ld('glitch_xauth');
   self.st.gpGame=gameName;self.st.gpLoading=true;self.st.gpClips=null;self.st.gpError=null;self.render();
   if(!auth){self.st.gpLoading=false;self.st.gpError='Sign in with Xbox to browse game clips';self.render();return}
 
   var hdrs={'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt};
+  var gn=gameName.toLowerCase();
 
   // Helper: merge user's own clips for this game
   var getOwnClips=function(){
-    var gn=gameName.toLowerCase();
     return self.st.clips.filter(function(c){return c.game.toLowerCase().indexOf(gn)!==-1});
   };
 
@@ -521,7 +525,6 @@ openGamePage:function(gameName){
   // Helper: try fetching community clips for a given titleId
   var fetchClipsForTitle=function(titleId){
     console.log('Fetching community clips for titleId:',titleId);
-    // Try multiple qualifiers in sequence
     self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+titleId+'/clips?maxItems=25',{
       method:'GET',headers:Object.assign({},hdrs,{'x-xbl-contract-version':'1'})
     }).then(function(r){
@@ -540,33 +543,60 @@ openGamePage:function(gameName){
     }).catch(function(e){console.log('Clips fetch error:',e);finishWith([])});
   };
 
-  // Step 1: Search Xbox title hub for this game to get titleId
-  console.log('Searching for game title:',gameName);
-  self.px('https://titlehub.xboxlive.com/titles/default/search?q='+encodeURIComponent(gameName)+'&maxItems=5',{
+  // Step 1: Check titleMap (built from user's own clips) for an exact or partial match
+  var titleId=null;
+  var mapKeys=Object.keys(self.st.titleMap);
+  // Try exact match first
+  if(self.st.titleMap[gn])titleId=self.st.titleMap[gn];
+  // Try partial match (game name contained in a title, or title contained in game name)
+  if(!titleId){for(var i=0;i<mapKeys.length;i++){if(mapKeys[i].indexOf(gn)!==-1||gn.indexOf(mapKeys[i])!==-1){titleId=self.st.titleMap[mapKeys[i]];break}}}
+
+  if(titleId){
+    console.log('Found titleId',titleId,'for',gameName,'from clip titleMap');
+    fetchClipsForTitle(titleId);
+    return;
+  }
+
+  // Step 2: Fetch user's title history to find the titleId
+  console.log('No cached titleId for',gameName,'- fetching title history...');
+  var xuid=auth.xid||'';
+  self.px('https://titlehub.xboxlive.com/users/xuid('+xuid+')/titles/titlehistory/decoration/image',{
     method:'GET',headers:Object.assign({},hdrs,{'x-xbl-contract-version':'2'})
   }).then(function(r){
-    console.log('Title search response:',r);
-    var titleId=null;
+    console.log('Title history response:',r);
     if(r.ok&&r.data){
-      var t=r.data.titles||r.data.Titles||r.data.Results||[];
-      if(!Array.isArray(t)&&typeof t==='object'){var k=Object.keys(r.data);for(var i=0;i<k.length;i++){if(Array.isArray(r.data[k[i]])){t=r.data[k[i]];break}}}
-      if(Array.isArray(t)&&t.length>0){
-        // Find best match — prefer Xbox console title
-        for(var j=0;j<t.length;j++){
-          var tid=t[j].titleId||t[j].TitleId;
-          var devs=t[j].devices||t[j].Devices||[];
-          if(tid&&(devs.indexOf('XboxOne')!==-1||devs.indexOf('XboxSeries')!==-1||devs.indexOf('Xbox')!==-1||j===0)){titleId=tid;break}
+      var titles=r.data.titles||r.data.Titles||[];
+      if(!Array.isArray(titles)){var k=Object.keys(r.data);for(var j=0;j<k.length;j++){if(Array.isArray(r.data[k[j]])){titles=r.data[k[j]];break}}}
+      // Cache all titles and find our match
+      for(var t=0;t<titles.length;t++){
+        var tn=(titles[t].name||titles[t].Name||titles[t].titleName||'').toLowerCase();
+        var tid=titles[t].titleId||titles[t].TitleId;
+        if(tn&&tid){
+          self.st.titleMap[tn]=tid;
+          if(!titleId&&(tn.indexOf(gn)!==-1||gn.indexOf(tn)!==-1))titleId=tid;
         }
-        if(!titleId)titleId=t[0].titleId||t[0].TitleId;
       }
     }
-    if(titleId){fetchClipsForTitle(titleId)}
-    else{
-      console.log('No titleId found, showing own clips only');
-      finishWith([]);
+    if(titleId){
+      console.log('Found titleId',titleId,'from title history');
+      fetchClipsForTitle(titleId);
+    } else {
+      console.log('Game not in title history, trying title hub search...');
+      // Step 3: Last resort - try title hub search
+      self.px('https://titlehub.xboxlive.com/titles/default/search?q='+encodeURIComponent(gameName)+'&maxItems=5',{
+        method:'GET',headers:Object.assign({},hdrs,{'x-xbl-contract-version':'2'})
+      }).then(function(r2){
+        console.log('Title search response:',r2);
+        if(r2.ok&&r2.data){
+          var ts=r2.data.titles||r2.data.Titles||r2.data.Results||[];
+          if(Array.isArray(ts)&&ts.length>0)titleId=ts[0].titleId||ts[0].TitleId;
+        }
+        if(titleId){fetchClipsForTitle(titleId)}
+        else{console.log('All title lookups failed for',gameName);finishWith([])}
+      }).catch(function(){finishWith([])});
     }
   }).catch(function(e){
-    console.log('Title search error:',e);
+    console.log('Title history error:',e);
     finishWith([]);
   });
 },
