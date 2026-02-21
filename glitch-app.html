@@ -282,7 +282,7 @@ genClips:function(){var c=[];for(var i=0;i<20;i++){var u=this.USERS[~~(Math.rand
 px:function(url,opts){
   var proxy=localStorage.getItem('glitch_proxy');
   var shortUrl=url.replace('https://','').split('?')[0];
-  return fetch(proxy+'/api/xbox',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,method:opts.method||'GET',headers:opts.headers||{},body:opts.body||undefined})}).then(function(r){return r.json().then(function(j){console.log('[PROXY]',shortUrl,'→',j.ok?'OK':'FAIL',j);return j})});
+  return fetch(proxy+'/api/xbox',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,method:opts.method||'GET',headers:opts.headers||{},body:opts.body||undefined})}).then(function(r){return r.json().then(function(j){console.log('[PROXY]',shortUrl,'→',j.ok?'OK':'FAIL',j.ok?'':'| status:'+j.status+' err:'+JSON.stringify(j.data||j.error||j.message||'').substring(0,300),j);return j})});
 },
 
 startLogin:function(){
