@@ -505,16 +505,16 @@ rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=
   +'<div class="snap-top"><div class="snap-user"><div class="cav" style="width:32px;height:32px;font-size:16px;border-color:#fff3">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span style="font-size:14px;font-weight:700;text-shadow:0 1px 4px #0008">'+c.user.un+'</span><span style="font-size:12px;color:#fff9;text-shadow:0 1px 4px #0008">'+c.ago+'</span></div></div>'
   // Bottom info
   +'<div class="snap-bot"><div class="snap-title">'+c.title+'</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="cgm" style="background:#fff2;color:#fffc">'+c.game+'</span>'+this.aib(c.ai)+'</div></div>'
-  // Right actions
+  +'</div>'
+  // Tap to pause/play indicator
+  +'<div class="snap-pause" data-idx="'+i+'"></div>'
+  // Right actions (after pause layer so clicks work)
   +'<div class="snap-acts">'
   +'<button class="snap-act snap-vol-btn" data-a="vol">'+(s._snapMuted!==false?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>')+'<span>Vol</span></button>'
   +'<button class="snap-act" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+'<span>'+(c.lk+(lk?1:0))+'</span></button>'
   +'<button class="snap-act" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+'<span>'+(c.cm+(s.st.comments[c.id]||[]).length)+'</span></button>'
   +'<button class="snap-act" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+'<span>Share</span></button>'
   +'</div>'
-  +'</div>'
-  // Tap to pause/play indicator
-  +'<div class="snap-pause" data-idx="'+i+'"></div>'
   +'</div>'},
 
 // Alternate bottom nav for feed (transparent)
