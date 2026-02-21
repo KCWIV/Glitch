@@ -246,12 +246,12 @@ out:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="current
 };return m[n]||''},
 
 USERS:[{id:1,un:"xNightHawk",gt:"xNightHawk#2847",av:"\u{1F985}",frs:1243,fg:89,cl:47},{id:2,un:"FragMaster99",gt:"FragMaster99",av:"\u{1F480}",frs:892,fg:134,cl:31},{id:3,un:"SilentScope",gt:"SilentScope_X",av:"\u{1F3AF}",frs:2301,fg:201,cl:63},{id:4,un:"VelocityKing",gt:"VelocityKing",av:"\u{26A1}",frs:567,fg:78,cl:22},{id:5,un:"LunarWraith",gt:"LunarWraith#1001",av:"\u{1F319}",frs:3102,fg:156,cl:89},{id:6,un:"BlazeRunner",gt:"BlazeRunner_TV",av:"\u{1F525}",frs:445,fg:62,cl:18}],
-GAMES:["Call of Duty: MW3","Fortnite","Apex Legends","Halo Infinite","Rocket League","FIFA 25","GTA Online","Destiny 2","Overwatch 2","Diablo IV"],
+GAMES:["Fortnite","Call of Duty: Black Ops 7","ARC Raiders","Minecraft","Roblox","GTA Online","Apex Legends","Rocket League","Overwatch 2","Halo Infinite"],
 TYPES:["Squad Wipe","Clutch Round","Insane Snipe","Ace","Trickshot","Collateral","1v4 Clutch","No-Scope","Team Play","Buzzer Beater"],
 DCMTS:[{u:{av:"\u{1F480}",n:"FragMaster99"},t:"Absolutely filthy \u{1F525}",tm:"2m"},{u:{av:"\u{1F3AF}",n:"SilentScope"},t:"How do you hit those lol",tm:"8m"},{u:{av:"\u{26A1}",n:"VelocityKing"},t:"Bro I was in this lobby",tm:"14m"}],
 HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,160],[220,280],[40,100]],
 
-st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:'',sugFriends:null,sugFrLoading:false},
+st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:'',sugFriends:null,sugFrLoading:false,gpGame:null,gpLoading:false,gpClips:null,gpError:null},
 sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
 ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
 svLikes:function(){this.sv('glitch_likes',Array.from(this.st.liked))},
@@ -337,7 +337,7 @@ scoreClip:function(c){
   // Duration scoring: sweet spot is 10-30s (highlights), very short or very long = lower
   if(dur>=5&&dur<=15)score+=15;else if(dur>15&&dur<=30)score+=12;else if(dur>30&&dur<=60)score+=6;else score+=2;
   // Game tier: competitive/action games score higher
-  var tier1=['call of duty','halo','apex','overwatch','fortnite','valorant','rainbow six','destiny','gears','battlefield','counter-strike','pubg','warzone'];
+  var tier1=['call of duty','halo','apex','overwatch','fortnite','valorant','rainbow six','destiny','gears','battlefield','counter-strike','pubg','warzone','arc raiders'];
   var tier2=['rocket league','fifa','nba','madden','ufc','gran turismo','forza','street fighter','mortal kombat'];
   var tier3=['gta','red dead','minecraft','roblox','diablo','elden ring','zelda','final fantasy','cyberpunk','starfield','hogwarts'];
   var gn=(c.titleName||'').toLowerCase();
@@ -469,6 +469,45 @@ loadSuggestedFriends:function(){
   }).catch(function(e){console.log('Suggested friends:',e);self.st.sugFriends=[];self.st.sugFrLoading=false;self.render()});
 },
 
+// Game page: search title, then fetch community clips
+openGamePage:function(gameName){
+  var self=this,auth=this.ld('glitch_xauth');
+  self.st.gpGame=gameName;self.st.gpLoading=true;self.st.gpClips=null;self.st.gpError=null;self.render();
+  if(!auth){self.st.gpLoading=false;self.st.gpError='Sign in with Xbox to browse game clips';self.render();return}
+  // Step 1: Search Xbox title hub for this game to get titleId
+  self.px('https://titlehub.xboxlive.com/titles/default/search?q='+encodeURIComponent(gameName)+'&maxItems=1',{
+    method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'2'}
+  }).then(function(r){
+    var titleId=null;
+    if(r.ok&&r.data){
+      var t=r.data.titles||r.data.Results||r.data;
+      if(Array.isArray(t)&&t.length>0)titleId=t[0].titleId||t[0].TitleId;
+    }
+    if(!titleId)throw new Error('no_title');
+    // Step 2: Fetch community clips for this title
+    return self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+titleId+'/clips?qualifier=created&maxItems=25',{
+      method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'}
+    });
+  }).then(function(r2){
+    if(r2&&r2.ok&&r2.data&&r2.data.gameClips){
+      self.st.gpClips=r2.data.gameClips.map(function(c,i){
+        var user={id:'gp_'+(c.xuid||i),un:c.gamertag||'Xbox Player',gt:c.gamertag||'Xbox Player',av:'\u{1F3AE}',avUrl:null,gs:'0'};
+        return{id:8000+i,user:user,game:c.titleName||gameName,type:c.type||'Clip',title:c.clipName||c.titleName||'Gameplay',ai:self.scoreClip(c),lk:c.likeCount||0,cm:c.commentCount||0,sh:c.shareCount||0,vw:c.views||0,dur:~~((c.durationInSeconds||0)/60)+':'+String(~~((c.durationInSeconds||0)%60)).padStart(2,'0'),ago:self.fmA(new Date(c.dateRecorded)),auto:c.type!=='UserGenerated',sd:i,thUrl:c.thumbnails&&c.thumbnails[0]?c.thumbnails[0].uri:null,vidUrl:c.gameClipUris&&c.gameClipUris[0]?c.gameClipUris[0].uri:null};
+      });
+    } else {self.st.gpClips=[]}
+    self.st.gpLoading=false;self.render();
+  }).catch(function(e){
+    console.log('Game page error:',e);
+    // Fallback: show user's own clips for this game
+    var gn=gameName.toLowerCase();
+    var own=self.st.clips.filter(function(c){return c.game.toLowerCase().indexOf(gn)!==-1});
+    self.st.gpClips=own;self.st.gpLoading=false;
+    if(own.length===0)self.st.gpError='No community clips found for '+gameName+'. Try searching for gamertags who play this game!';
+    self.render();
+  });
+},
+closeGamePage:function(){this.st.gpGame=null;this.st.gpClips=null;this.st.gpError=null;this.render()},
+
 // View a searched player's clip in feed
 viewPlayerClips:function(clips){
   if(clips.length===0){this.toast('This player has no public clips','err');return}
@@ -537,8 +576,16 @@ rBN2:function(){var s=this,p=this.st.page,ns=[['feed','home','Feed'],['discover'
 rC:function(c,i){var lk=this.st.liked.has(c.id),bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+this.tg(c.sd);var thContent=c.vidUrl?'<video class="feed-vid" data-clipid="'+c.id+'" src="'+c.vidUrl+'" poster="'+(c.thUrl||'')+'" playsinline muted loop preload="none" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video>':'';return'<div class="clip fu d'+(Math.min(i+1,5))+'"><div class="cth" style="'+bg+'" data-a="oc" data-id="'+c.id+'">'+thContent+'<div class="cpl feed-play" data-clipid="'+c.id+'">'+this.ic('play',32)+'</div><span class="cdur">'+c.dur+'</span>'+(c.auto?'<span class="cac">'+this.ic('zap',12)+' AUTO</span>':'')+'<span class="cvw">'+this.ic('eye',12)+' '+c.vw.toLocaleString()+'</span></div><div class="cbd"><div class="chd"><div style="flex:1;min-width:0"><div class="cur"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div><div class="ctt">'+c.title+'</div><span class="cgm">'+c.game+'</span></div>'+this.aib(c.ai)+'</div><div class="cas"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca" data-a="oc" data-id="'+c.id+'">'+this.ic('cmt')+' '+(c.cm+(this.st.comments[c.id]||[]).length)+'</button><button class="ca" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+' Share</button></div></div></div>'},
 rMo:function(c){var lk=this.st.liked.has(c.id),isDemo=this.st.user&&this.st.user.un==='DemoPlayer',cm=[].concat(this.st.comments[c.id]||[],isDemo?this.DCMTS:[]),bg=c.thUrl?'background-image:url('+c.thUrl+');background-size:cover;background-position:center':'background:'+this.tg(c.sd);var muteIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',mutedIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
 var vidHtml=c.vidUrl?'<video id="clipVid" style="width:100%;aspect-ratio:16/9;background:#000;object-fit:contain" poster="'+(c.thUrl||'')+'" playsinline controls><source src="'+c.vidUrl+'" type="video/mp4"></video>':'<div class="cth" style="'+bg+'"><div class="cpl" data-a="noVid">'+this.ic('play',32)+'</div></div>';var muteBtn=c.vidUrl?'<button class="mute-btn" data-a="mute" title="Toggle mute">'+mutedIc+'</button>':'';return'<div class="mo" data-a="cbg"><div class="mc" onclick="event.stopPropagation()"><div style="position:relative">'+vidHtml+muteBtn+'<button class="mx" data-a="cm">'+this.ic('x')+'</button></div><div style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1"><div class="ctt" style="font-size:18px">'+c.title+'</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div class="cav">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span class="cun">'+c.user.un+'</span><span class="ctm">'+c.ago+'</span></div></div>'+this.aib(c.ai)+'</div><div class="cas" style="margin-top:16px;padding-top:14px"><button class="ca'+(lk?' lk':'')+'" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+' '+(c.lk+(lk?1:0))+'</button><button class="ca">'+this.ic('cmt')+' '+(c.cm+(this.st.comments[c.id]||[]).length)+'</button><button class="ca" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+' Share</button></div></div><div class="cs"><div style="font-size:15px;font-weight:700;margin-bottom:10px">Comments</div>'+(cm.length===0?'<div style="text-align:center;padding:20px 0;color:var(--d);font-size:13px">No comments yet \u2014 be the first!</div>':cm.map(function(m){return'<div class="cmi"><div class="cmav">'+m.u.av+'</div><div><div class="cmn">'+m.u.n+'</div><div class="cmt2">'+m.t+'</div><div class="cmtm">'+m.tm+'</div></div></div>'}).join(''))+'<div class="cr"><input class="ci2" id="ci" placeholder="Add a comment..." value="'+this.st.newCmt+'"><button class="csb" data-a="sc">Post</button></div></div></div></div>'},
-rD:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer',dsl=this.st.dsLoading,dsr=this.st.dsResults,dse=this.st.dsError,dsq=this.st.dsQuery||'';
-  if(isDemo)return'<div class="pt">Discover</div><div class="sb">'+this.ic('search')+'<input placeholder="Search clips, games, players..."></div><div class="stt">\u{1F525} TRENDING GAMES</div><div class="gt">'+this.GAMES.map(function(g){return'<button class="gti">'+g+'</button>'}).join('')+'</div><div class="stt">\u{26A1} TOP CLIPPERS</div>'+this.USERS.slice(0,5).map(function(u,i){return'<div class="lr"><span class="lrk">#'+(i+1)+'</span><div class="lra">'+u.av+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">'+u.un+'</div><div style="font-size:11px;color:var(--d)">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div>'+s.aib(~~(Math.random()*15)+85)+'</div>'}).join('');
+rGP:function(){
+  var s=this,g=this.st.gpGame,cl=this.st.gpClips,ld=this.st.gpLoading,err=this.st.gpError;
+  var content='';
+  if(ld){content='<div style="text-align:center;padding:40px 0"><div class="load-spin" style="margin:0 auto 12px"></div><div style="color:var(--d);font-size:13px">Loading '+g+' clips...</div></div>'}
+  else if(cl&&cl.length>0){content='<div class="stt" style="margin-top:4px">\u{1F3AC} COMMUNITY CLIPS</div>'+cl.map(function(c,i){var bg=c.thUrl?'background-image:url('+c.thUrl+')':'background:'+s.tg(c.sd);return'<div class="cli" data-a="gpoc" data-idx="'+i+'"><div class="clt" style="'+bg+'"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;color:#fff;background:#000a;border-radius:4px;padding:1px 5px">'+c.dur+'</span></div><div class="clif"><div class="cltt">'+c.title+'</div><div class="clm">'+c.user.un+' \u00b7 '+c.ago+'</div><div style="margin-top:6px">'+s.aib(c.ai)+'</div></div></div>'}).join('')}
+  else if(err){content='<div class="em" style="margin-top:10px"><div class="emi">\u{1F3AE}</div><div class="emt">No Clips Found</div><div class="emd">'+err+'</div></div>'}
+  else{content='<div class="em" style="margin-top:10px"><div class="emi">\u{1F3AE}</div><div class="emt">No Clips</div><div class="emd">No public clips found for '+g+'</div></div>'}
+  return'<div style="display:flex;align-items:center;gap:12px;padding:16px 16px 4px"><button style="padding:6px 14px;border-radius:10px;background:var(--sf);color:var(--t);font-size:13px;font-weight:700;border:1px solid #ffffff11;cursor:pointer" data-a="gpback">\u{2190} Back</button><div class="pt" style="padding:0;margin:0">'+g+'</div></div>'+content},
+rD:function(){if(this.st.gpGame)return this.rGP();var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer',dsl=this.st.dsLoading,dsr=this.st.dsResults,dse=this.st.dsError,dsq=this.st.dsQuery||'';
+  if(isDemo)return'<div class="pt">Discover</div><div class="sb">'+this.ic('search')+'<input placeholder="Search clips, games, players..."></div><div class="stt">\u{1F525} TRENDING GAMES</div><div class="gt">'+this.GAMES.map(function(g){return'<button class="gti" data-a="gp" data-g="'+g+'">'+g+'</button>'}).join('')+'</div><div class="stt">\u{26A1} TOP CLIPPERS</div>'+this.USERS.slice(0,5).map(function(u,i){return'<div class="lr"><span class="lrk">#'+(i+1)+'</span><div class="lra">'+u.av+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">'+u.un+'</div><div style="font-size:11px;color:var(--d)">'+u.cl+' clips \u00b7 '+u.frs.toLocaleString()+' followers</div></div>'+s.aib(~~(Math.random()*15)+85)+'</div>'}).join('');
   // Real user — gamertag search
   var results='';
   if(dsl){results='<div style="text-align:center;padding:40px 0"><div class="load-spin" style="margin:0 auto 12px"></div><div style="color:var(--d);font-size:13px">Searching for "'+dsq+'"...</div></div>'}
@@ -551,7 +598,7 @@ rD:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer',dsl
     results='';
   }
   // Trending games & top clippers for all users
-  var trendSec='<div class="stt">\u{1F525} TRENDING GAMES</div><div class="gt">'+this.GAMES.map(function(g){return'<button class="gti">'+g+'</button>'}).join('')+'</div>';
+  var trendSec='<div class="stt">\u{1F525} TRENDING GAMES</div><div class="gt">'+this.GAMES.map(function(g){return'<button class="gti" data-a="gp" data-g="'+g+'">'+g+'</button>'}).join('')+'</div>';
   return'<div class="pt">Discover</div><div style="display:flex;gap:8px;padding:0 16px 14px"><div class="sb" style="flex:1;margin:0">'+this.ic('search')+'<input id="dsInput" placeholder="Enter Xbox Gamertag..." value="'+dsq+'"></div><button id="dsBtn" class="bsy" style="width:auto;padding:10px 18px;border-radius:14px">\u{1F50E}</button></div>'+results+trendSec},
 rU:function(){var um=this.st.upMode,sp=this.st.syncProg,ai=this.st.aiSet,ls=["Detect multi-kills","Detect clutch rounds","Detect high-action","Detect trick shots","Auto-post 85+ clips"];return'<div class="pt">Upload</div><div class="mt"><button class="mb'+(um==='auto'?' on':'')+'" data-m="auto">\u{1F916} Auto</button><button class="mb'+(um==='manual'?' on':'')+'" data-m="manual">\u{1F4E4} Manual</button></div>'+(um==='auto'?'<div class="syc"><div class="syh"><div class="syi">\u{1F3AE}</div><div><div class="syt">Xbox Game DVR</div><div class="syd">Import captures from Xbox</div></div></div>'+(sp>=0?'<div class="pbr"><div class="pfl" style="width:'+Math.min(sp,100)+'%"></div></div><div style="font-size:12px;color:var(--d)">'+(sp>=100?'\u2705 Synced 8 clips!':'Syncing... '+~~(Math.min(sp,99))+'%')+'</div>':'<button class="bsy" data-a="sy">Sync Now</button>')+'</div><div class="aic"><div class="ait">\u{26A1} AI Settings</div>'+ls.map(function(l,i){return'<div class="air"><span class="ail">'+l+'</span><button class="tg '+(ai[i]?'on':'off')+'" data-a="ta" data-i="'+i+'"><div class="tgk"></div></button></div>'}).join('')+'</div>':'<div style="background:var(--c);border-radius:18px;padding:44px 24px;margin:0 16px;border:2px dashed #ffffff15;text-align:center"><div style="font-size:48px;margin-bottom:12px">\u{1F4E4}</div><div style="font-size:16px;font-weight:700">Upload a clip</div><div style="font-size:13px;color:var(--d);margin-top:4px;margin-bottom:20px">Choose from your captures</div><button class="bsy" style="width:auto;padding:10px 28px;display:inline-block">Choose File</button></div>')},
 rFr:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';if(!isDemo){var frq=this.st.frQuery||'',frl=this.st.frLoading,frr=this.st.frResult,fre=this.st.frError;
@@ -718,6 +765,11 @@ bindAll:function(){
   }
   var frvpc=document.querySelector('[data-a="frvpc"]');
   if(frvpc)frvpc.onclick=function(){if(s.st.frResult)s.viewPlayerClips(s.st.frResult.clips)};
+
+  // Game page: tag clicks, back button, clip opens
+  document.querySelectorAll('[data-a="gp"]').forEach(function(b){b.onclick=function(){s.openGamePage(b.dataset.g)}});
+  var gpb=document.querySelector('[data-a="gpback"]');if(gpb)gpb.onclick=function(){s.closeGamePage()};
+  document.querySelectorAll('[data-a="gpoc"]').forEach(function(b){b.onclick=function(){if(s.st.gpClips){var c=s.st.gpClips[parseInt(b.dataset.idx)];if(c){s.st.selClip=c;s.render()}}}});
 }
 };
 
