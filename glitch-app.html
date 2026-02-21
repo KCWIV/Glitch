@@ -256,7 +256,7 @@ TYPES:["Squad Wipe","Clutch Round","Insane Snipe","Ace","Trickshot","Collateral"
 DCMTS:[{u:{av:"\u{1F480}",n:"FragMaster99"},t:"Absolutely filthy \u{1F525}",tm:"2m"},{u:{av:"\u{1F3AF}",n:"SilentScope"},t:"How do you hit those lol",tm:"8m"},{u:{av:"\u{26A1}",n:"VelocityKing"},t:"Bro I was in this lobby",tm:"14m"}],
 HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,160],[220,280],[40,100]],
 
-st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:'',sugFriends:null,sugFrLoading:false,gpGame:null,gpLoading:false,gpClips:null,gpError:null,titleMap:{}},
+st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:'',sugFriends:null,sugFrLoading:false,sugFrError:null,gpGame:null,gpLoading:false,gpClips:null,gpError:null,titleMap:{}},
 sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
 ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
 svLikes:function(){this.sv('glitch_likes',Array.from(this.st.liked))},
@@ -381,7 +381,7 @@ scoreClip:function(c){
 demoFB:function(){this.st.user={id:0,un:'DemoPlayer',gt:'Demo Mode',av:'\u{1F3AE}',frs:1243,fg:89,cl:47};this.st.screen='main';this.sv('glitch_sess',{user:this.st.user,demo:1});this.genClips();this.render()},
 setSt:function(m,t){var el=document.getElementById('ls');if(el){if(this.st.screen==='loading'){el.textContent=m}else{el.className='ls on '+t;el.textContent=m}}},
 loginDemo:function(){this.demoFB()},
-logout:function(){localStorage.removeItem('glitch_sess');localStorage.removeItem('glitch_xauth');localStorage.removeItem('glitch_clips');this.st.screen='login';this.st.user=null;this.st.clips=[];this.render()},
+logout:function(){localStorage.removeItem('glitch_sess');localStorage.removeItem('glitch_xauth');localStorage.removeItem('glitch_clips');this.st.screen='login';this.st.user=null;this.st.clips=[];this.st.sugFriends=null;this.st.sugFrError=null;this.render()},
 toggleLike:function(id){var s=this.st.liked;s.has(id)?s.delete(id):s.add(id);this.svLikes();this.render()},
 toggleFollow:function(id){var s=this.st.following;s.has(id)?s.delete(id):s.add(id);this.svFollows();this.render()},
 toggleAI:function(i){this.st.aiSet[i]=this.st.aiSet[i]?0:1;this.render()},
@@ -474,30 +474,86 @@ searchFriend:function(gt){
 },
 
 // Load Xbox friends list — favorites shown first, then all friends
+// Tries multiple Xbox API endpoints as fallbacks
 loadSuggestedFriends:function(){
   var self=this,auth=this.ld('glitch_xauth');
-  if(!auth){self.st.sugFriends=[];return}
-  self.st.sugFrLoading=true;self.render();
-  // Fetch full friends list from Xbox PeopleHub (richer data than social.xboxlive.com)
-  self.px('https://peoplehub.xboxlive.com/users/me/people/social/decoration/detail,presenceDetail',{method:'GET',headers:{'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'5','Accept-Language':'en-US'}})
-  .then(function(r){
-    console.log('Friends API response:',r);
-    if(r.ok&&r.data){
-      var people=r.data.people||r.data.People||[];
-      if(!Array.isArray(people)&&r.data.length){people=r.data}
-      var all=people.map(function(p){return{xuid:p.xuid||p.Xuid,un:p.gamertag||p.Gamertag||p.displayName||p.DisplayName||'Player',avUrl:p.displayPicRaw||p.DisplayPicRaw||p.displayPic||null,gs:p.gamerScore||p.GamerScore||'0',isFav:!!(p.isFavorite||p.IsFavorite)}});
-      // Sort favorites to top
-      all.sort(function(a,b){return(b.isFav?1:0)-(a.isFav?1:0)});
-      self.st.sugFriends=all;
-      console.log('Loaded',all.length,'friends,',all.filter(function(f){return f.isFav}).length,'favorites');
-    } else {
-      console.log('Friends API: no data or not ok',r);
-      self.st.sugFriends=[];
+  if(!auth){self.st.sugFriends=[];self.st.sugFrError='Sign in with Xbox to see friends';self.render();return}
+  self.st.sugFrLoading=true;self.st.sugFrError=null;self.render();
+  var authHdr='XBL3.0 x='+auth.uh+';'+auth.xt;
+
+  // Generic parser that handles various Xbox API response shapes
+  var parsePeople=function(r){
+    if(!r||!r.ok||!r.data)return null;
+    var people=r.data.people||r.data.People||[];
+    if(!Array.isArray(people)){
+      if(Array.isArray(r.data)){people=r.data}
+      else{var ks=Object.keys(r.data);for(var i=0;i<ks.length;i++){if(Array.isArray(r.data[ks[i]])&&r.data[ks[i]].length>0){people=r.data[ks[i]];break}}}
     }
+    if(!people||!people.length)return null;
+    return people.map(function(p){return{
+      xuid:p.xuid||p.Xuid||'',
+      un:p.gamertag||p.Gamertag||p.displayName||p.DisplayName||'Player',
+      avUrl:p.displayPicRaw||p.DisplayPicRaw||p.displayPic||p.DisplayPic||null,
+      gs:p.gamerScore||p.GamerScore||p.Gamerscore||'0',
+      isFav:!!(p.isFavorite||p.IsFavorite)
+    }});
+  };
+  var finishFriends=function(all){
+    all.sort(function(a,b){return(b.isFav?1:0)-(a.isFav?1:0)});
+    self.st.sugFriends=all;self.st.sugFrLoading=false;
+    console.log('[Friends] Loaded',all.length,'friends,',all.filter(function(f){return f.isFav}).length,'favorites');
+    self.render();
+  };
+
+  // Attempt 1: PeopleHub with full decoration (richest data)
+  console.log('[Friends] Trying PeopleHub v5 with decoration...');
+  self.px('https://peoplehub.xboxlive.com/users/me/people/social/decoration/detail,presenceDetail',{
+    method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'5','Accept-Language':'en-US','Accept':'application/json'}
+  }).then(function(r){
+    console.log('[Friends] PeopleHub v5 decorated:',r);
+    var all=parsePeople(r);
+    if(all){finishFriends(all);return}
+    // Attempt 2: PeopleHub without decoration
+    console.log('[Friends] v5 decorated returned no people, trying v4 basic...');
+    return self.px('https://peoplehub.xboxlive.com/users/me/people/social',{
+      method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'4','Accept-Language':'en-US','Accept':'application/json'}
+    });
+  }).then(function(r){
+    if(!r||self.st.sugFriends)return;
+    console.log('[Friends] PeopleHub v4 basic:',r);
+    var all=parsePeople(r);
+    if(all){finishFriends(all);return}
+    // Attempt 3: PeopleHub v3 with detail only
+    console.log('[Friends] v4 basic returned no people, trying v3 with detail...');
+    return self.px('https://peoplehub.xboxlive.com/users/me/people/social/decoration/detail',{
+      method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'3','Accept-Language':'en-US','Accept':'application/json'}
+    });
+  }).then(function(r){
+    if(!r||self.st.sugFriends)return;
+    console.log('[Friends] PeopleHub v3 detail:',r);
+    var all=parsePeople(r);
+    if(all){finishFriends(all);return}
+    // Attempt 4: social.xboxlive.com (older, simpler API)
+    console.log('[Friends] PeopleHub failed, trying social.xboxlive.com...');
+    return self.px('https://social.xboxlive.com/users/me/people',{
+      method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'2','Accept':'application/json'}
+    });
+  }).then(function(r){
+    if(!r||self.st.sugFriends)return;
+    console.log('[Friends] social.xboxlive.com:',r);
+    var all=parsePeople(r);
+    if(all){finishFriends(all);return}
+    // All attempts failed
+    console.log('[Friends] All endpoints returned no friends data');
+    self.st.sugFriends=[];self.st.sugFrError='Could not load friends list. Xbox API may be temporarily unavailable.';
     self.st.sugFrLoading=false;self.render();
+    self.toast('Could not load friends list','err');
   }).catch(function(e){
-    console.log('Friends list error:',e);
-    self.st.sugFriends=[];self.st.sugFrLoading=false;self.render();
+    if(self.st.sugFriends&&self.st.sugFriends.length>0)return;
+    console.log('[Friends] Error:',e);
+    self.st.sugFriends=[];self.st.sugFrError='Friends list error: '+(e.message||'Unknown error');
+    self.st.sugFrLoading=false;self.render();
+    self.toast('Friends list error','err');
   });
 },
 
@@ -537,25 +593,53 @@ openGamePage:function(gameName){
     self.render();
   };
 
-  // Helper: try fetching community clips for a given titleId
+  // Helper: try fetching community clips for a given titleId (parallel multi-qualifier)
   var fetchClipsForTitle=function(titleId){
-    console.log('Fetching community clips for titleId:',titleId);
-    self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+titleId+'/clips?maxItems=25',{
-      method:'GET',headers:Object.assign({},hdrs,{'x-xbl-contract-version':'1'})
+    console.log('[GameClips] Fetching community clips for titleId:',titleId,'game:',gameName);
+    var allClips=[],pending=0,finished=false;
+    var tryFinish=function(){
+      if(finished)return;pending--;
+      if(pending<=0){
+        finished=true;
+        // Deduplicate by video URL, then re-ID
+        var seen={},unique=[];
+        allClips.forEach(function(c){
+          var key=c.vidUrl||c.thUrl||(c.title+c.dur);
+          if(key&&!seen[key]){seen[key]=1;unique.push(c)}
+          else if(!key){unique.push(c)}
+        });
+        unique.forEach(function(c,i){c.id=8000+i});
+        console.log('[GameClips] Total unique community clips:',unique.length,'from',allClips.length,'raw');
+        finishWith(unique);
+      }
+    };
+    var clipHdrs=Object.assign({},hdrs,{'x-xbl-contract-version':'1'});
+    // Fire all qualifier variants in parallel + contract v2 fallback
+    var urls=[
+      'https://gameclipsmetadata.xboxlive.com/public/titles/'+titleId+'/clips?maxItems=100',
+      'https://gameclipsmetadata.xboxlive.com/public/titles/'+titleId+'/clips?qualifier=saved&maxItems=100',
+      'https://gameclipsmetadata.xboxlive.com/public/titles/'+titleId+'/clips?qualifier=created&maxItems=100'
+    ];
+    urls.forEach(function(u){
+      pending++;
+      self.px(u,{method:'GET',headers:clipHdrs}).then(function(r){
+        console.log('[GameClips]',u.split('?')[1]||'default','→',r&&r.ok?'OK':'FAIL','clips:',r&&r.ok&&r.data?(r.data.gameClips||r.data.GameClips||[]).length:0);
+        if(r&&r.ok&&r.data){
+          var c=self._parseGameClips(r.data,gameName);
+          allClips=allClips.concat(c);
+        }
+        tryFinish();
+      }).catch(function(e){console.log('[GameClips] Error fetching',u,e);tryFinish()});
+    });
+    // Also try contract version 2
+    pending++;
+    self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+titleId+'/clips?maxItems=100',{
+      method:'GET',headers:Object.assign({},hdrs,{'x-xbl-contract-version':'2'})
     }).then(function(r){
-      console.log('Community clips response:',r);
-      var community=[];
-      if(r&&r.ok&&r.data){community=self._parseGameClips(r.data,gameName)}
-      if(community.length>0){finishWith(community);return}
-      // Try with qualifier=saved if no results
-      self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+titleId+'/clips?qualifier=saved&maxItems=25',{
-        method:'GET',headers:Object.assign({},hdrs,{'x-xbl-contract-version':'1'})
-      }).then(function(r2){
-        console.log('Community clips (saved) response:',r2);
-        if(r2&&r2.ok&&r2.data){community=self._parseGameClips(r2.data,gameName)}
-        finishWith(community);
-      }).catch(function(){finishWith([])});
-    }).catch(function(e){console.log('Clips fetch error:',e);finishWith([])});
+      console.log('[GameClips] v2 contract →',r&&r.ok?'OK':'FAIL');
+      if(r&&r.ok&&r.data){allClips=allClips.concat(self._parseGameClips(r.data,gameName))}
+      tryFinish();
+    }).catch(function(){tryFinish()});
   };
 
   // Step 1: Check titleMap (built from user's own clips) for an exact or partial match
@@ -729,6 +813,7 @@ rFr:function(){var s=this,isDemo=this.st.user&&this.st.user.un==='DemoPlayer';if
     if(s.st.sugFriends===null&&!s.st.sugFrLoading){setTimeout(function(){s.loadSuggestedFriends()},0)}
     var sugSec='';
     if(s.st.sugFrLoading){sugSec='<div style="text-align:center;padding:20px 0"><div class="load-spin" style="margin:0 auto 12px"></div><div style="color:var(--d);font-size:13px">Loading friends list...</div></div>'}
+    else if(s.st.sugFrError&&(!s.st.sugFriends||s.st.sugFriends.length===0)){sugSec='<div class="em" style="margin-top:10px"><div class="emi">\u{26A0}\u{FE0F}</div><div class="emt">Friends List Unavailable</div><div class="emd">'+s.st.sugFrError+'</div><button class="bsy" style="width:auto;padding:12px 28px;display:inline-block;margin-top:16px" data-a="retryFr">\u{1F504} Retry</button></div>'}
     else if(s.st.sugFriends&&s.st.sugFriends.length>0){
       var favFriends=s.st.sugFriends.filter(function(f){return f.isFav});
       var otherFriends=s.st.sugFriends.filter(function(f){return!f.isFav});
@@ -891,6 +976,8 @@ bindAll:function(){
   }
   var frvpc=document.querySelector('[data-a="frvpc"]');
   if(frvpc)frvpc.onclick=function(){if(s.st.frResult)s.viewPlayerClips(s.st.frResult.clips)};
+  var retryFr=document.querySelector('[data-a="retryFr"]');
+  if(retryFr)retryFr.onclick=function(){s.st.sugFriends=null;s.st.sugFrError=null;s.render()};
 
   // Game page: tag clicks, back button, clip opens
   document.querySelectorAll('[data-a="gp"]').forEach(function(b){b.onclick=function(){s.openGamePage(b.dataset.g)}});
