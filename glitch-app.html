@@ -109,7 +109,7 @@ input,button,textarea{font-family:inherit}button{cursor:pointer;border:none;back
 .tab{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;border:1px solid #ffffff0a;background:var(--sf);color:var(--d)}.tab.on{background:var(--a);color:var(--bg);border-color:var(--a)}
 .feed{display:flex;flex-direction:column;gap:0;padding:0;scroll-snap-type:y mandatory;overflow-y:auto;height:100dvh;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .snap-item{position:relative;width:100%;height:100dvh;flex-shrink:0;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
-.snap-bg{position:absolute;inset:-20px;width:calc(100% + 40px);height:calc(100% + 40px);object-fit:cover;filter:blur(25px) brightness(.5) saturate(1.3);transform:scale(1.1);z-index:0}
+.snap-bg{position:absolute;inset:-20px;width:calc(100% + 40px);height:calc(100% + 40px);background-size:cover;background-position:center;filter:blur(28px) brightness(.45) saturate(1.4);transform:scale(1.15);z-index:0;pointer-events:none}
 .snap-vid{position:relative;width:100%;max-height:100%;aspect-ratio:16/9;object-fit:contain;z-index:1}
 .snap-poster{position:relative;width:100%;aspect-ratio:16/9;background-size:cover;background-position:center;z-index:1;display:flex;align-items:center;justify-content:center}
 .snap-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(180deg,#0006 0%,transparent 20%,transparent 50%,#000a 100%);padding:16px;padding-bottom:calc(72px + var(--sb));pointer-events:none;z-index:3}
@@ -453,21 +453,22 @@ rF:function(){var s=this,f=this.st.filter,cl=this.st.clips,isDemo=this.st.user&&
   return'<div class="feed" id="snapFeed">'+cl.map(function(c,i){return s.rSnapCard(c,i)}).join('')+'</div><div class="feed-tabs" style="position:fixed;top:calc(var(--st));left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101;padding:10px 14px;display:flex;gap:6px">'+tabs.map(function(t){return'<button class="tab" style="background:#0008;border-color:#fff3;color:#fffc;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);'+(f===t?'background:var(--a);border-color:var(--a);color:var(--bg)':'')+'" data-f="'+t+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join('')+'</div><div class="feed-bnav" style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:101">'+this.rBN2()+'</div>'+(this.st.selClip?this.rMo(this.st.selClip):'')},
 
 rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id),u=this.st.user,av=u.avUrl?'<img src="'+u.avUrl+'">':u.av;
-  var hasVid=!!c.vidUrl,poster=c.thUrl||'';
-  // Blur background: either blurred video or blurred poster image
-  var bgEl=hasVid?'<video class="snap-bg" src="'+c.vidUrl+'" poster="'+poster+'" playsinline muted loop preload="none"></video>':poster?'<div class="snap-bg" style="background-image:url('+poster+');background-size:cover;background-position:center"></div>':'<div class="snap-bg" style="background:'+this.tg(c.sd)+'"></div>';
+  var poster=c.thUrl||'';
+  // Blur background: use poster/thumbnail image (not video — avoids mobile rendering issues)
+  var bgEl=poster?'<div class="snap-bg" style="background-image:url('+poster+')"></div>':'<div class="snap-bg" style="background:'+this.tg(c.sd)+'"></div>';
   // Main video: native aspect ratio, centered
-  var mainEl=hasVid?'<video class="snap-vid" data-idx="'+i+'" src="'+c.vidUrl+'" poster="'+poster+'" playsinline muted loop preload="'+(i<2?'auto':'none')+'"></video>':poster?'<div class="snap-poster" style="background-image:url('+poster+')"><div class="cpl">'+this.ic('play',32)+'</div></div>':'<div class="snap-poster" style="background:'+this.tg(c.sd)+'"><div class="cpl">'+this.ic('play',32)+'</div></div>';
+  var mainEl=c.vidUrl?'<video class="snap-vid" data-idx="'+i+'" src="'+c.vidUrl+'" poster="'+poster+'" playsinline muted loop preload="'+(i<2?'auto':'none')+'"></video>':poster?'<div class="snap-poster" style="background-image:url('+poster+')"><div class="cpl">'+this.ic('play',32)+'</div></div>':'<div class="snap-poster" style="background:'+this.tg(c.sd)+'"><div class="cpl">'+this.ic('play',32)+'</div></div>';
   return'<div class="snap-item" data-idx="'+i+'">'+bgEl+mainEl
   +'<div class="snap-overlay">'
   +'<div class="snap-top"><div class="snap-user"><div class="cav" style="width:32px;height:32px;font-size:16px;border-color:#fff3">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span style="font-size:14px;font-weight:700;text-shadow:0 1px 4px #0008">'+c.user.un+'</span><span style="font-size:12px;color:#fff9;text-shadow:0 1px 4px #0008">'+c.ago+'</span></div></div>'
   +'<div class="snap-bot"><div class="snap-title">'+c.title+'</div><div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span class="cgm" style="background:#fff2;color:#fffc">'+c.game+'</span>'+this.aib(c.ai)+'</div></div>'
+  +'</div>'
+  +'<div class="snap-pause" data-idx="'+i+'"></div>'
   +'<div class="snap-acts">'
+  +'<button class="snap-act snap-vol-btn" data-a="vol">'+(s._snapMuted!==false?this.ic('volX'):this.ic('vol'))+'</button>'
   +'<button class="snap-act" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+'<span>'+(c.lk+(lk?1:0))+'</span></button>'
   +'<button class="snap-act" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+'</button>'
   +'</div>'
-  +'</div>'
-  +'<div class="snap-pause" data-idx="'+i+'"></div>'
   +'</div>'},
 
 // Alternate bottom nav for feed (transparent)
@@ -530,11 +531,9 @@ bindAll:function(){
       });
       // Pause all, play best
       feed.querySelectorAll('.snap-vid').forEach(function(v){v.pause()});
-      feed.querySelectorAll('.snap-bg').forEach(function(v){if(v.tagName==='VIDEO')v.pause()});
       if(best>=0){
         var vid=items[best].querySelector('.snap-vid');
-        var bg=items[best].querySelector('.snap-bg');
-        if(vid&&!s._paused){vid.play().catch(function(){});if(bg&&bg.tagName==='VIDEO')bg.play().catch(function(){})}
+        if(vid&&!s._paused){vid.play().catch(function(){})}
         s._curIdx=best;
       }
     };
@@ -595,14 +594,14 @@ bindAll:function(){
     b._tapCount=0;
     b.onclick=function(e){
       e.stopPropagation();
-      var idx=parseInt(b.dataset.idx),vid=b.parentElement.querySelector('.snap-vid'),bg=b.parentElement.querySelector('.snap-bg');
+      var idx=parseInt(b.dataset.idx),vid=b.parentElement.querySelector('.snap-vid');
       b._tapCount++;
       if(b._tapCount===1){
         b._tapTimer=setTimeout(function(){
           b._tapCount=0;
           if(!vid)return;
-          if(vid.paused){s._paused=false;vid.play().catch(function(){});if(bg&&bg.tagName==='VIDEO')bg.play().catch(function(){});b.innerHTML=''}
-          else{s._paused=true;vid.pause();if(bg&&bg.tagName==='VIDEO')bg.pause();b.innerHTML='<div class="snap-pause-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>'}
+          if(vid.paused){s._paused=false;vid.play().catch(function(){});b.innerHTML=''}
+          else{s._paused=true;vid.pause();b.innerHTML='<div class="snap-pause-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>'}
         },280);
       } else if(b._tapCount===2){
         clearTimeout(b._tapTimer);b._tapCount=0;
