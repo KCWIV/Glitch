@@ -619,7 +619,7 @@ viewPlayerClips:function(clips){
 },
 
 // === RENDER ===
-render:function(){var el=document.getElementById('app');if(this.st.screen==='login')el.innerHTML=this.rL();else if(this.st.screen==='loading')el.innerHTML=this.rLd();else el.innerHTML=this.rM();this.bindAll()},
+
 rLd:function(){return'<div class="loading"><div class="load-logo">GLITCH</div><div class="load-spin"></div><div class="load-msg" id="ls">'+(this.st.loadMsg||'Connecting...')+'</div></div>'},
 toast:function(msg,type,dur){var old=document.querySelector('.toast');if(old)old.remove();var t=document.createElement('div');t.className='toast '+(type||'ok');t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove()},300)},dur||3000)},
 rSkel:function(){var cards='';for(var i=0;i<3;i++){cards+='<div class="skel-card fu d'+(i+1)+'"><div class="skel-th"></div><div style="padding:14px"><div class="skel skel-line w80" style="animation-delay:'+(.1*i)+'s"></div><div class="skel skel-line w60" style="animation-delay:'+(.15*i)+'s"></div><div class="skel skel-line w40" style="animation-delay:'+(.2*i)+'s"></div></div></div>'}return'<div style="padding:10px 14px">'+cards+'</div>'},
@@ -844,10 +844,10 @@ bindAll:function(){
 toast:function(msg,type,dur){var t=document.createElement('div');t.className='toast '+(type||'ok');t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},dur||2500)},
 render:function(){var el=document.getElementById('app');if(!el)return;
   if(this.st.screen==='loading'){el.innerHTML='<div class="loading"><div class="load-logo">GLITCH</div><div class="load-spin"></div><div class="load-msg" id="ls">'+this.st.loadMsg+'</div></div>';return}
-  if(this.st.screen==='login'){el.innerHTML=this.rLg();this.bindAll();return}
+  if(this.st.screen==='login'){el.innerHTML=this.rL();this.bindAll();return}
   var pg='';
   switch(this.st.page){
-    case'feed':pg=this.rH();break;
+    case'feed':pg=this.rF();break;
     case'discover':pg=this.rD();break;
     case'upload':pg=this.rU();break;
     case'friends':pg=this.rFr();break;
