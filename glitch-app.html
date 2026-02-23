@@ -724,23 +724,6 @@ bindAll:function(){
   // Suggested friends load
   if(s.st.page==='friends'&&s.st.fTab==='xbox'&&!s.st.sugFriends&&!s.st.sugFrLoading){s.loadSuggestedFriends()}
 },
-// Toast notification
-toast:function(msg,type,dur){var t=document.createElement('div');t.className='toast '+(type||'ok');t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},dur||2500)},
-render:function(){var el=document.getElementById('app');if(!el)return;
-  if(this.st.screen==='loading'){el.innerHTML='<div class="loading"><div class="load-logo">GLITCH</div><div class="load-spin"></div><div class="load-msg" id="ls">'+this.st.loadMsg+'</div></div>';return}
-  if(this.st.screen==='login'){el.innerHTML=this.rLg();this.bindAll();return}
-  var pg='';
-  switch(this.st.page){
-    case'feed':pg=this.rH();break;
-    case'discover':pg=this.rD();break;
-    case'upload':pg=this.rU();break;
-    case'friends':pg=this.rFr();break;
-    case'profile':pg=this.rP();break;
-  }
-  if(this.st.page==='feed'){el.innerHTML=pg}
-  else{el.innerHTML='<div class="tb"><div class="tb-l">GLITCH</div><div class="tb-r"><button class="ntf">'+this.ic('bell')+'<span class="ntf-d">3</span></button><div class="avsm">'+(this.st.user.avUrl?'<img src="'+this.st.user.avUrl+'">':this.st.user.av)+'</div></div></div><div class="pg">'+pg+'</div>'+this.rBN()+(this.st.selClip?this.rMo(this.st.selClip):'')}
-  this.bindAll();
-}
 };
 // === BOOT ===
 document.addEventListener('DOMContentLoaded',function(){
