@@ -720,7 +720,7 @@ bindAll:function(){
       });
     });
     // Volume toggle
-    feed.querySelectorAll('.snap-vol-btn').forEach(function(b){b.onclick=function(e){e.stopPropagation();s._snapMuted=s._snapMuted===false?true:false;feed.querySelectorAll('video.snap-vid').forEach(function(v){v.muted=s._snapMuted});s.render()}});
+    feed.querySelectorAll('.snap-vol-btn').forEach(function(b){b.onclick=function(e){e.stopPropagation();s._snapMuted=s._snapMuted===false?true:false;feed.querySelectorAll('video.snap-vid').forEach(function(v){v.muted=s._snapMuted});feed.querySelectorAll('.snap-vol-btn').forEach(function(btn){btn.innerHTML=s._snapMuted?s.ic('volX'):s.ic('vol')})}});
   }
   // Suggested friends load
   if(s.st.page==='friends'&&s.st.fTab==='xbox'&&!s.st.sugFriends&&!s.st.sugFrLoading){s.loadSuggestedFriends()}
