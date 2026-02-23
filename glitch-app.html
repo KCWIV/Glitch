@@ -638,7 +638,7 @@ rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id);
   // Blur background layer
   var bgEl=c.vidUrl?'<video class="snap-bg" src="'+c.vidUrl+'" poster="'+poster+'" playsinline muted loop preload="none"></video>':poster?'<div class="snap-bg" style="background-image:url('+poster+');background-size:cover;background-position:center"></div>':'<div class="snap-bg" style="background:'+this.tg(c.sd)+'"></div>';
   // Main video: native aspect ratio, centered
-  var mainEl=c.vidUrl?'<video class="snap-vid" data-idx="'+i+'" src="'+c.vidUrl+'" poster="'+poster+'" playsinline muted loop preload="'+(i<2?'auto':'none')+'"></video>':'';
+  var mainEl=c.vidUrl?'<video class="snap-vid" data-idx="'+i+'" src="'+c.vidUrl+'" poster="'+poster+'" playsinline loop preload="'+(i<2?'auto':'none')+'"></video>':'';
   return'<div class="snap-item" data-idx="'+i+'">'+bgEl+mainEl
   +'<div class="snap-overlay">'
   +'<div class="snap-top"><div class="snap-user"><div class="cav" style="width:32px;height:32px;font-size:16px;border-color:#fff3">'+(c.user.avUrl?'<img src="'+c.user.avUrl+'">':c.user.av)+'</div><span style="font-size:14px;font-weight:700;text-shadow:0 1px 4px #0008">'+c.user.un+'</span><span style="font-size:12px;color:#fff9;text-shadow:0 1px 4px #0008">'+c.ago+'</span></div></div>'
@@ -646,7 +646,7 @@ rSnapCard:function(c,i){var s=this,lk=this.st.liked.has(c.id);
   +'</div>'
   +'<div class="snap-pause" data-idx="'+i+'"></div>'
   +'<div class="snap-acts">'
-  +'<button class="snap-act snap-vol-btn" data-a="vol">'+(s._snapMuted!==false?this.ic('volX'):this.ic('vol'))+'</button>'
+  +'<button class="snap-act snap-vol-btn" data-a="vol">'+(s._snapMuted===true?this.ic('volX'):this.ic('vol'))+'</button>'
   +'<button class="snap-act" data-a="lk" data-id="'+c.id+'">'+(lk?this.ic('heartF'):this.ic('heart'))+'<span>'+(c.lk+(lk?1:0))+'</span></button>'
   +'<button class="snap-act" data-a="cmt-open" data-id="'+c.id+'">'+this.ic('cmt')+'<span>'+(c.cm+(this.st.comments[c.id]||[]).length)+'</span></button>'
   +'<button class="snap-act" data-a="sh" data-id="'+c.id+'">'+this.ic('share')+'</button>'
@@ -772,7 +772,7 @@ bindAll:function(){
   var feed=document.getElementById('snapFeed');
   if(feed){
     var vids=feed.querySelectorAll('video.snap-vid');
-    var playVid=function(v){if(!v)return;v.play().catch(function(){});v.muted=s._snapMuted!==false};
+    var playVid=function(v){if(!v)return;v.muted=s._snapMuted===true;v.play().catch(function(){v.muted=true;v.play().catch(function(){})});};
     var stopAll=function(){vids.forEach(function(v){v.pause()})};
     var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){stopAll();playVid(e.target)}else{e.target.pause()}})},{root:feed,threshold:0.6});
     vids.forEach(function(v){obs.observe(v)});
@@ -796,8 +796,8 @@ bindAll:function(){
         },300);
       });
     });
-    // Volume toggle
-    feed.querySelectorAll('.snap-vol-btn').forEach(function(b){b.onclick=function(e){e.stopPropagation();s._snapMuted=s._snapMuted===false?true:false;feed.querySelectorAll('video.snap-vid').forEach(function(v){v.muted=s._snapMuted});s.render()}});
+    // Volume toggle — no re-render, just flip mute and swap icons in place
+    feed.querySelectorAll('.snap-vol-btn').forEach(function(b){b.onclick=function(e){e.stopPropagation();s._snapMuted=s._snapMuted===false?true:false;feed.querySelectorAll('video.snap-vid').forEach(function(v){v.muted=s._snapMuted});feed.querySelectorAll('.snap-vol-btn').forEach(function(btn){btn.innerHTML=s._snapMuted===false?s.ic('vol'):s.ic('volX')})}});
   }
   // Comment drawer open
   document.querySelectorAll('[data-a="cmt-open"]').forEach(function(b){
