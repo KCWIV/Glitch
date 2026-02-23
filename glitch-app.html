@@ -240,6 +240,7 @@ input,button,textarea{font-family:inherit}button{cursor:pointer;border:none;back
 .cmt-drawer-inp::placeholder{color:var(--d)}
 .cmt-drawer-post{padding:10px 18px;background:var(--a);color:var(--bg);border-radius:22px;font-size:13px;font-weight:700;white-space:nowrap}
 .cmt-empty{text-align:center;padding:40px 20px;color:var(--d)}.cmt-empty-i{font-size:36px;margin-bottom:8px}.cmt-empty-t{font-size:14px;font-weight:700;color:var(--t)}.cmt-empty-d{font-size:12px;margin-top:3px}
+.cmt-del{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#ffffff0f;color:var(--d);margin-left:6px;vertical-align:middle;flex-shrink:0;transition:background .15s}.cmt-del:active{background:#ff475733;color:var(--r)}
 </style>
 </head>
 <body>
@@ -275,12 +276,14 @@ TYPES:["Squad Wipe","Clutch Round","Insane Snipe","Ace","Trickshot","Collateral"
 DCMTS:[{u:{av:"\u{1F480}",n:"FragMaster99"},t:"Absolutely filthy \u{1F525}",tm:"2m"},{u:{av:"\u{1F3AF}",n:"SilentScope"},t:"How do you hit those lol",tm:"8m"},{u:{av:"\u{26A1}",n:"VelocityKing"},t:"Bro I was in this lobby",tm:"14m"}],
 HUES:[[200,260],[340,20],[140,200],[260,320],[20,80],[180,240],[300,360],[100,160],[220,280],[40,100]],
 
-st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:'',sugFriends:null,sugFrLoading:false,sugFrError:null,gpGame:null,gpLoading:false,gpClips:null,gpError:null,titleMap:{}},
+st:{screen:'login',page:'feed',user:null,clips:[],liked:new Set(),following:new Set([2,3,5]),comments:{},filter:'all clips',upMode:'auto',pTab:'clips',fTab:'friends',fSearch:'',syncProg:-1,selClip:null,newCmt:'',aiSet:[1,1,1,0,0],clipsLoading:false,loadMsg:'',dsLoading:false,dsResults:null,dsError:null,dsQuery:'',sugFriends:null,sugFrLoading:false,sugFrError:null,gpGame:null,gpLoading:false,gpClips:null,gpError:null,titleMap:{},cmtClip:null,cmtOpen:false},
 sv:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
 ld:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
 svLikes:function(){this.sv('glitch_likes',Array.from(this.st.liked))},
 svFollows:function(){this.sv('glitch_follows',Array.from(this.st.following))},
 svClips:function(){try{this.sv('glitch_clips',this.st.clips.slice(0,30))}catch(e){}},
+svComments:function(){try{this.sv('glitch_comments',this.st.comments)}catch(e){}},
+ldComments:function(){var c=this.ld('glitch_comments');if(c)this.st.comments=c;},
 _buildTitleMap:function(gameClips){
   var self=this;
   if(!gameClips||!Array.isArray(gameClips))return;
@@ -408,12 +411,13 @@ toggleAI:function(i){this.st.aiSet[i]=this.st.aiSet[i]?0:1;this.render()},
 startSync:function(){var self=this;this.st.syncProg=0;this.render();var iv=setInterval(function(){self.st.syncProg+=Math.random()*12+5;if(self.st.syncProg>=100){self.st.syncProg=100;clearInterval(iv)}self.render()},350)},
 addCmt:function(){
   if(!this.st.newCmt.trim())return;
-  var id=this.st.cmtClip||( this.st.selClip&&this.st.selClip.id);
+  var id=this.st.cmtClip||(this.st.selClip&&this.st.selClip.id);
   if(!id)return;
   if(!this.st.comments[id])this.st.comments[id]=[];
-  this.st.comments[id].unshift({u:{av:this.st.user.av,avUrl:this.st.user.avUrl||null,n:this.st.user.un},t:this.st.newCmt.trim(),tm:'now'});
+  var ts=Date.now();
+  this.st.comments[id].unshift({u:{av:this.st.user.av,avUrl:this.st.user.avUrl||null,n:this.st.user.un},t:this.st.newCmt.trim(),tm:'now',ts:ts,mine:true});
   this.st.newCmt='';
-  // If drawer is open, refresh just the list & counter without full re-render
+  this.svComments();
   if(this.st.cmtClip){
     var list=document.getElementById('cmtList');
     var head=document.querySelector('.cmt-drawer-title');
@@ -422,18 +426,38 @@ addCmt:function(){
     var c=this.st.clips.find(function(x){return x.id===id});
     var total=(c?c.cm:0)+(this.st.comments[id]||[]).length;
     if(head)head.textContent=total+' Comments';
-    if(list){
-      var isDemo=this.st.user&&this.st.user.un==='DemoPlayer';
-      var cm=[].concat(this.st.comments[id]||[],isDemo?this.DCMTS:[]);
-      list.innerHTML=cm.map(function(m){
-        var av=m.u.avUrl?'<img src="'+m.u.avUrl+'">':m.u.av;
-        return'<div class="cmt-drawer-item"><div class="cmt-drawer-av">'+av+'</div><div class="cmt-drawer-body"><span class="cmt-drawer-name">'+m.u.n+'</span><span class="cmt-drawer-time">'+m.tm+'</span><div class="cmt-drawer-text">'+m.t+'</div></div></div>';
-      }).join('');
-      list.scrollTop=0;
-    }
+    if(list){this._renderCmtList(list,id);}
   } else {
     this.render();
   }
+},
+deleteCmt:function(id,ts){
+  if(!this.st.comments[id])return;
+  this.st.comments[id]=this.st.comments[id].filter(function(m){return m.ts!==ts});
+  this.svComments();
+  var list=document.getElementById('cmtList');
+  var head=document.querySelector('.cmt-drawer-title');
+  var c=this.st.clips.find(function(x){return x.id===id});
+  var total=(c?c.cm:0)+(this.st.comments[id]||[]).length;
+  if(head)head.textContent=total+' Comments';
+  if(list){this._renderCmtList(list,id);}
+},
+_renderCmtList:function(list,id){
+  var s=this;
+  var isDemo=this.st.user&&this.st.user.un==='DemoPlayer';
+  var cm=[].concat(this.st.comments[id]||[],isDemo?this.DCMTS:[]);
+  if(cm.length===0){
+    list.innerHTML='<div class="cmt-empty"><div class="cmt-empty-i">💬</div><div class="cmt-empty-t">No comments yet</div><div class="cmt-empty-d">Be the first to comment!</div></div>';
+    return;
+  }
+  list.innerHTML=cm.map(function(m){
+    var av=m.u.avUrl?'<img src="'+m.u.avUrl+'">':m.u.av;
+    var del=m.mine?'<button class="cmt-del" data-ts="'+m.ts+'" data-clipid="'+id+'" title="Delete">'+s.ic('x',13)+'</button>':'';
+    return'<div class="cmt-drawer-item"><div class="cmt-drawer-av">'+av+'</div><div class="cmt-drawer-body"><span class="cmt-drawer-name">'+m.u.n+'</span><span class="cmt-drawer-time">'+m.tm+'</span>'+del+'<div class="cmt-drawer-text">'+m.t+'</div></div></div>';
+  }).join('');
+  list.querySelectorAll('.cmt-del').forEach(function(b){
+    b.onclick=function(){s.deleteCmt(parseInt(b.dataset.clipid),parseInt(b.dataset.ts))};
+  });
 },
 
 shareClip:function(c){
@@ -720,7 +744,8 @@ rCmtDrawer:function(){
     ?'<div class="cmt-empty"><div class="cmt-empty-i">💬</div><div class="cmt-empty-t">No comments yet</div><div class="cmt-empty-d">Be the first to comment!</div></div>'
     :cm.map(function(m){
       var av=m.u.avUrl?'<img src="'+m.u.avUrl+'">':m.u.av;
-      return'<div class="cmt-drawer-item"><div class="cmt-drawer-av">'+av+'</div><div class="cmt-drawer-body"><span class="cmt-drawer-name">'+m.u.n+'</span><span class="cmt-drawer-time">'+m.tm+'</span><div class="cmt-drawer-text">'+m.t+'</div></div></div>';
+      var del=m.mine?'<button class="cmt-del" data-ts="'+m.ts+'" data-clipid="'+id+'">'+s.ic('x',13)+'</button>':'';
+      return'<div class="cmt-drawer-item"><div class="cmt-drawer-av">'+av+'</div><div class="cmt-drawer-body"><span class="cmt-drawer-name">'+m.u.n+'</span><span class="cmt-drawer-time">'+m.tm+'</span>'+del+'<div class="cmt-drawer-text">'+m.t+'</div></div></div>';
     }).join('');
   return'<div class="cmt-drawer-bg'+(open?' open':'')+'" id="cmtDrawerBg">'
     +'<div class="cmt-drawer-scrim" data-a="cmt-close"></div>'
@@ -730,6 +755,31 @@ rCmtDrawer:function(){
     +'<div class="cmt-drawer-list" id="cmtList">'+listHtml+'</div>'
     +'<div class="cmt-drawer-foot"><input class="cmt-drawer-inp" id="cmtIn" placeholder="Add a comment..." value="'+this.st.newCmt+'"><button class="cmt-drawer-post" data-a="sc">Post</button></div>'
     +'</div></div>';
+},
+
+_bindDrawer:function(clipId){
+  var s=this;
+  var closeDrawer=function(){
+    var bg=document.getElementById('cmtDrawerBg');
+    if(bg){bg.classList.remove('open');setTimeout(function(){bg.remove();s.st.cmtClip=null;s.st.cmtOpen=false},350)}
+  };
+  document.querySelectorAll('[data-a="cmt-close"]').forEach(function(b){b.onclick=closeDrawer});
+  var scrim=document.querySelector('.cmt-drawer-scrim');if(scrim)scrim.onclick=closeDrawer;
+  var cmtIn=document.getElementById('cmtIn');
+  if(cmtIn){
+    cmtIn.focus();
+    cmtIn.addEventListener('input',function(e){s.st.newCmt=e.target.value});
+    cmtIn.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();s.addCmt()}});
+  }
+  var scBtn=document.querySelector('[data-a="sc"]');
+  if(scBtn)scBtn.onclick=function(){s.addCmt()};
+  // Bind any existing delete buttons
+  var list=document.getElementById('cmtList');
+  if(list){
+    list.querySelectorAll('.cmt-del').forEach(function(b){
+      b.onclick=function(){s.deleteCmt(parseInt(b.dataset.clipid),parseInt(b.dataset.ts))};
+    });
+  }
 },
 
 // === EVENTS ===
@@ -799,44 +849,39 @@ bindAll:function(){
     // Volume toggle — no re-render, just flip mute and swap icons in place
     feed.querySelectorAll('.snap-vol-btn').forEach(function(b){b.onclick=function(e){e.stopPropagation();s._snapMuted=s._snapMuted===false?true:false;feed.querySelectorAll('video.snap-vid').forEach(function(v){v.muted=s._snapMuted});feed.querySelectorAll('.snap-vol-btn').forEach(function(btn){btn.innerHTML=s._snapMuted===false?s.ic('vol'):s.ic('volX')})}});
   }
-  // Comment drawer open
+  // Comment drawer open — inject directly, never re-render feed
   document.querySelectorAll('[data-a="cmt-open"]').forEach(function(b){
     b.onclick=function(e){
       e.stopPropagation();
-      s.st.cmtClip=parseInt(b.dataset.id);
+      var clipId=parseInt(b.dataset.id);
+      s.st.cmtClip=clipId;
       s.st.cmtOpen=false;
       s.st.newCmt='';
-      s.render();
-      // Trigger open on next frame so CSS transition fires
+      // Remove any existing drawer first
+      var old=document.getElementById('cmtDrawerBg');if(old)old.remove();
+      // Inject drawer HTML into body
+      var tmp=document.createElement('div');
+      tmp.innerHTML=s.rCmtDrawer();
+      var drawerEl=tmp.firstChild;
+      document.querySelector('.app').appendChild(drawerEl);
+      // Bind drawer events immediately
+      s._bindDrawer(clipId);
+      // Trigger open animation next frame
       requestAnimationFrame(function(){
         requestAnimationFrame(function(){
-          s.st.cmtOpen=true;
           var bg=document.getElementById('cmtDrawerBg');
-          if(bg){bg.classList.add('open')}
+          if(bg)bg.classList.add('open');
         });
       });
     };
   });
-  // Comment drawer close
+  // Comment drawer close (non-feed pages fallback)
   document.querySelectorAll('[data-a="cmt-close"]').forEach(function(b){
     b.onclick=function(){
       var bg=document.getElementById('cmtDrawerBg');
-      if(bg){
-        bg.classList.remove('open');
-        setTimeout(function(){s.st.cmtOpen=false;s.st.cmtClip=null;s.render()},350);
-      } else {
-        s.st.cmtOpen=false;s.st.cmtClip=null;s.render();
-      }
+      if(bg){bg.classList.remove('open');setTimeout(function(){bg.remove();s.st.cmtClip=null;s.st.cmtOpen=false},350)}
     };
   });
-  // Comment drawer input & post
-  var cmtIn=document.getElementById('cmtIn');
-  if(cmtIn){
-    cmtIn.addEventListener('input',function(e){s.st.newCmt=e.target.value});
-    cmtIn.addEventListener('keydown',function(e){if(e.key==='Enter')s.addCmt()});
-  }
-  var scBtn=document.querySelector('[data-a="sc"]');
-  if(scBtn)scBtn.onclick=function(){s.addCmt()};
   // Suggested friends load
   if(s.st.page==='friends'&&s.st.fTab==='xbox'&&!s.st.sugFriends&&!s.st.sugFrLoading){s.loadSuggestedFriends()}
 },
@@ -861,6 +906,7 @@ render:function(){var el=document.getElementById('app');if(!el)return;
 // === BOOT ===
 document.addEventListener('DOMContentLoaded',function(){
   G.restoreSocial();
+  G.ldComments();
   var h=location.hash;
   if(h&&h.indexOf('access_token')!==-1){
     var p={};h.substring(1).split('&').forEach(function(s){var kv=s.split('=');p[kv[0]]=decodeURIComponent(kv[1])});
