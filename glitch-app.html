@@ -306,9 +306,22 @@ handleAuth:function(token){
     var tk=r.data.Token,uh=r.data.DisplayClaims.xui[0].uhs;
     self.st.loadMsg='Authorizing...';self.render();
 
-    return self.px('https://xsts.auth.xboxlive.com/xsts/authorize',{method:'POST',headers:{'Content-Type':'application/json'},body:{RelyingParty:'http://xboxlive.com',TokenType:'JWT',Properties:{SandboxId:'RETAIL',UserTokens:[tk]}}}).then(function(r2){
+    // Get main XSTS token (for profile, social, etc)
+    var mainXSTS=self.px('https://xsts.auth.xboxlive.com/xsts/authorize',{method:'POST',headers:{'Content-Type':'application/json'},body:{RelyingParty:'http://xboxlive.com',TokenType:'JWT',Properties:{SandboxId:'RETAIL',UserTokens:[tk]}}});
+    // Get clips XSTS token (for gameclipsmetadata public endpoints)
+    var clipsXSTS=self.px('https://xsts.auth.xboxlive.com/xsts/authorize',{method:'POST',headers:{'Content-Type':'application/json'},body:{RelyingParty:'http://gameclips.xboxlive.com',TokenType:'JWT',Properties:{SandboxId:'RETAIL',UserTokens:[tk]}}});
+
+    return Promise.all([mainXSTS,clipsXSTS]).then(function(results){
+      var r2=results[0],r3=results[1];
       if(!r2.ok)throw new Error('XSTS failed');
-      return{uh:uh,xt:r2.data.Token};
+      var auth={uh:uh,xt:r2.data.Token};
+      if(r3.ok&&r3.data&&r3.data.Token){
+        auth.cxt=r3.data.Token;
+        console.log('[Auth] Got clips XSTS token');
+      } else {
+        console.log('[Auth] Clips XSTS failed, will use main token. Status:',r3.status);
+      }
+      return auth;
     });
   })
   .then(function(auth){
@@ -323,7 +336,7 @@ handleAuth:function(token){
     self.st.user={id:0,un:s.Gamertag||'Player',gt:s.Gamertag||'Player',av:'\u{1F3AE}',avUrl:s.GameDisplayPicRaw||null,frs:0,fg:0,cl:0,gs:s.Gamerscore||'0',xuid:xuid};
     self.st.screen='main';
     self.sv('glitch_sess',{user:self.st.user});
-    self.sv('glitch_xauth',{uh:res.a.uh,xt:res.a.xt,xid:xuid});
+    self.sv('glitch_xauth',{uh:res.a.uh,xt:res.a.xt,cxt:res.a.cxt||null,xid:xuid});
     self.st.clips=[];self.st.clipsLoading=true;self.st.communityLoading=true;self.render();
     self.toast('Welcome, '+(s.Gamertag||'Player')+'! \u{1F3AE}','ok',3000);
 
@@ -354,10 +367,12 @@ fmA:function(d){var m=~~((Date.now()-d.getTime())/60000);return m<60?m+'m':m<144
 _fetchCommunityClips:function(cb){
   var self=this,auth=self.ld('glitch_xauth');
   if(!auth){console.log('[Community] No auth, skipping');if(cb)cb();return}
-  var authHdr='XBL3.0 x='+auth.uh+';'+auth.xt;
+  // Use clips-specific token if available, otherwise fall back to main
+  var clipAuth=auth.cxt?('XBL3.0 x='+auth.uh+';'+auth.cxt):('XBL3.0 x='+auth.uh+';'+auth.xt);
+  var mainAuth='XBL3.0 x='+auth.uh+';'+auth.xt;
   var titles=Object.keys(self.KNOWN_TITLES);
   var allClips=[],pending=0,done=false;
-  console.log('[Community] Fetching clips for',titles.length,'games');
+  console.log('[Community] Fetching clips for',titles.length,'games, hasClipsToken:',!!auth.cxt);
   var tryDone=function(){pending--;if(pending<=0&&!done){done=true;
     var seen={},unique=[];allClips.forEach(function(c){var k=c.vidUrl||c.thUrl||(c.title+c.dur+c.user.un);if(k&&!seen[k]){seen[k]=1;unique.push(c)}});
     unique.sort(function(a,b){return b.ai-a.ai});
@@ -368,27 +383,35 @@ _fetchCommunityClips:function(cb){
     if(cb)cb()}};
   var fetchTitle=function(name,tid){
     pending++;
-    // Try v2 first (broader public access)
-    self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+tid+'/clips?maxItems=25',{method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'2','Accept':'application/json'}}).then(function(r){
+    // Try with clips token + v1
+    self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+tid+'/clips?maxItems=25',{method:'GET',headers:{'Authorization':clipAuth,'x-xbl-contract-version':'1'}}).then(function(r){
       if(r&&r.ok&&r.data){
         var parsed=self._parseGameClips(r.data,name);
-        console.log('[Community]',name,'v2:',parsed.length,'clips');
-        allClips=allClips.concat(parsed);tryDone();
-      } else {
-        console.log('[Community]',name,'v2 failed ('+((r&&r.status)||'?')+'), trying user clips search...');
-        // Fallback: search for clips via the user-scoped trending/search endpoint
-        self.px('https://gameclipsmetadata.xboxlive.com/users/me/titles/'+tid+'/clips?maxItems=25',{method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'1'}}).then(function(r2){
-          if(r2&&r2.ok&&r2.data){
-            var parsed2=self._parseGameClips(r2.data,name);
-            console.log('[Community]',name,'user-title:',parsed2.length,'clips');
-            allClips=allClips.concat(parsed2);
+        console.log('[Community]',name,': got',parsed.length,'clips');
+        allClips=allClips.concat(parsed);tryDone();return;
+      }
+      console.log('[Community]',name,'clips-token v1 failed ('+((r&&r.status)||'?')+'), trying v2...');
+      // Try v2
+      return self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+tid+'/clips?maxItems=25',{method:'GET',headers:{'Authorization':clipAuth,'x-xbl-contract-version':'2'}}).then(function(r2){
+        if(r2&&r2.ok&&r2.data){
+          var parsed2=self._parseGameClips(r2.data,name);
+          console.log('[Community]',name,'v2:',parsed2.length,'clips');
+          allClips=allClips.concat(parsed2);tryDone();return;
+        }
+        console.log('[Community]',name,'v2 failed ('+((r2&&r2.status)||'?')+'), trying main token...');
+        // Try with main token
+        return self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+tid+'/clips?maxItems=25',{method:'GET',headers:{'Authorization':mainAuth,'x-xbl-contract-version':'1'}}).then(function(r3){
+          if(r3&&r3.ok&&r3.data){
+            var parsed3=self._parseGameClips(r3.data,name);
+            console.log('[Community]',name,'main-token:',parsed3.length,'clips');
+            allClips=allClips.concat(parsed3);
           } else {
-            console.log('[Community]',name,': all attempts failed');
+            console.log('[Community]',name,': all attempts failed, status:',r3&&r3.status);
           }
           tryDone();
-        }).catch(function(){tryDone()});
-      }
-    }).catch(function(){tryDone()});
+        });
+      });
+    }).catch(function(e){console.log('[Community]',name,': ERROR',e.message);tryDone()});
   };
   titles.forEach(function(name){
     var tid=self.KNOWN_TITLES[name];if(!tid)return;
