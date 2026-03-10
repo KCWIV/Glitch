@@ -354,10 +354,10 @@ fmA:function(d){var m=~~((Date.now()-d.getTime())/60000);return m<60?m+'m':m<144
 _fetchCommunityClips:function(cb){
   var self=this,auth=self.ld('glitch_xauth');
   if(!auth){console.log('[Community] No auth, skipping');if(cb)cb();return}
-  var hdrs={'Authorization':'XBL3.0 x='+auth.uh+';'+auth.xt,'x-xbl-contract-version':'1'};
+  var authHdr='XBL3.0 x='+auth.uh+';'+auth.xt;
   var titles=Object.keys(self.KNOWN_TITLES);
   var allClips=[],pending=0,done=false;
-  console.log('[Community] Fetching clips for',titles.length,'games:',titles.join(', '));
+  console.log('[Community] Fetching clips for',titles.length,'games');
   var tryDone=function(){pending--;if(pending<=0&&!done){done=true;
     var seen={},unique=[];allClips.forEach(function(c){var k=c.vidUrl||c.thUrl||(c.title+c.dur+c.user.un);if(k&&!seen[k]){seen[k]=1;unique.push(c)}});
     unique.sort(function(a,b){return b.ai-a.ai});
@@ -366,19 +366,34 @@ _fetchCommunityClips:function(cb){
     self.sv('glitch_community',unique.slice(0,40));
     console.log('[Community] Done! Got',unique.length,'unique clips');
     if(cb)cb()}};
+  var fetchTitle=function(name,tid){
+    pending++;
+    // Try v2 first (broader public access)
+    self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+tid+'/clips?maxItems=25',{method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'2','Accept':'application/json'}}).then(function(r){
+      if(r&&r.ok&&r.data){
+        var parsed=self._parseGameClips(r.data,name);
+        console.log('[Community]',name,'v2:',parsed.length,'clips');
+        allClips=allClips.concat(parsed);tryDone();
+      } else {
+        console.log('[Community]',name,'v2 failed ('+((r&&r.status)||'?')+'), trying user clips search...');
+        // Fallback: search for clips via the user-scoped trending/search endpoint
+        self.px('https://gameclipsmetadata.xboxlive.com/users/me/titles/'+tid+'/clips?maxItems=25',{method:'GET',headers:{'Authorization':authHdr,'x-xbl-contract-version':'1'}}).then(function(r2){
+          if(r2&&r2.ok&&r2.data){
+            var parsed2=self._parseGameClips(r2.data,name);
+            console.log('[Community]',name,'user-title:',parsed2.length,'clips');
+            allClips=allClips.concat(parsed2);
+          } else {
+            console.log('[Community]',name,': all attempts failed');
+          }
+          tryDone();
+        }).catch(function(){tryDone()});
+      }
+    }).catch(function(){tryDone()});
+  };
   titles.forEach(function(name){
     var tid=self.KNOWN_TITLES[name];if(!tid)return;
-    pending++;
-    self.px('https://gameclipsmetadata.xboxlive.com/public/titles/'+tid+'/clips?maxItems=25',{method:'GET',headers:hdrs}).then(function(r){
-      if(r&&r.ok&&r.data){
-        var parsed=self._parseGameClips(r.data,name.charAt(0).toUpperCase()+name.slice(1));
-        console.log('[Community]',name,': got',parsed.length,'clips');
-        allClips=allClips.concat(parsed);
-      } else {
-        console.log('[Community]',name,': FAILED',r&&r.status?'status:'+r.status:'no data',r);
-      }
-      tryDone();
-    }).catch(function(e){console.log('[Community]',name,': ERROR',e.message);tryDone()});
+    var displayName=name.split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1)}).join(' ');
+    fetchTitle(displayName,tid);
   });
   if(pending===0){self.st.communityLoading=false;if(cb)cb()}
 },
